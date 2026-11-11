@@ -563,6 +563,9 @@ async function run() {
       const activeFanniSession = await request(app).get('/api/fanni/me').set('Authorization', 'Bearer ' + fanniNewLogin.body.token);
       assert.equal(activeFanniSession.status, 200);
       assert.deepEqual(activeFanniSession.body.specialties, [], 'historical specialties stay in storage but are hidden from the technician self-service payload');
+      const adminFanniProfile = await request(app).get('/api/admin/fannis/' + fanni._id + '/profile').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(adminFanniProfile.status, 200);
+      assert.deepEqual(adminFanniProfile.body.fanni.specialties, [], 'admin profile editor must receive only active services');
       assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['صيانة تكييف'], 'historical specialties must remain preserved in the database');
 
       await test('admin technician trust and visibility controls save their decision history', async () => {
