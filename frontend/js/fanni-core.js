@@ -105,9 +105,10 @@ function clearAuth(){
 }
 
 function buildUrl(path){
- if(['localhost','127.0.0.1'].includes(location.hostname))return path;
- if(location.hostname.endsWith('vercel.app')&&location.hostname.includes('sonaa'))return path;
- return BASE_URL+path;
+ // Keep browser API requests on the exact origin serving the page.
+ // This avoids sending technician login to a stale Vercel alias while
+ // the client page already uses same-origin /api requests.
+ return path;
 }
 
 function toast(message,type='success'){
