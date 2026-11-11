@@ -170,7 +170,7 @@ function createAdminFanniProfilesRouter({
 
       const normalizedAreas = areas;
       const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()).filter(Boolean))];
-      const activeServices = await getActiveServiceNames(Service);
+      const activeServices = (await getActiveServiceNames(Service)).map(normalizeServiceKey);
       const invalidSpecialties = requestedSpecialties.filter(item => !activeServices.includes(normalizeServiceKey(item)));
       if (invalidSpecialties.length) return res.status(400).json({ message: 'توجد خدمة غير ظاهرة في قائمة الخدمات الحالية.', invalidSpecialties });
       const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, activeServices);
@@ -193,7 +193,7 @@ function createAdminFanniProfilesRouter({
   router.get('/fanni-profile-edits', auth('admin'), async (req, res, next) => {
     try {
       const fannis = await Fanni.find({ role: 'fanni', 'pendingProfileChange.requestedAt': { $exists: true, $ne: null } }).select('-passwordHash').sort({ 'pendingProfileChange.requestedAt': 1 }).limit(MAX_LIST_LIMIT).lean();
-      const activeServices = await getActiveServiceNames(Service);
+      const activeServices = (await getActiveServiceNames(Service)).map(normalizeServiceKey);
       return res.set('Cache-Control', 'no-store').json({ requests: fannis.map(item => {
         const pending = item.pendingProfileChange || {};
         const current = { phone: item.phone, specialties: item.specialties || [], areas: item.areas || [] };
@@ -246,7 +246,7 @@ function createAdminFanniProfilesRouter({
         fanni.phone = pending.phone;
       }
       if (changedFields.includes('specialties')) {
-        const activeServices = await getActiveServiceNames(Service);
+        const activeServices = (await getActiveServiceNames(Service)).map(normalizeServiceKey);
         const requestedSpecialties = [...new Set((Array.isArray(pending.specialties) ? pending.specialties : [])
           .map(value => String(value || '').normalize('NFC').trim())
           .filter(value => value && activeServices.includes(normalizeServiceKey(value))))];
