@@ -12,8 +12,15 @@ function isExcludedService(value) {
     normalized === normalizeServiceKey('تركيب شاشة حائط').replace(/ة/g, 'ه');
 }
 
+const SERVICE_VISIBILITY_CUTOVER = new Date('2026-11-11T00:00:00.000Z');
+
+function isPublicServiceRecord(item) {
+  return isBuiltInServiceRecord(item) || item.isPublic === true ||
+    (item.isPublic === undefined && item.createdAt && new Date(item.createdAt) >= SERVICE_VISIBILITY_CUTOVER);
+}
+
 async function getServiceRecords(Service) {
-  return Service.find({}).select('name category emoji isActive isPublic sortOrder categorySortOrder').lean();
+  return Service.find({}).select('name category emoji isActive isPublic sortOrder categorySortOrder createdAt').lean();
 }
 
 function isBuiltInServiceRecord(item) {
@@ -26,7 +33,7 @@ async function getActiveServiceNames(Service) {
   // Old Sonaa services were stored as active but deliberately hidden from customers.
   // Only the current built-in catalog or an explicit owner opt-in may be public.
   const active = new Map(records.filter(item => item.isActive !== false && !isExcludedService(item.name) &&
-    (isBuiltInServiceRecord(item) || item.isPublic === true)).map(item => [normalizeServiceKey(item.name), item.name]));
+    isPublicServiceRecord(item)).map(item => [normalizeServiceKey(item.name), item.name]));
   const recordsByPair = new Set(records.map(item => normalizeServiceKey(item.category) + '|' + normalizeServiceKey(item.name)));
   for (const category of CATEGORIES) {
     for (const name of category.services) {
@@ -44,4 +51,4 @@ async function isActiveService(Service, name) {
   return activeNames.some(value => normalizeServiceKey(value) === key);
 }
 
-module.exports = { normalizeServiceKey, isExcludedService, isBuiltInServiceRecord, getServiceRecords, getActiveServiceNames, isActiveService };
+module.exports = { normalizeServiceKey, isExcludedService, isBuiltInServiceRecord, isPublicServiceRecord, getServiceRecords, getActiveServiceNames, isActiveService };
