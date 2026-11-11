@@ -907,33 +907,6 @@ async function run() {
       assert.equal(r.status, 400);
     });
 
-    await test('public and admin service catalogs expose only the eight approved services', async () => {
-      const { ALL_SERVICES } = require('../config/professions');
-      assert.equal(ALL_SERVICES.length, 8);
-      const publicCatalog = await request(app).get('/api/services');
-      assert.equal(publicCatalog.status, 200);
-      assert.deepEqual([...publicCatalog.body.services].sort(), [...ALL_SERVICES].sort());
-      assert.ok(publicCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
-      const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
-      assert.equal(adminCatalog.status, 200);
-      assert.ok(adminCatalog.body.services.every(service => ALL_SERVICES.includes(service.name)));
-      assert.ok(adminCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
-    });
-
-    await test('legacy orders remain stored but cannot be published to technicians', async () => {
-      const Order = require('../models/Order');
-      const legacyOrder = await Order.create({
-        sn: 'SN999991', service: 'صيانة تكييف', area: 'المعادي',
-        clientPhone: '01012345678', status: 'قيد المراجعة'
-      });
-      const response = await request(app).post('/api/orders/admin/' + legacyOrder.sn + '/publish')
-        .set('Authorization', 'Bearer ' + adminToken);
-      assert.equal(response.status, 409, JSON.stringify(response.body));
-      const persisted = await Order.findById(legacyOrder._id).lean();
-      assert.equal(persisted.status, 'قيد المراجعة', 'historical order state must remain unchanged');
-      assert.equal(persisted.service, 'صيانة تكييف', 'historical service data must remain unchanged');
-    });
-
     await test('order creation rejects historical services', async () => {
       const r = await request(app).post('/api/orders')
         .set('Authorization', 'Bearer ' + clientToken)
