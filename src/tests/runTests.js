@@ -64,8 +64,9 @@ async function run() {
       const { getActiveServiceNames, isActiveService } = require('../services/serviceCatalog');
       const records = [
         { name: 'تركيب دش', category: 'دش وكاميرات وشاشات', isActive: true },
-        { name: 'كهرباء', category: 'خدمات منزلية', isActive: true },
-        { name: 'سباكة', category: 'خدمات منزلية', isActive: false }
+        { name: 'كهرباء', category: 'خدمات منزلية', isActive: true, isPublic: true },
+        { name: 'سباكة', category: 'خدمات منزلية', isActive: false, isPublic: false },
+        { name: 'سباك منازل', category: 'السباكة', isActive: true }
       ];
       const fakeService = {
         find: () => ({ select: () => ({ lean: async () => records }) })
@@ -73,6 +74,7 @@ async function run() {
       const active = await getActiveServiceNames(fakeService);
       assert.ok(active.includes('كهرباء'), 'new active database services must be accepted without code changes');
       assert.ok(!active.includes('سباكة'), 'hidden services must not be available to clients or technicians');
+      assert.ok(!active.includes('سباك منازل'), 'legacy Sonaa services remain hidden until explicitly enabled');
       assert.equal(await isActiveService(fakeService, 'كهرباء'), true);
       assert.equal(await isActiveService(fakeService, 'سباكة'), false);
     });
@@ -939,22 +941,25 @@ async function run() {
       const Service = require('../models/Service');
       assert.equal(ALL_SERVICES.length, 8);
       const hiddenBuiltIn = await Service.create({ name: ALL_SERVICES[0], category: 'دش وكاميرات وشاشات', isActive: false });
-      const customActive = await Service.create({ name: 'كهرباء', category: 'خدمات منزلية', isActive: true });
-      const customHidden = await Service.create({ name: 'سباكة', category: 'خدمات منزلية', isActive: false });
+      const customActive = await Service.create({ name: 'كهرباء', category: 'خدمات منزلية', isActive: true, isPublic: true });
+      const customHidden = await Service.create({ name: 'سباكة', category: 'خدمات منزلية', isActive: false, isPublic: false });
+      const legacyUnpublished = await Service.create({ name: 'سباك منازل', category: 'السباكة', isActive: true });
       try {
         const publicCatalog = await request(app).get('/api/services');
         assert.equal(publicCatalog.status, 200);
         assert.ok(publicCatalog.body.services.includes('كهرباء'), 'new active services must appear without code changes');
         assert.ok(!publicCatalog.body.services.includes('سباكة'), 'hidden services must stay unavailable publicly');
+        assert.ok(!publicCatalog.body.services.includes('سباك منازل'), 'old Sonaa services must not become public by default');
         assert.ok(!publicCatalog.body.services.includes(ALL_SERVICES[0]), 'a hidden built-in service must stay hidden publicly');
         const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
         assert.equal(adminCatalog.status, 200);
         const adminServices = adminCatalog.body.services;
         assert.ok(adminServices.some(service => service.name === 'كهرباء' && service.isActive === true));
         assert.ok(adminServices.some(service => service.name === 'سباكة' && service.isActive === false));
+        assert.ok(adminServices.some(service => service.name === 'سباك منازل' && service.isActive === false), 'old Sonaa services must appear as hidden in the owner console');
         assert.ok(adminServices.some(service => service.name === ALL_SERVICES[0] && service.isActive === false), 'hidden built-in services must remain visible to the owner');
       } finally {
-        await Service.deleteMany({ _id: { $in: [hiddenBuiltIn._id, customActive._id, customHidden._id] } });
+        await Service.deleteMany({ _id: { $in: [hiddenBuiltIn._id, customActive._id, customHidden._id, legacyUnpublished._id] } });
       }
     });
 
