@@ -2,7 +2,7 @@
 
 // Isolated integration/security suite. Never points at production MongoDB.
 process.env.NODE_ENV = 'test';
-process.env.ALLOWED_ORIGINS = 'https://sonaa-backend-v2.vercel.app,http://localhost:3000';
+process.env.ALLOWED_ORIGINS = 'https://sonaa-backend-v2.vercel.app,https://hamzawy-sat.vercel.app,http://localhost:3000';
 process.env.JWT_SECRET = 'sonaa-test-only-secret-change-me';
 process.env.ADMIN_PHONE = '01012345678';
 
@@ -177,7 +177,9 @@ async function run() {
       const enforced = r.headers['content-security-policy'] || '';
       const reportOnly = r.headers['content-security-policy-report-only'] || '';
       assert.ok(enforced.includes("script-src 'self' 'unsafe-inline'"));
+      assert.ok(enforced.includes('https://hamzawy-sat.vercel.app'));
       assert.ok(reportOnly.includes("script-src 'self' https://cdn.tailwindcss.com"));
+      assert.ok(reportOnly.includes('https://hamzawy-sat.vercel.app'));
       assert.ok(reportOnly.includes("script-src-attr 'none'"));
       assert.ok(!reportOnly.includes("script-src 'self' 'unsafe-inline'"));
       const report = await request(app).post('/api/csp-report')
@@ -191,6 +193,13 @@ async function run() {
         .set('Origin', 'https://sonaa-backend-v2.vercel.app')
         .set('Access-Control-Request-Method', 'GET');
       assert.equal(r.headers['access-control-allow-origin'], 'https://sonaa-backend-v2.vercel.app');
+    });
+
+    await test('CORS allows the new Hamzawy Sat frontend origin', async () => {
+      const r = await request(app).options('/api/test')
+        .set('Origin', 'https://hamzawy-sat.vercel.app')
+        .set('Access-Control-Request-Method', 'GET');
+      assert.equal(r.headers['access-control-allow-origin'], 'https://hamzawy-sat.vercel.app');
     });
 
     await test('CORS does not reflect an arbitrary origin', async () => {
