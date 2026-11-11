@@ -67,7 +67,7 @@ router.get('/areas', async (req, res, next) => {
       getActiveServiceNames(Service)
     ]);
     const areas = getEffectiveAreaOptions(adminRegions);
-    const publicServiceNames = new Set(activeServiceNames);
+    const publicServiceNames = new Set(activeServiceNames.map(normalize));
     const serviceEligibleTechnicians = approvedTechnicians.filter(technician =>
       Array.isArray(technician.specialties) && technician.specialties.some(value => publicServiceNames.has(normalize(value)))
     );
