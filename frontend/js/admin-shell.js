@@ -11,12 +11,12 @@ function render(){
   document.getElementById('app').innerHTML=`
   <header class="sticky top-0 z-40 glass-header text-white shadow-[0_6px_18px_rgba(11,27,58,.20)]"><div class="mx-auto max-w-[800px] px-3 py-1 grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-1 min-h-[64px]">
       <div class="admin-header-title min-w-0 text-right self-start">
-        <h1 class="font-black text-[14px] leading-5"><span class="sonaa-brand-shimmer" data-text="صُنّاع">صُنّاع</span> | لوحة الإدارة</h1>
+        <h1 class="font-black text-[14px] leading-5"><span class="sonaa-brand-shimmer" data-text="حمزاوي سات">حمزاوي سات</span> | لوحة الإدارة</h1>
         ${isAuth&&currentAdminRoleLabel()?'<div class="mt-0.5 text-[10px] text-blue-100 font-bold"><span>المنصب الإداري:</span><span>'+escHtml(currentAdminRoleLabel())+'</span></div>':''}
         <button type="button" onclick="goBack()" class="mt-1 h-6 px-3 rounded-lg border border-white/20 bg-white/10 text-white text-[11px] font-extrabold">← رجوع</button>
       </div>
       <div class="admin-logo-frame h-[84px] w-[84px] justify-self-center rounded-2xl bg-[#F8FAFC] border-2 border-[#14B8A6] flex items-center justify-center shadow-lg overflow-hidden">
-        <img class="sonaa-logo-svg admin-header-logo h-full w-full object-contain" src="/images/LOGO_UPLOAD_HERE/logo.png" alt="شعار صُنّاع" width="120" height="120" decoding="async">
+        <img class="sonaa-logo-svg admin-header-logo h-full w-full object-contain" src="/images/LOGO_UPLOAD_HERE/logo.png" alt="شعار حمزاوي سات" width="120" height="120" decoding="async">
       </div>
       <div class="admin-header-actions grid grid-cols-2 gap-1 shrink-0 items-center justify-self-end w-auto max-w-[210px]">
         ${isAuth?'<a href="/frontend/editor.html" target="_blank" id="visualEditorLink" style="background:#7C3AED;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;margin-right:10px;display:inline-block;">🎨 تحرير الواجهة</a>':''}
@@ -38,7 +38,7 @@ function render(){
       <section class="mt-8 max-w-[420px] mx-auto premium-panel p-6 sm:p-7 animate-fade">
         <div class="flex items-center gap-3.5">
           <div class="h-12 w-12 rounded-[14px] bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black">🔐</div>
-          <div><h2 class="font-black text-[18px]">دخول الأدمن</h2><p class="text-[11px] text-slate-500 font-bold">إدارة مشروع صُنّاع</p></div>
+          <div><h2 class="font-black text-[18px]">دخول الأدمن</h2><p class="text-[11px] text-slate-500 font-bold">إدارة مشروع حمزاوي سات</p></div>
         </div>
         <form onsubmit="event.preventDefault();doLogin();" class="mt-5 space-y-4">
           <label class="block"><span class="block text-[11px] font-black text-slate-700 mb-2">البريد الإلكتروني</span><input type="email" value="${escHtml(state.adminEmail)}" oninput="state.adminEmail=this.value" required placeholder="admin@sonaa.com" class="field"></label>
