@@ -118,7 +118,7 @@ router.post(
       const specialties = [...new Set((req.body.specialties || []).map(value => String(value || '').normalize('NFC').trim()).filter(Boolean))];
       const activeServiceKeys = new Set((await getActiveServiceNames(Service)).map(normalizeServiceKey));
       if (!specialties.length || specialties.some(specialty => !activeServiceKeys.has(normalizeServiceKey(specialty)))) {
-        return res.status(400).json({ message: 'التسجيل متاح حاليًا لخدمات الدش والريسيفرات وكاميرات المراقبة والشاشات فقط.' });
+        return res.status(400).json({ message: 'التسجيل متاح للخدمات الظاهرة حاليًا في قائمة خدمات حمزاوي سات فقط.' });
       }
 
       const existing = await Fanni.findOne({ phone }).select('_id');
@@ -278,7 +278,7 @@ router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (
       ? [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(value => value && activeServiceKeys.has(normalizeServiceKey(value))))]
       : null;
     if (requestedSpecialties && !normalizedSpecialties.length) {
-      return res.status(400).json({ message: 'اختار تخصصًا واحدًا على الأقل من خدمات حمزاوي سات المعتمدة.' });
+      return res.status(400).json({ message: 'اختار تخصصًا واحدًا على الأقل من الخدمات الظاهرة حاليًا في حمزاوي سات.' });
     }
     const current = {
       phone: String(req.user.phone || ''),
