@@ -103,7 +103,7 @@ router.get('/services', async (req, res, next) => {
       });
     }
 
-    // Every active database service is public, regardless of whether it existed in the original hard-coded catalog.
+    // Publish current core services and custom services explicitly enabled by the owner.
     for (const saved of savedServices) {
       if (saved.isActive === false || isExcludedService(saved.name) || !isPublicServiceRecord(saved)) continue;
       const key = normalize(saved.category);
