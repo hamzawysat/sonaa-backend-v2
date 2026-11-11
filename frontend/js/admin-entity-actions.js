@@ -97,6 +97,9 @@ window.openFanniProfileEditor=async function(id){
   const results=await Promise.all([tryApi(['/api/admin/fannis/'+encodeURIComponent(id)+'/profile']),tryApi(['/api/areas']),tryApi(['/api/services'])]);
   const f=results[0].fanni||results[0],areas=Array.isArray(results[1].areas)?results[1].areas:[],cats=Array.isArray(results[2].categories)?results[2].categories:[];
   if(!f||!f._id||!areas.length||!cats.length)throw new Error('تعذر تحميل بيانات الفني أو القوائم المعتمدة.');
+  const normalizeService=value=>String(value||'').normalize('NFC').trim().replace(/\s+/g,' ');
+  const activeServiceKeys=new Set(cats.flatMap(cat=>Array.isArray(cat.services)?cat.services:[]).map(normalizeService));
+  const historicalSpecialties=[...new Set((Array.isArray(f.specialties)?f.specialties:[]).filter(value=>!activeServiceKeys.has(normalizeService(value))))];
   const esc=escHtml,chosenAreas=new Set(f.areas||[]),chosenServices=new Set(f.specialties||[]);
   const areaOptions=areas.map(a=>'<label class="flex items-center gap-2 rounded-lg border p-2 text-[11px]"><input type="checkbox" name="admin-fanni-area" value="'+esc(a)+'" '+(chosenAreas.has(a)?'checked':'')+'><span>'+esc(a)+'</span></label>').join('');
   const serviceOptions=cats.map(cat=>'<details class="mb-2 rounded-xl border overflow-hidden"><summary class="cursor-pointer bg-slate-50 p-3 text-xs font-black">'+esc(cat.emoji||'')+' '+esc(cat.label)+' <span class="text-slate-500">('+cat.services.filter(s=>chosenServices.has(s)).length+' مختار)</span></summary><div class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3">'+cat.services.map(s=>'<label class="flex items-center gap-2 rounded-lg border p-2 text-[11px]"><input type="checkbox" name="admin-fanni-service" value="'+esc(s)+'" '+(chosenServices.has(s)?'checked':'')+'><span>'+esc(s)+'</span></label>').join('')+'</div></details>').join('');
@@ -112,9 +115,10 @@ window.openFanniProfileEditor=async function(id){
    const save=body.querySelector('#admin-fanni-edit-save');save.disabled=true;save.textContent='جاري الحفظ...';
    try{
     const result=await tryApi(['/api/admin/fannis/'+encodeURIComponent(id)+'/profile'],{method:'PATCH',body:JSON.stringify({phone,specialties,areas:selectedAreas})});
+    const expectedSpecialties=[...new Set([...historicalSpecialties,...specialties])];
     const verify=await tryApi(['/api/admin/fannis/'+encodeURIComponent(id)+'/profile']),saved=verify.fanni||verify;
     const same=(a,b)=>JSON.stringify([...a].sort())===JSON.stringify([...b].sort());
-    if(String(saved.phone)!==phone||!same(saved.specialties||[],specialties)||!same(saved.areas||[],selectedAreas))throw new Error('الحفظ لم يتأكد: البيانات المسترجعة لا تطابق التعديلات.');
+    if(String(saved.phone)!==phone||!same(saved.specialties||[],expectedSpecialties)||!same(saved.areas||[],selectedAreas))throw new Error('الحفظ لم يتأكد: البيانات المسترجعة لا تطابق التعديلات.');
     close();showToast(result.message||'تم حفظ بيانات الفني مباشرة من الإدارة');if(typeof loadAll==='function')await loadAll();
    }catch(error){showToast(error.message||'تعذر حفظ بيانات الفني','error');}
    finally{if(save.isConnected){save.disabled=false;save.textContent='حفظ التعديلات';}}

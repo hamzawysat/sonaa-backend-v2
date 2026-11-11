@@ -26,7 +26,7 @@ function renderMessages(target,item,adminMode){
  const msgs=Array.isArray(item&&item.messages)?item.messages:[];
  $(target).innerHTML=msgs.length?msgs.map(m=>{
   const mine=adminMode?m.senderRole==='admin':m.senderRole===role;
-  const sender=m.senderRole==='admin'?'دعم صُنّاع':m.senderRole==='assistant'?'المساعد الذكي':mine?'أنت':role==='fanni'?'الفني':'العميل';
+  const sender=m.senderRole==='admin'?'دعم حمزاوي سات':m.senderRole==='assistant'?'المساعد الذكي':mine?'أنت':role==='fanni'?'الفني':'العميل';
   const removeButton=adminMode&&m._id?'<div style="display:flex;justify-content:flex-start;margin-top:10px"><button type="button" style="display:inline-flex!important;align-items:center;gap:6px;background:#b91c1c!important;color:#fff!important;border:1px solid #991b1b!important;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;visibility:visible!important;opacity:1!important" onclick="deleteSupportMessage(&quot;'+esc(item._id)+'&quot;,&quot;'+esc(m._id)+'&quot;)">🗑 حذف الرسالة</button></div>':'';
   return '<article class="message '+(mine?'mine':adminMode?'admin':'')+'"><div class="meta">'+esc(sender)+' • '+esc(dateLabel(m.createdAt))+'</div><div class="body">'+esc(m.text)+'</div>'+removeButton+'</article>';
  }).join(''):'<p class="muted">لا توجد رسائل في هذه المحادثة.</p>';
@@ -111,7 +111,7 @@ function init(){
   $('admin-refresh').addEventListener('click',()=>refresh());$('admin-send').addEventListener('click',sendAdminReply);$('admin-save-status').addEventListener('click',saveStatus);
   $('admin-filter').addEventListener('change',()=>loadCases(false).catch(e=>showError(e.message)));$('human-only').addEventListener('change',()=>loadCases(false).catch(e=>showError(e.message)));
  }else{
-  $('role-caption').textContent=role==='client'?'دعم حساب العميل — محادثة خاصة داخل صُنّاع':'دعم الفني — محادثة خاصة داخل صُنّاع';
+  $('role-caption').textContent=role==='client'?'دعم حساب العميل — محادثة خاصة داخل حمزاوي سات':'دعم الفني — محادثة خاصة داخل حمزاوي سات';
   $('main').classList.remove('hidden');$('create-btn').addEventListener('click',createCase);$('refresh-btn').addEventListener('click',()=>refresh());$('send-btn').addEventListener('click',()=>sendOwnerMessage(false));$('human-btn').addEventListener('click',()=>sendOwnerMessage(true));
  }
  loadCases(false).catch(e=>showError(e.message));

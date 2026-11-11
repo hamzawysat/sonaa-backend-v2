@@ -20,16 +20,39 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
+
+/* Strict Hamzawy Sat palette overrides for remaining client UI controls */
+body #app .account-switch-link,body .account-gate .account-switch-link,body .account-gate button.account-switch-link{
+  border:1px solid #C9A34F!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#F8F6F0 0%,#E8D9B5 100%)!important;
+  color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;
+  box-shadow:0 3px 0 #A9822E,0 6px 12px rgba(169,130,46,.16)!important;
+}
+body .account-gate .account-switch-link small{color:#77602F!important;-webkit-text-fill-color:#77602F!important}
+body #app .global-refresh-float{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;border:2px solid #F8F6F0!important;box-shadow:0 4px 0 #8D6C25,0 8px 18px rgba(169,130,46,.25)!important}
+body #app .support-float{background:linear-gradient(145deg,#F8F6F0,#E8D9B5)!important;color:#5A4520!important;border:2px solid #C9A34F!important;box-shadow:0 4px 0 #A9822E,0 8px 18px rgba(169,130,46,.2)!important}
+body #app header.app-header .dashboard-download-btn{display:inline-flex!important;flex:0 0 auto!important;min-width:112px!important;width:auto!important;gap:6px!important;padding-inline:9px!important;white-space:nowrap!important;overflow:visible!important;background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important;border:1px solid #8D6C25!important;box-shadow:0 3px 0 #8D6C25,0 6px 12px rgba(169,130,46,.2)!important}
+body #app header.app-header .dashboard-download-btn span{display:inline!important;visibility:visible!important;opacity:1!important;font-size:10px!important;white-space:nowrap!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important}
+body #app header.app-header a[href*="password.html?role=client&mode=account"]{background:#F8F6F0!important;color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;border-color:#E8E0CF!important}
+body #app header.app-header .client-home-main-btn{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important;border-color:#8D6C25!important}
+body #app nav.fixed.bottom-0 button[class*="text-blue-"],body #app nav.fixed.bottom-0 button[class*="bg-blue-"]{color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;background:linear-gradient(145deg,#F8F6F0,#E8D9B5)!important;border-color:#C9A34F!important}
+body #app .client-section-tabs button.tab-active,body #app .client-orders-status-tabs .tab-active{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;border-color:#8D6C25!important}
+body #app [class*="text-blue-"],body #app [class*="text-sky-"],body #app [class*="text-cyan-"]{color:#5A4520!important;-webkit-text-fill-color:#5A4520!important}
+body #app [class*="bg-blue-"],body #app [class*="bg-sky-"],body #app [class*="bg-cyan-"]{background-color:#F8F6F0!important}
+body #app [class*="border-blue-"],body #app [class*="border-sky-"],body #app [class*="border-cyan-"]{border-color:#E8E0CF!important}
+body #app [class*="ring-blue-"],body #app [class*="ring-sky-"],body #app [class*="ring-cyan-"]{--tw-ring-color:#C9A34F!important}
+body #app [class*="underline"][class*="decoration-blue-"]{text-decoration-color:#C9A34F!important}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#174EA6">
+<meta name="theme-color" content="#171A22">
 <link rel="icon" type="image/png" href="/images/LOGO_UPLOAD_HERE/logo.png">
 <link rel="apple-touch-icon" href="/images/LOGO_UPLOAD_HERE/logo.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="color-scheme" content="light">
-<title>تسجيل عميل جديد | صُنّاع</title>
-<meta name="description" content="أنشئ حساب عميل جديد على منصة صُنّاع واطلب الخدمات التي تحتاجها بسهولة.">
+<title>تسجيل عميل جديد | حمزاوي سات</title>
+<meta name="description" content="أنشئ حساب عميل جديد على منصة حمزاوي سات واطلب الخدمات التي تحتاجها بسهولة.">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/js/preview-bootstrap.js" data-sonaa-page="client"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -174,9 +197,10 @@ body #app header.app-header a[href="https://aasdstarr77.github.io/sonaa-download
 .support-float{position:fixed;left:16px;bottom:18px;z-index:80;width:52px;height:52px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--sonaa-color-fff),var(--sonaa-color-cbd5e1));color:var(--sonaa-color-0b1b3a);border:2px solid var(--sonaa-color-fff);box-shadow:0 5px 0 var(--sonaa-color-64748b),0 10px 24px var(--sonaa-color-0b1b3a35),inset 0 2px 3px var(--sonaa-color-fff)}.support-float svg{width:25px;height:25px}
 </style>
 <link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/hamzawy-sat-brand.css">
 </head>
 <body class="min-h-screen antialiased">
-<div id="clientLoadingOverlay" class="client-loading-overlay" role="status" aria-live="polite"><main class="account-gate min-h-screen px-4 py-8 flex items-center justify-center"><div class="w-full max-w-[440px] text-center"><div class="account-brand mx-auto mb-5 flex items-center justify-center"><img src="/images/LOGO_UPLOAD_HERE/logo.png" alt="صُنّاع" class="sonaa-logo-svg account-loading-logo"></div><h1 class="text-2xl font-black">صُنّاع</h1><p class="account-slogan mt-1 text-base font-extrabold">كل خدمة تبدأ بخطوة</p><div class="mt-7 inline-flex items-center gap-3 rounded-2xl border border-blue-200 bg-white/90 px-5 py-4 font-extrabold text-blue-900 shadow-xl"><span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span><span id="clientLoadingMessage">جاري تحميل البيانات...</span></div></div></main></div>
+<div id="clientLoadingOverlay" class="client-loading-overlay" role="status" aria-live="polite"><main class="account-gate min-h-screen px-4 py-8 flex items-center justify-center"><div class="w-full max-w-[440px] text-center"><div class="account-brand mx-auto mb-5 flex items-center justify-center"><img src="/images/LOGO_UPLOAD_HERE/logo.png" alt="حمزاوي سات" class="sonaa-logo-svg account-loading-logo"></div><h1 class="text-2xl font-black">حمزاوي سات</h1><p class="account-slogan mt-1 text-base font-extrabold">كل خدمة تبدأ بخطوة</p><div class="mt-7 inline-flex items-center gap-3 rounded-2xl border border-blue-200 bg-white/90 px-5 py-4 font-extrabold text-blue-900 shadow-xl"><span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span><span id="clientLoadingMessage">جاري تحميل البيانات...</span></div></div></main></div>
 <div id="app"></div>
 <div id="toast" class="fixed bottom-[88px] left-3 right-3 z-[200] pointer-events-none"></div>
 <script src="/js/client-core.js"></script>
@@ -352,13 +376,13 @@ body .account-gate .account-switch-link{
   background:#eff6ff!important;
   background-image:none!important;
   background-color:#eff6ff!important;
-  color:#1d4ed8!important;
-  -webkit-text-fill-color:#1d4ed8!important;
-  border:1px dashed #93c5fd!important;
+  color:#A9822E!important;
+  -webkit-text-fill-color:#A9822E!important;
+  border:1px dashed #E8E0CF!important;
   box-shadow:0 2px 0 #dbeafe!important;
   font-size:13px!important;
 }
-body .account-gate .account-switch-link small{color:#1e40af!important;font-size:10px!important}
+body .account-gate .account-switch-link small{color:#5A4520!important;font-size:10px!important}
 body .support-float{left:12px!important;bottom:18px!important;width:48px!important;height:48px!important;z-index:90!important}
 body .global-refresh-float{right:12px!important;bottom:18px!important;width:48px!important;height:48px!important;z-index:90!important}
 
@@ -380,6 +404,35 @@ body .global-refresh-float{position:fixed!important;right:16px!important;left:au
 @media(prefers-reduced-motion:reduce){
   .global-refresh-float{transition:none!important}
 }
+
+
+/* Hamzawy Sat final palette override: remove remaining blue from account links and navigation. */
+body .account-gate .account-switch-link,
+body .account-gate .account-switch-link span,
+body .account-gate .account-switch-link small{
+  background:linear-gradient(145deg,#F5F0E5,#E8D9B7)!important;
+  background-color:#F5F0E5!important;
+  background-image:linear-gradient(145deg,#F5F0E5,#E8D9B7)!important;
+  border-color:#C9A34F!important;
+  color:#5A4520!important;
+  -webkit-text-fill-color:#5A4520!important;
+  box-shadow:0 3px 0 #D8C79F,0 5px 10px rgba(23,26,34,.08)!important;
+  text-shadow:none!important;
+}
+body .account-gate .account-switch-link small{color:#77602F!important;-webkit-text-fill-color:#77602F!important}
+body .account-top-nav .account-home-btn,
+body .account-top-nav a,
+#app .app-header .client-home-main-btn{
+  background:linear-gradient(145deg,#C9A34F 0%,#A9822E 100%)!important;
+  background-color:#C9A34F!important;
+  border:1px solid #A9822E!important;
+  color:#171A22!important;
+  -webkit-text-fill-color:#171A22!important;
+  box-shadow:0 3px 0 #8D6C25,0 6px 11px rgba(23,26,34,.12),inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+body .account-top-nav .account-home-btn:active,
+body .account-top-nav a:active,
+#app .app-header .client-home-main-btn:active{transform:translateY(2px)!important}
 
 </style>
 <script src="/web-push.js" defer></script>

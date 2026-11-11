@@ -1,0 +1,43 @@
+/* Hamzawy Sat unified visual identity: black, gold, and warm cream. */
+:root,
+[data-sonaa-theme] {
+  --navy: #171A22;
+  --navy2: #242832;
+  --navy-light: #242832;
+  --blue: #C9A34F;
+  --blue2: #A9822E;
+  --blue-dark: #A9822E;
+  --gold: #C9A34F;
+  --teal: #C9A34F;
+  --page: #F8F6F0;
+  --paper: #F8F6F0;
+  --border: #E8E0CF;
+  --text: #171A22;
+  --ink: #171A22;
+  --muted: #77736A;
+  --card: #FFFFFF;
+}
+body { color: #171A22; }
+button.btn:not(.danger):not(.success),
+a.btn:not(.danger):not(.success),
+button.primary,
+button[type="submit"]:not(.danger):not(.success),
+.btn-primary {
+  background: #C9A34F !important;
+  border-color: #C9A34F !important;
+  color: #171A22 !important;
+}
+button.btn:not(.danger):not(.success):hover,
+a.btn:not(.danger):not(.success):hover,
+button.primary:hover,
+button[type="submit"]:not(.danger):not(.success):hover,
+.btn-primary:hover {
+  background: #171A22 !important;
+  border-color: #C9A34F !important;
+  color: #F8F6F0 !important;
+}
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #C9A34F;
+  outline-offset: 2px;
+}

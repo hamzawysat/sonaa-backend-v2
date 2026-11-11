@@ -111,6 +111,8 @@ function publicFanni(fanni) {
     : { ...fanni };
   delete item.passwordHash;
   delete item.__v;
+  const activeSpecialties = (Array.isArray(item.specialties) ? item.specialties : [])
+    .filter(value => ALL_SERVICES.some(service => normalizeServiceName(service) === normalizeServiceName(value)));
   const statusMap = {
     'معتمد': 'approved',
     'قيد المراجعة': 'pending',
@@ -123,9 +125,11 @@ function publicFanni(fanni) {
     actualStatus: item.status,
     isApproved: item.status === 'معتمد',
     isDisabled: item.status === 'معلق',
+    specialties: activeSpecialties,
+    activeSpecialties,
     balance: Number(item.walletBalance || 0),
-    skill: Array.isArray(item.specialties) ? item.specialties.join('، ') : '',
-    service: Array.isArray(item.specialties) ? item.specialties.join('، ') : ''
+    skill: activeSpecialties.join('، '),
+    service: activeSpecialties.join('، ')
   };
 }
 
@@ -280,6 +284,7 @@ router.get(['/counts', '/stats'], auth('admin'), async (req, res, next) => {
     const acceptedFanniFilter = {
       $and: [
         { $or: [ { role: 'fanni' }, { role: { $ne: 'admin' }, specialties: { $exists: true, $ne: [] }, adminRole: null } ] },
+        { specialties: { $in: ALL_SERVICES } },
         { status: { $in: ['معتمد', 'معلق'] } }
       ]
     };
@@ -364,7 +369,7 @@ router.delete('/clients/:phone', auth('admin'), async (req, res, next) => {
 
 router.use(createAdminOffersRouter({ auth, Order, Fanni, adminName, writeAdminAudit }));
 router.use(createAdminOrdersRouter({
-  auth, validate, Joi, reasonSchema, MAX_LIST_LIMIT,
+  auth, validate, Joi, ALL_SERVICES, reasonSchema, MAX_LIST_LIMIT,
   Order, WalletTransaction, Fanni, AdminConfig, mongoose,
   normalizePhone, adminName, writeAdminAudit, createNotification, requireRootAdmin
 }));

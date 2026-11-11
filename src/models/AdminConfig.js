@@ -21,7 +21,7 @@ const adminConfigSchema = new mongoose.Schema({
     maxOffer: { type: Number, min: 1, max: 1000000, default: 1000000 }
   },
   settings: {
-    siteName: { type: String, trim: true, maxlength: 100, default: 'صُنّاع' },
+    siteName: { type: String, trim: true, maxlength: 100, default: 'حمزاوي سات' },
     maintenance: { type: Boolean, default: false },
     maintenanceMessage: { type: String, trim: true, maxlength: 500, default: '' },
     maxFanniSignupAttempts: { type: Number, min: 1, max: 100, default: 5 },

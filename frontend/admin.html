@@ -2,11 +2,11 @@
 <html lang="ar" dir="rtl" data-sonaa-theme="admin"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#174EA6">
+<meta name="theme-color" content="#171A22">
 <link rel="icon" type="image/png" href="/images/LOGO_UPLOAD_HERE/logo.png">
 <link rel="apple-touch-icon" href="/images/LOGO_UPLOAD_HERE/logo.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<title>صُنّاع | لوحة الإدارة</title>
+<title>حمزاوي سات | لوحة الإدارة</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/js/preview-bootstrap.js" data-sonaa-page="admin"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -393,15 +393,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue)!important;box-s
 
 /* Admin header buttons only — preserve the approved logo, brand text and white header. */
 .glass-header .admin-header-actions a[href*="mode=account"]{
-  background:linear-gradient(145deg,#3b82f6 0%,#2563eb 55%,#1d4ed8 100%)!important;
+  background:linear-gradient(145deg,#C9A34F 0%,#A9822E 55%,#5A4520 100%)!important;
   color:#fff!important;
-  border:1px solid #93c5fd!important;
-  box-shadow:0 3px 0 #1e40af,0 5px 10px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.45)!important;
+  border:1px solid #E8E0CF!important;
+  box-shadow:0 3px 0 #5A4520,0 5px 10px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.45)!important;
 }
 .glass-header .admin-header-actions a[href="/"]{
   background:linear-gradient(145deg,#14b8a6 0%,#0d9488 55%,#0f766e 100%)!important;
   color:#fff!important;
-  border:1px solid #5eead4!important;
+  border:1px solid #C9A34F!important;
   box-shadow:0 3px 0 #0f766e,0 5px 10px rgba(13,148,136,.16),inset 0 1px 0 rgba(255,255,255,.4)!important;
 }
 .glass-header .admin-header-actions button[onclick="logout()"]{
@@ -412,16 +412,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue)!important;box-s
   font-weight:900!important;
 }
 .glass-header .admin-header-actions #visualEditorLink{
-  background:linear-gradient(145deg,#8b5cf6 0%,#7c3aed 55%,#6d28d9 100%)!important;
+  background:linear-gradient(145deg,#8b5cf6 0%,#A9822E 55%,#5A4520 100%)!important;
   color:#fff!important;
   border:1px solid #c4b5fd!important;
-  box-shadow:0 3px 0 #5b21b6,0 5px 10px rgba(109,40,217,.16),inset 0 1px 0 rgba(255,255,255,.4)!important;
+  box-shadow:0 3px 0 #5A4520,0 5px 10px rgba(109,40,217,.16),inset 0 1px 0 rgba(255,255,255,.4)!important;
 }
 .glass-header .admin-header-title button[onclick="goBack()"]{
-  background:linear-gradient(145deg,#3b82f6 0%,#2563eb 55%,#1d4ed8 100%)!important;
+  background:linear-gradient(145deg,#C9A34F 0%,#A9822E 55%,#5A4520 100%)!important;
   color:#fff!important;
-  border:1px solid #93c5fd!important;
-  box-shadow:0 3px 0 #1e40af,0 5px 9px rgba(37,99,235,.16),inset 0 1px 0 rgba(255,255,255,.4)!important;
+  border:1px solid #E8E0CF!important;
+  box-shadow:0 3px 0 #5A4520,0 5px 9px rgba(37,99,235,.16),inset 0 1px 0 rgba(255,255,255,.4)!important;
 }
 .glass-header .admin-header-actions a:focus-visible,
 .glass-header .admin-header-actions button:focus-visible,
@@ -434,10 +434,10 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue)!important;box-s
 /* Requested admin header refinements: blue navigation/editor actions and larger centered logo. */
 .glass-header .admin-header-actions a[href="/"],
 .glass-header .admin-header-actions #visualEditorLink{
-  background:linear-gradient(145deg,#60a5fa 0%,#3b82f6 52%,#1d4ed8 100%)!important;
+  background:linear-gradient(145deg,#C9A34F 0%,#C9A34F 52%,#5A4520 100%)!important;
   color:#fff!important;
-  border:1px solid #93c5fd!important;
-  box-shadow:0 3px 0 #1e40af,0 5px 10px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.45)!important;
+  border:1px solid #E8E0CF!important;
+  box-shadow:0 3px 0 #5A4520,0 5px 10px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.45)!important;
 }
 .glass-header>div{
   grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr)!important;
@@ -515,11 +515,12 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue)!important;box-s
 </style>
 
 <link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/hamzawy-sat-brand.css">
 </head>
 <body class="min-h-screen antialiased">
 <div id="app"></div>
 <div id="toast" class="fixed bottom-4 left-3 right-3 z-[200] pointer-events-none"></div>
-<button id="global-refresh" type="button"  aria-label="تحديث البيانات" title="تحديث البيانات" class="global-refresh fixed bottom-4 left-4 z-[80] flex h-12 w-12 items-center justify-center rounded-full border border-white/70 bg-gradient-to-br from-[#0b1b3a] to-[#2563eb] text-white shadow-[0_8px_24px_rgba(11,27,58,.28)] ring-1 ring-blue-200/70 backdrop-blur transition hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300/60"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3L3 11"/><path d="M3 4v7h7"/><path d="M4 13a8 8 0 0 0 14.9 3L21 13"/><path d="M21 20v-7h-7"/></svg></button>
+<button id="global-refresh" type="button"  aria-label="تحديث البيانات" title="تحديث البيانات" class="global-refresh fixed bottom-4 left-4 z-[80] flex h-12 w-12 items-center justify-center rounded-full border border-white/70 bg-gradient-to-br from-[#0b1b3a] to-[#A9822E] text-white shadow-[0_8px_24px_rgba(11,27,58,.28)] ring-1 ring-amber-200/70 backdrop-blur transition hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300/60"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3L3 11"/><path d="M3 4v7h7"/><path d="M4 13a8 8 0 0 0 14.9 3L21 13"/><path d="M21 20v-7h-7"/></svg></button>
 <script src="/js/admin-core.js"></script>
 <script src="/js/admin-shell.js"></script>
 <script src="/js/admin-people.js?v=20261105-direct-fanni-admin-edit"></script>

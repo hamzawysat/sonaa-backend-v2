@@ -2,7 +2,7 @@
 
 // Isolated integration/security suite. Never points at production MongoDB.
 process.env.NODE_ENV = 'test';
-process.env.ALLOWED_ORIGINS = 'https://sonaa-backend-v2.vercel.app,http://localhost:3000';
+process.env.ALLOWED_ORIGINS = 'https://sonaa-backend-v2.vercel.app,https://hamzawy-sat.vercel.app,http://localhost:3000';
 process.env.JWT_SECRET = 'sonaa-test-only-secret-change-me';
 process.env.ADMIN_PHONE = '01012345678';
 
@@ -58,6 +58,15 @@ async function run() {
       assert.equal(canAccessAdmin(readOnlySupport, { path: '/password-recovery/admin/support-passwords', method: 'GET' }), true);
       assert.equal(canAccessAdmin(readOnlySupport, { path: '/password-recovery/admin/support-passwords', method: 'POST' }), false);
       assert.equal(canAccessAdmin({ role: 'fanni', adminRole: 'مدير', adminPermissions: { __customOverrides: true, passwordRecovery: { read: true, write: false } } }, { path: '/password-recovery/admin/support-passwords', method: 'POST' }), false);
+    });
+
+    await test('technician order matching accepts only explicit current services', async () => {
+      const { createFanniCanHandleService } = require('../utils/orderPresentation');
+      const { CATEGORIES, normalizeServiceName } = require('../config/professions');
+      const canHandle = createFanniCanHandleService({ CATEGORIES, normalizeServiceName });
+      assert.equal(canHandle(['صيانة دش'], 'صيانة دش'), true);
+      assert.equal(canHandle(['صيانة تكييف'], 'صيانة دش'), false);
+      assert.equal(canHandle(['دش وكاميرات وشاشات'], 'صيانة دش'), false, 'a historical category label must not grant every service');
     });
 
     await test('role defaults are restored and manager can publish orders and moderate offers', async () => {
@@ -177,7 +186,9 @@ async function run() {
       const enforced = r.headers['content-security-policy'] || '';
       const reportOnly = r.headers['content-security-policy-report-only'] || '';
       assert.ok(enforced.includes("script-src 'self' 'unsafe-inline'"));
+      assert.ok(enforced.includes('https://hamzawy-sat.vercel.app'));
       assert.ok(reportOnly.includes("script-src 'self' https://cdn.tailwindcss.com"));
+      assert.ok(reportOnly.includes('https://hamzawy-sat.vercel.app'));
       assert.ok(reportOnly.includes("script-src-attr 'none'"));
       assert.ok(!reportOnly.includes("script-src 'self' 'unsafe-inline'"));
       const report = await request(app).post('/api/csp-report')
@@ -191,6 +202,13 @@ async function run() {
         .set('Origin', 'https://sonaa-backend-v2.vercel.app')
         .set('Access-Control-Request-Method', 'GET');
       assert.equal(r.headers['access-control-allow-origin'], 'https://sonaa-backend-v2.vercel.app');
+    });
+
+    await test('CORS allows the new Hamzawy Sat frontend origin', async () => {
+      const r = await request(app).options('/api/test')
+        .set('Origin', 'https://hamzawy-sat.vercel.app')
+        .set('Access-Control-Request-Method', 'GET');
+      assert.equal(r.headers['access-control-allow-origin'], 'https://hamzawy-sat.vercel.app');
     });
 
     await test('CORS does not reflect an arbitrary origin', async () => {
@@ -293,11 +311,20 @@ async function run() {
 
     await test('technician registration and login preserve pending-review rules and Expo push-token lifecycle', async () => {
       const phone = '01012345681';
+      const legacyServiceRegistration = await request(app).post('/api/fanni/register').send({
+        name: 'فني تخصص قديم',
+        phone: '01012345682',
+        password: 'FanniTestPass123',
+        specialties: ['صيانة تكييف'],
+        areas: ['المعادي']
+      });
+      assert.equal(legacyServiceRegistration.status, 400, 'legacy professions must not be accepted for new registrations');
+
       const registration = await request(app).post('/api/fanni/register').send({
         name: 'فني اختبار التسجيل',
         phone,
         password: 'FanniTestPass123',
-        specialties: ['صيانة تكييف'],
+        specialties: ['صيانة دش'],
         areas: ['المعادي']
       });
       assert.equal(registration.status, 201);
@@ -318,7 +345,7 @@ async function run() {
         name: 'فني مكرر',
         phone,
         password: 'FanniTestPass123',
-        specialties: ['صيانة تكييف'],
+        specialties: ['صيانة دش'],
         areas: ['المعادي']
       });
       assert.equal(duplicate.status, 409);
@@ -518,8 +545,12 @@ async function run() {
 
       const fanni = await Fanni.create({
         name: 'فني اختبار', phone: '01012345680', passwordHash: await bcrypt.hash('FanniOldPass123', 12),
-        specialties: ['صيانة تكييف'], areas: ['القاهرة'], status: 'معتمد', role: 'fanni'
+        specialties: ['صيانة تكييف'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
       });
+      const legacyOnlyAreas = await request(app).get('/api/areas');
+      assert.equal(legacyOnlyAreas.status, 200);
+      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, 0,
+        'approved technicians with only historical services must not count as available');
       const oldFanniToken = jwt.sign({ id: String(fanni._id), role: 'fanni' }, process.env.JWT_SECRET, { expiresIn: '30d' });
       const fanniPasswordReset = await request(app).patch('/api/admin/fannis/' + fanni._id + '/password')
         .set('Authorization', 'Bearer ' + adminToken)
@@ -529,8 +560,14 @@ async function run() {
       assert.equal(revokedFanniSession.status, 401);
       const fanniNewLogin = await request(app).post('/api/fanni/login').send({ phone: '01012345680', password: 'FanniNewPass123' });
       assert.equal(fanniNewLogin.status, 200);
+      assert.deepEqual(fanniNewLogin.body.user.specialties, [], 'login payload must not expose retired specialties');
       const activeFanniSession = await request(app).get('/api/fanni/me').set('Authorization', 'Bearer ' + fanniNewLogin.body.token);
       assert.equal(activeFanniSession.status, 200);
+      assert.deepEqual(activeFanniSession.body.specialties, [], 'historical specialties stay in storage but are hidden from the technician self-service payload');
+      const adminFanniProfile = await request(app).get('/api/admin/fannis/' + fanni._id + '/profile').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(adminFanniProfile.status, 200);
+      assert.deepEqual(adminFanniProfile.body.fanni.specialties, [], 'admin profile editor must receive only active services');
+      assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['صيانة تكييف'], 'historical specialties must remain preserved in the database');
 
       await test('admin technician trust and visibility controls save their decision history', async () => {
         const response = await request(app).patch('/api/admin/fannis/' + fanni._id + '/profile-controls')
@@ -553,13 +590,14 @@ async function run() {
       await test('technician profile edit request persists and appears in the admin review queue', async () => {
         const edit = await request(app).patch('/api/fanni/me')
           .set('Authorization', 'Bearer ' + fanniNewLogin.body.token)
-          .send({ phone: '01012345680', specialties: ['صيانة تكييف'], areas: ['مدينة نصر'] });
+          .send({ phone: '01012345680', specialties: ['صيانة دش'], areas: ['مدينة نصر'] });
         assert.equal(edit.status, 200, JSON.stringify(edit.body));
         assert.ok(edit.body.pendingProfileChange?.requestedAt);
         const Fanni = require('../models/Fanni');
         const persisted = await Fanni.findById(fanni._id).lean();
         assert.equal(persisted.pendingProfileChange.phone, '01012345680');
         assert.deepEqual(persisted.pendingProfileChange.areas, ['مدينة نصر']);
+        assert.deepEqual(persisted.pendingProfileChange.specialties, ['صيانة تكييف', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
         const queue = await request(app).get('/api/admin/fanni-profile-edits')
           .set('Authorization', 'Bearer ' + adminToken);
         assert.equal(queue.status, 200, JSON.stringify(queue.body));
@@ -854,6 +892,44 @@ async function run() {
       assert.equal(r.status, 401);
     });
 
+    await test('legacy site name is presented as Hamzawy Sat without mutating stored settings', async () => {
+      const AdminConfig = require('../models/AdminConfig');
+      let config = await AdminConfig.findOne({ key: 'main' });
+      if (!config) config = await AdminConfig.create({ key: 'main' });
+      const previousSiteName = config.settings.siteName;
+      try {
+        config.settings.siteName = 'صُنّاع';
+        await config.save();
+        const response = await request(app).get('/api/admin/settings').set('Authorization', 'Bearer ' + adminToken);
+        assert.equal(response.status, 200);
+        assert.equal(response.body.settings.siteName, 'حمزاوي سات');
+        const persisted = await AdminConfig.findOne({ key: 'main' }).lean();
+        assert.equal(persisted.settings.siteName, 'صُنّاع', 'GET must not rewrite persisted settings');
+      } finally {
+        config.settings.siteName = previousSiteName || 'حمزاوي سات';
+        await config.save();
+      }
+    });
+
+    await test('client account screens use Hamzawy Sat branding', async () => {
+      const clientAccount = fs.readFileSync(path.join(__dirname, '../../frontend/js/client-account.js'), 'utf8');
+      assert.ok(clientAccount.includes('حمزاوي سات'));
+      assert.equal(clientAccount.includes('صُنّاع'), false);
+    });
+
+    await test('public and admin service catalogs expose only the eight approved services', async () => {
+      const { ALL_SERVICES } = require('../config/professions');
+      assert.equal(ALL_SERVICES.length, 8);
+      const publicCatalog = await request(app).get('/api/services');
+      assert.equal(publicCatalog.status, 200);
+      assert.deepEqual([...publicCatalog.body.services].sort(), [...ALL_SERVICES].sort());
+      assert.ok(publicCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
+      const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(adminCatalog.status, 200);
+      assert.ok(adminCatalog.body.services.every(service => ALL_SERVICES.includes(service.name)));
+      assert.ok(adminCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
+    });
+
     await test('order creation rejects an unknown service', async () => {
       const r = await request(app).post('/api/orders')
         .set('Authorization', 'Bearer ' + clientToken)
@@ -873,6 +949,33 @@ async function run() {
           description: 'اتصل بي على 01012345678 من فضلك'
         });
       assert.equal(r.status, 400);
+    });
+
+    await test('legacy orders remain stored but cannot be published to technicians', async () => {
+      const Order = require('../models/Order');
+      const legacyOrder = await Order.create({ sn: 'SN999991', service: 'صيانة تكييف', area: 'المعادي', clientPhone: '01012345678', status: 'قيد المراجعة' });
+      const response = await request(app).post('/api/orders/admin/' + legacyOrder.sn + '/publish').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(response.status, 409, JSON.stringify(response.body));
+      const persisted = await Order.findById(legacyOrder._id).lean();
+      assert.equal(persisted.status, 'قيد المراجعة');
+      assert.equal(persisted.service, 'صيانة تكييف');
+    });
+
+    await test('admin order correction rejects historical services', async () => {
+      const response = await request(app).patch('/api/admin/orders/SN999991/correct')
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send({ clientPhone: '01012345678', service: 'صيانة تكييف', area: 'المعادي' });
+      assert.equal(response.status, 400, JSON.stringify(response.body));
+    });
+
+    await test('order creation rejects historical services', async () => {
+      const r = await request(app).post('/api/orders')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({
+          service: 'صيانة تكييف', area: 'المعادي', address: 'شارع التحرير 10',
+          description: 'أحتاج فني لصيانة الخدمة في المنزل'
+        });
+      assert.equal(r.status, 400, 'historical services must not be accepted for new orders');
     });
 
     await test('valid order returns tracking code and omits customer phone from public payload', async () => {

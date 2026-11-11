@@ -1,7 +1,7 @@
 'use strict';
 
 function renderServices(){
-  let html='<section class="mt-4 space-y-4"><div class="rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white"><p class="text-[12px] font-black">إدارة الخدمات والمهن والتخصصات</p><p class="text-[10px] text-blue-100 mt-1">إضافة • تعديل • حذف • ترتيب الأقسام والخدمات • مصدر موحد</p></div>';
+  let html='<section class="mt-4 space-y-4"><div class="rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white"><p class="text-[12px] font-black">إدارة خدمات حمزاوي سات</p><p class="text-[10px] text-blue-100 mt-1">إضافة • تعديل • حذف • ترتيب الأقسام والخدمات • مصدر موحد</p></div>';
   html+='<div class="premium-panel p-4"><div class="flex gap-2"><input id="new-service-name" placeholder="اسم خدمة جديدة" class="field flex-1"><input id="new-service-category" placeholder="القسم (اختياري)" class="field flex-1"><input id="new-service-emoji" placeholder="🔧" class="field !w-[60px]"><button onclick="addService()" class="pill-btn primary-pill">إضافة</button></div></div>';
   if(state.servicesLoading) html+='<div class="premium-panel p-10 text-center"><div class="h-8 w-8 rounded-full border-[3px] border-slate-200 border-t-blue-600 animate-spin mx-auto"></div></div>';
   if(state.filteredServices.length===0&&!state.servicesLoading) html+='<div class="premium-panel p-10 text-center text-[12px] font-bold text-slate-400">لا توجد خدمات</div>';
@@ -98,12 +98,12 @@ async function deleteNotificationCampaign(id){
 }
 
 function renderSettings(){
-  const v=state.settings||{siteName:'صُنّاع',maintenance:false,maintenanceMessage:'',maxFanniSignupAttempts:5};
+  const v=state.settings||{siteName:'حمزاوي سات',maintenance:false,maintenanceMessage:'',maxFanniSignupAttempts:5};
   return `
   <section class="mt-4 space-y-4">
     <div class="rounded-[18px] bg-gradient-to-r from-slate-800 to-slate-600 p-4 text-white"><p class="text-[12px] font-black">إعدادات النظام العامة</p><p class="text-[10px] text-slate-300 mt-1">يتم حفظ القيم في قاعدة البيانات؛ بعض الإعدادات تحتاج ربطًا تشغيليًا إضافيًا.</p></div>
     <div class="premium-panel p-4 space-y-4">
-      <label class="block"><span class="text-[11px] font-black">اسم المنصة</span><input id="setting-site-name" maxlength="100" value="${escHtml(v.siteName||'صُنّاع')}" class="field mt-2"></label>
+      <label class="block"><span class="text-[11px] font-black">اسم المنصة</span><input id="setting-site-name" maxlength="100" value="${escHtml(v.siteName && v.siteName !== 'صُنّاع' ? v.siteName : 'حمزاوي سات')}" class="field mt-2"></label>
       <label class="block"><span class="text-[11px] font-black">رسالة وضع الصيانة</span><textarea id="setting-maintenance-message" rows="2" maxlength="500" class="field mt-2">${escHtml(v.maintenanceMessage||'')}</textarea></label>
       <div class="flex items-center justify-between p-3 rounded-[12px] bg-amber-50 border border-amber-200"><span class="text-[11px] font-black">وضع الصيانة (يوقف طلبات العملاء والفنيين مؤقتًا)</span><label class="relative inline-flex items-center cursor-pointer"><input id="setting-maintenance" type="checkbox" class="sr-only peer" ${v.maintenance?'checked':''}><div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600"></div></label></div>
       <label class="block"><span class="text-[11px] font-black">الحد الأقصى لمحاولات تسجيل الفني من نفس عنوان IP خلال 15 دقيقة</span><input id="setting-signup-attempts" type="number" min="1" max="100" value="${Number(v.maxFanniSignupAttempts||5)}" class="field mt-2"></label>
@@ -156,7 +156,7 @@ function renderSupport(){
  const result=state.supportResults||{orders:[],complaints:[]};
  return `
  <section class="mt-4 space-y-4">
- <div class="premium-panel p-4"><h3 class="font-black text-sm">محادثات خدمة العملاء</h3><p class="text-[11px] text-slate-500 mt-1 leading-6">افتح صندوق المحادثات لمتابعة رسائل العملاء والفنيين والرد عليهم وتغيير حالة كل محادثة.</p><div class="mt-3"><a href="support.html?role=admin" class="pill-btn primary-pill w-full inline-flex items-center justify-center no-underline">مركز مساعدة صُنّاع 🎧</a></div></div>
+ <div class="premium-panel p-4"><h3 class="font-black text-sm">محادثات خدمة العملاء</h3><p class="text-[11px] text-slate-500 mt-1 leading-6">افتح صندوق المحادثات لمتابعة رسائل العملاء والفنيين والرد عليهم وتغيير حالة كل محادثة.</p><div class="mt-3"><a href="support.html?role=admin" class="pill-btn primary-pill w-full inline-flex items-center justify-center no-underline">مركز مساعدة حمزاوي سات 🎧</a></div></div>
  <div class="premium-panel p-4"><div class="flex gap-2"><input id="support-query" value="${escHtml(state.supportQuery||'')}" placeholder="رقم طلب / كود تتبع / هاتف" class="field flex-1"><button onclick="searchSupport()" class="pill-btn primary-pill">بحث</button></div><button onclick="loadSupportViolations()" class="pill-btn soft-btn mt-3 w-full">سجل المخالفات / إجراءات الدعم</button></div>
  ${(result.orders||[]).map(o=>`<article class="premium-card p-3"><p class="font-black">طلب ${escHtml(o.sn)} — ${escHtml(o.clientName||'عميل')} — ${escHtml(o.clientPhone||'')}</p><p class="text-[10px] text-slate-500">${escHtml(o.service||'')} • ${escHtml(o.status||'')}</p><button onclick="markSupportReview('${escHtml(o.sn)}')" class="pill-btn soft-btn mt-2">وضع علامة مراجعة</button></article>`).join('')}
  ${(result.complaints||[]).map(c=>`<article class="premium-card p-3"><p class="font-black">شكوى ${escHtml(c.sn)} — ${escHtml(c.clientName||'')}</p><p class="text-[10px] text-slate-600">${escHtml(c.text||'')}</p><p class="text-[10px]">الحالة: ${escHtml(c.status||'')}</p><button onclick="markSupportReview('${escHtml(c.sn)}')" class="pill-btn soft-btn mt-2">وضع علامة مراجعة</button></article>`).join('')}

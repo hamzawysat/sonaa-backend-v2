@@ -10,6 +10,7 @@ const Fanni = require('../models/Fanni');
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
 const TopupRequest = require('../models/TopupRequest');
+const { isValidService } = require('../config/professions');
 
 const { auth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -113,6 +114,11 @@ router.post(
         });
       }
 
+      const specialties = [...new Set((req.body.specialties || []).map(value => String(value || '').normalize('NFC').trim()).filter(Boolean))];
+      if (!specialties.length || specialties.some(specialty => !isValidService(specialty))) {
+        return res.status(400).json({ message: 'التسجيل متاح حاليًا لخدمات الدش والريسيفرات وكاميرات المراقبة والشاشات فقط.' });
+      }
+
       const existing = await Fanni.findOne({ phone }).select('_id');
 
       if (existing) {
@@ -129,7 +135,7 @@ router.post(
         name: req.body.name,
         phone,
         passwordHash,
-        specialties: req.body.specialties,
+        specialties,
         areas: approvedAreas,
         ...(req.body.guidelinesAccepted === true ? {
           technicianGuidelinesAcceptedAt: new Date(),
@@ -222,11 +228,13 @@ router.post(
         { expiresIn: supportLogin ? '15m' : '30d' }
       );
 
+      const safeUser = fanni.toSafeJSON();
+      safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
       return res.json({
         token,
         mustChangePassword: supportLogin,
         message: supportLogin ? 'تم الدخول بكلمة دعم مؤقتة. غيّر كلمة المرور الآن للمتابعة.' : 'تم تسجيل الدخول بنجاح',
-        user: fanni.toSafeJSON()
+        user: safeUser
       });
     } catch (err) {
       next(err);
@@ -243,12 +251,14 @@ router.post('/guidelines/accept', auth(), requireFanni, requireApprovedFanni, as
     if (req.body?.accepted !== true || req.body?.version !== TECHNICIAN_GUIDELINES_VERSION) return res.status(400).json({ message: 'اقرأ التعليمات وحدد الموافقة لتأكيد الالتزام بها.' });
     const fanni = await Fanni.findOneAndUpdate({ _id: req.userId, role: 'fanni', status: 'معتمد' }, { $set: { technicianGuidelinesAcceptedAt: new Date(), technicianGuidelinesVersion: TECHNICIAN_GUIDELINES_VERSION } }, { new: true, runValidators: true });
     if (!fanni) return res.status(403).json({ message: 'حساب الفني غير معتمد.' });
-    return res.json({ message: 'تم تسجيل موافقتك على ميثاق صُنّاع.', acceptedAt: fanni.technicianGuidelinesAcceptedAt, version: fanni.technicianGuidelinesVersion });
+    return res.json({ message: 'تم تسجيل موافقتك على ميثاق حمزاوي سات.', acceptedAt: fanni.technicianGuidelinesAcceptedAt, version: fanni.technicianGuidelinesVersion });
   } catch (err) { next(err); }
 });
 
 router.get('/me', auth(), requireFanni, async (req, res) => {
-  return res.json(req.user.toSafeJSON());
+  const safeUser = req.user.toSafeJSON();
+  safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
+  return res.json(safeUser);
 });
 
 router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (req, res, next) => {
@@ -258,15 +268,24 @@ router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (
     if (req.user.pendingProfileChange?.requestedAt) return res.status(409).json({ message: 'لديك طلب تعديل بيانات قيد مراجعة الإدارة. انتظر القرار قبل إرسال طلب جديد.' });
     const duplicate = await Fanni.findOne({ phone, _id: { $ne: req.user._id } }).select('_id');
     if (duplicate) return res.status(409).json({ message: 'رقم الهاتف مسجل بالفعل في حساب آخر' });
-    const requestedSpecialties = Array.isArray(req.body.specialties) ? req.body.specialties : [];
-    const normalizedSpecialties = [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(Boolean))];
+    const requestedSpecialties = Array.isArray(req.body.specialties) ? req.body.specialties : null;
+    const normalizedSpecialties = requestedSpecialties
+      ? [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(value => value && isValidService(value)))]
+      : null;
+    if (requestedSpecialties && !normalizedSpecialties.length) {
+      return res.status(400).json({ message: 'اختار تخصصًا واحدًا على الأقل من خدمات حمزاوي سات المعتمدة.' });
+    }
     const current = {
       phone: String(req.user.phone || ''),
       specialties: [...(req.user.specialties || [])],
       areas: [...(req.user.areas || [])]
     };
-    // التخصصات اختيارية؛ عدم إرسالها يعني الاحتفاظ بالقائمة الحالية.
-    const specialties = normalizedSpecialties.length ? normalizedSpecialties : [...current.specialties];
+    // نخفي المهن القديمة من الاختيارات الجديدة، لكن نحتفظ بها في السجل التاريخي.
+    // أي تعديل لبيانات الحساب يدمج التخصصات الجديدة المعتمدة مع التخصصات القديمة المحفوظة.
+    const historicalSpecialties = current.specialties.filter(value => !isValidService(value));
+    const specialties = normalizedSpecialties
+      ? [...new Set([...historicalSpecialties, ...normalizedSpecialties])]
+      : [...current.specialties];
     const areas = await validateApprovedAreas(req.body.areas);
     if (!areas) return res.status(400).json({ message: 'اختار مناطق العمل من قائمة المناطق المعتمدة فقط.' });
     const sameArray = (a, b) => JSON.stringify(a) === JSON.stringify(b);

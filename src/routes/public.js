@@ -15,6 +15,8 @@ const {
   normalizeServiceName
 } = require('../config/professions');
 
+const PUBLIC_SERVICE_NAMES = new Set(ALL_SERVICES.map(normalizeServiceName));
+
 const router = express.Router();
 
 // Publicly expose only the two transfer numbers needed by technician wallets.
@@ -60,12 +62,19 @@ router.get('/areas', async (req, res, next) => {
   try {
     const [adminRegions, approvedTechnicians] = await Promise.all([
       Region.find({}).select('name isActive isDeleted isBase').lean(),
-      Fanni.find({ status: 'معتمد', role: 'fanni' }).select('areas').lean()
+      Fanni.find({ status: 'معتمد', role: 'fanni' }).select('specialties areas').lean()
     ]);
     const areas = getEffectiveAreaOptions(adminRegions);
+    // Count only technicians with at least one current Hamzawy Sat service.
+    // Historical accounts remain stored but are not represented as available technicians.
+    const serviceEligibleTechnicians = approvedTechnicians.filter(technician =>
+      Array.isArray(technician.specialties) && technician.specialties.some(value =>
+        PUBLIC_SERVICE_NAMES.has(normalize(value))
+      )
+    );
     const technicianCountByArea = Object.fromEntries(areas.map(area => {
       const areaKey = normalizeArea(area);
-      const count = approvedTechnicians.filter(technician =>
+      const count = serviceEligibleTechnicians.filter(technician =>
         Array.isArray(technician.areas) && technician.areas.some(value => normalizeArea(value) === areaKey)
       ).length;
       return [area, count];
@@ -87,7 +96,9 @@ router.get('/services', async (req, res, next) => {
     ]);
     const technicianCounts = new Map();
     const normalizedSpecialties = approvedTechnicians.map(technician =>
-      new Set((Array.isArray(technician.specialties) ? technician.specialties : []).map(normalize).filter(Boolean))
+      new Set((Array.isArray(technician.specialties) ? technician.specialties : [])
+        .map(normalize)
+        .filter(specialty => specialty && PUBLIC_SERVICE_NAMES.has(specialty)))
     );
     for (const specialties of normalizedSpecialties) {
       for (const specialty of specialties) technicianCounts.set(specialty, (technicianCounts.get(specialty) || 0) + 1);
@@ -103,7 +114,9 @@ router.get('/services', async (req, res, next) => {
           normalizeArea(value) === areaKey
         );
         if (!worksHere) continue;
-        const specialties = new Set((Array.isArray(technician.specialties) ? technician.specialties : []).map(normalize).filter(Boolean));
+        const specialties = new Set((Array.isArray(technician.specialties) ? technician.specialties : [])
+          .map(normalize)
+          .filter(specialty => specialty && PUBLIC_SERVICE_NAMES.has(specialty)));
         for (const specialty of specialties) counts.set(specialty, (counts.get(specialty) || 0) + 1);
       }
       areaCountsByName.set(area, counts);
@@ -123,12 +136,11 @@ router.get('/services', async (req, res, next) => {
       });
 
       for (const [index, name] of category.services.entries()) {
-        if (isBrokenWallScreenService(name)) continue;
+        if (isBrokenWallScreenService(name) || !PUBLIC_SERVICE_NAMES.has(normalizeServiceName(name))) continue;
 
         // A database row is authoritative for a legacy service. In particular,
         // an inactive row is a tombstone: do not re-add that service from CATEGORIES.
         const savedOverride = savedServices.some(saved =>
-          normalize(saved.category) === categoryKey &&
           normalize(saved.name) === normalize(name)
         );
         if (savedOverride) continue;
@@ -145,9 +157,13 @@ router.get('/services', async (req, res, next) => {
 
     // سجلات قاعدة البيانات تتحكم في الإضافة والتعديل والإخفاء.
     for (const saved of savedServices) {
-      const categoryKey = normalize(saved.category);
       const serviceKey = normalize(saved.name);
-      if (isBrokenWallScreenService(saved.name)) continue; // never expose either historical label of the broken service
+      if (isBrokenWallScreenService(saved.name) || !PUBLIC_SERVICE_NAMES.has(normalizeServiceName(saved.name))) continue;
+      const publicCategory = CATEGORIES.find(category =>
+        category.services.some(name => normalize(name) === serviceKey)
+      );
+      if (!publicCategory) continue;
+      const categoryKey = normalize(publicCategory.label);
 
       if (!categoriesMap.has(categoryKey)) {
         categoriesMap.set(categoryKey, {
@@ -240,7 +256,7 @@ router.get('/content', async (req, res, next) => {
     const config = await AdminConfig.findOne({ key: 'main' }).select('content settings.siteName settings.maintenance settings.maintenanceMessage').lean();
     const content = config?.content || { announcement: '', faqs: [] };
     return res.set('Cache-Control', 'no-store').json({
-      siteName: String(config?.settings?.siteName || 'صُنّاع'),
+      siteName: String(config?.settings?.siteName && config.settings.siteName !== 'صُنّاع' ? config.settings.siteName : 'حمزاوي سات'),
       maintenance: Boolean(config?.settings?.maintenance),
       maintenanceMessage: String(config?.settings?.maintenanceMessage || ''),
       announcement: String(content.announcement || ''),

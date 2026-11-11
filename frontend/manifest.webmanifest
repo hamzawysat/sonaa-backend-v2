@@ -1,20 +1,20 @@
 {
-  "name": "صُنّاع",
-  "short_name": "صُنّاع",
-  "description": "صُنّاع، كُلُّ خِدْمَةٍ تَبْدَأُ بِخُطْوَةٍ",
+  "name": "حمزاوي سات",
+  "short_name": "حمزاوي سات",
+  "description": "حمزاوي سات، خدمات الدش والكاميرات والشاشات",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0A2342",
+  "background_color": "#171A22",
+  "theme_color": "#171A22",
   "icons": [
     {
-      "src": "/icons/sonaa-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/images/LOGO_UPLOAD_HERE/logo.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
