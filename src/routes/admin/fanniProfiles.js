@@ -190,9 +190,6 @@ function createAdminFanniProfilesRouter({
       return res.set('Cache-Control', 'no-store').json({ requests: fannis.map(item => {
         const pending = item.pendingProfileChange || {};
         const current = { phone: item.phone, specialties: item.specialties || [], areas: item.areas || [] };
-        const activeServiceKeys = new Set((ALL_SERVICES || []).map(normalizeServiceKey));
-        const activeSpecialties = values => (Array.isArray(values) ? values : [])
-          .filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
         const sameArray = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
         const changedFields = Array.isArray(pending.changedFields) && pending.changedFields.length ? pending.changedFields : [
           ...(String(pending.phone || current.phone) !== String(current.phone) ? ['phone'] : []),
@@ -201,16 +198,8 @@ function createAdminFanniProfilesRouter({
         ];
         return {
           _id: item._id, name: item.name, phone: item.phone,
-          specialties: current.specialties, activeSpecialties: activeSpecialties(current.specialties), areas: current.areas,
-          pendingProfileChange: {
-            ...pending,
-            activeSpecialties: activeSpecialties(pending.specialties),
-            before: {
-              ...(pending.before || current),
-              activeSpecialties: activeSpecialties((pending.before || current).specialties)
-            },
-            changedFields
-          },
+          specialties: current.specialties, areas: current.areas,
+          pendingProfileChange: { ...pending, before: pending.before || current, changedFields },
           status: item.status, createdAt: item.createdAt
         };
       }) });

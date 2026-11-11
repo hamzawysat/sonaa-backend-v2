@@ -8,6 +8,8 @@ function createOrderAdminPublicationRouter({
   Order,
   writeOrderAdminAudit,
   ORDER_EXPIRY_HOURS,
+  ALL_SERVICES,
+  normalizeServiceName,
   Fanni,
   fanniCanHandleService,
   fanniWorksInArea,
@@ -46,6 +48,8 @@ function createOrderAdminPublicationRouter({
       const reviewCheck = await Order.findOne({ sn }).select('+voiceRecordingData status voiceReviewedAt').lean();
       if (!reviewCheck) return res.status(404).json({ message: 'الطلب غير موجود' });
       if (reviewCheck.status !== 'قيد المراجعة') return res.status(409).json({ message: 'الطلب ليس قيد المراجعة، لذلك لم يتم نشره', status: reviewCheck.status });
+      const isCurrentService = (ALL_SERVICES || []).some(service => normalizeServiceName(service) === normalizeServiceName(reviewCheck.service));
+      if (!isCurrentService) return res.status(409).json({ message: 'لا يمكن نشر هذا الطلب لأنه مرتبط بخدمة قديمة خارج خدمات حمزاوي سات المعتمدة. سيظل محفوظًا في السجلات دون إرساله للفنيين.' });
       if (reviewCheck.voiceRecordingData && !reviewCheck.voiceReviewedAt) return res.status(409).json({ message: 'لا يمكن نشر الطلب قبل الاستماع إلى التسجيل الصوتي وتأكيد مراجعته من الإدارة.' });
       const order = await Order.findOneAndUpdate(
         { sn, status: 'قيد المراجعة', $or: [{ voiceRecordingData: { $exists: false } }, { voiceRecordingData: '' }, { voiceReviewedAt: { $type: 'date' } }] },

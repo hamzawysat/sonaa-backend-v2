@@ -125,7 +125,7 @@ const ADMIN_PERMISSION_SECTIONS=[
   ['voiceReview','التسجيلات الصوتية ومراجعتها'],
   ['passwordRecovery','طلبات استعادة كلمة المرور'],
   ['complaints','الشكاوى'],
-  ['services','الخدمات والمهن'],
+  ['services','الخدمات'],
   ['clients','العملاء'],
   ['topups','طلبات الشحن'],
   ['wallet','المحافظ والأرصدة'],

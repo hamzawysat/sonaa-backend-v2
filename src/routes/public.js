@@ -62,19 +62,12 @@ router.get('/areas', async (req, res, next) => {
   try {
     const [adminRegions, approvedTechnicians] = await Promise.all([
       Region.find({}).select('name isActive isDeleted isBase').lean(),
-      Fanni.find({ status: 'معتمد', role: 'fanni' }).select('specialties areas').lean()
+      Fanni.find({ status: 'معتمد', role: 'fanni' }).select('areas').lean()
     ]);
     const areas = getEffectiveAreaOptions(adminRegions);
-    // Count only technicians with at least one current Hamzawy Sat service.
-    // Historical accounts remain stored but are not represented as available technicians.
-    const serviceEligibleTechnicians = approvedTechnicians.filter(technician =>
-      Array.isArray(technician.specialties) && technician.specialties.some(value =>
-        PUBLIC_SERVICE_NAMES.has(normalize(value))
-      )
-    );
     const technicianCountByArea = Object.fromEntries(areas.map(area => {
       const areaKey = normalizeArea(area);
-      const count = serviceEligibleTechnicians.filter(technician =>
+      const count = approvedTechnicians.filter(technician =>
         Array.isArray(technician.areas) && technician.areas.some(value => normalizeArea(value) === areaKey)
       ).length;
       return [area, count];

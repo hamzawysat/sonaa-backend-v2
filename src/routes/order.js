@@ -252,6 +252,8 @@ router.use(createOrderAdminPublicationRouter({
   Order,
   writeOrderAdminAudit,
   ORDER_EXPIRY_HOURS,
+  ALL_SERVICES,
+  normalizeServiceName,
   Fanni,
   fanniCanHandleService,
   fanniWorksInArea,
