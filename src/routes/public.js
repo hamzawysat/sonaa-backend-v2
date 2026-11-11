@@ -7,7 +7,7 @@ const Service = require('../models/Service');
 const Fanni = require('../models/Fanni');
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
-const { getActiveServiceNames, getServiceRecords, isExcludedService } = require('../services/serviceCatalog');
+const { getActiveServiceNames, getServiceRecords, isExcludedService, isBuiltInServiceRecord } = require('../services/serviceCatalog');
 
 const { CATEGORIES } = require('../config/professions');
 
@@ -105,7 +105,7 @@ router.get('/services', async (req, res, next) => {
 
     // Every active database service is public, regardless of whether it existed in the original hard-coded catalog.
     for (const saved of savedServices) {
-      if (saved.isActive === false || isExcludedService(saved.name)) continue;
+      if (saved.isActive === false || isExcludedService(saved.name) || (!isBuiltInServiceRecord(saved) && saved.isPublic !== true)) continue;
       const key = normalize(saved.category);
       if (!categoriesMap.has(key)) categoriesMap.set(key, {
         label: saved.category, emoji: saved.emoji || '🔧',
