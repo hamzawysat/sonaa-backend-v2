@@ -27,6 +27,16 @@ function createAdminFanniProfilesRouter({
 }) {
   const router = express.Router();
 
+  function normalizeServiceKey(value) {
+    return String(value || '').normalize('NFC').trim().replace(/\\s+/g, ' ');
+  }
+
+  function preserveHistoricalSpecialties(current, requested, allServices) {
+    const activeKeys = new Set((allServices || []).map(normalizeServiceKey));
+    const historical = (Array.isArray(current) ? current : []).filter(value => !activeKeys.has(normalizeServiceKey(value)));
+    return [...new Set([...historical, ...requested])];
+  }
+
   router.get('/fannis/:id/profile', auth('admin'), async (req, res, next) => {
     try {
       if (!validId(req.params.id)) return sendBadId(res);
@@ -58,8 +68,9 @@ function createAdminFanniProfilesRouter({
       const areas = [...new Map(value.areas.map(item => [normalizeArea(item), String(item).normalize('NFC').trim().replace(/\s+/g, ' ')])).values()];
       if (areas.some(item => !allowedAreas.has(normalizeArea(item)))) return res.status(400).json({ message: 'اختار مناطق العمل من القائمة المعتمدة فقط.' });
       const normalizedAreas = areas;
-      const specialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()))];
-      if (specialties.some(item => !(ALL_SERVICES || []).some(service => service.normalize('NFC').trim() === item))) return res.status(400).json({ message: 'توجد خدمة غير موجودة في قائمة الخدمات المعتمدة.' });
+      const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()))];
+      if (requestedSpecialties.some(item => !(ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(item)))) return res.status(400).json({ message: 'توجد خدمة غير موجودة في قائمة الخدمات المعتمدة.' });
+      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
       const before = { phone: fanni.phone, specialties: [...(fanni.specialties || [])], areas: [...(fanni.areas || [])] };
       const auditDetails = JSON.stringify({ before, after: { phone, specialties, areas: normalizedAreas } });
       const profileDecision = decision(req, 'تعديل بيانات فني', 'تعديل مباشر من لوحة الإدارة');
@@ -153,9 +164,10 @@ function createAdminFanniProfilesRouter({
       if (invalidAreas.length) return res.status(400).json({ message: 'توجد منطقة غير معتمدة في القائمة. حدّث قائمة المناطق ثم حاول مرة أخرى.', invalidAreas });
 
       const normalizedAreas = areas;
-      const specialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()).filter(Boolean))];
-      const invalidSpecialties = specialties.filter(item => !(ALL_SERVICES || []).some(service => service.normalize('NFC').trim() === item));
+      const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()).filter(Boolean))];
+      const invalidSpecialties = requestedSpecialties.filter(item => !(ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(item)));
       if (invalidSpecialties.length) return res.status(400).json({ message: 'توجد خدمة غير موجودة في قائمة الخدمات المعتمدة.', invalidSpecialties });
+      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
       const before = { specialties: [...(fanni.specialties || [])], areas: [...(fanni.areas || [])] };
       fanni.specialties = specialties;
       fanni.areas = normalizedAreas;
