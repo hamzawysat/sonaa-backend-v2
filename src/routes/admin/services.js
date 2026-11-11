@@ -39,7 +39,7 @@ function createAdminServicesRouter({
       const savedServices = await Service.find({}).sort({ category: 1, sortOrder: 1, name: 1 }).lean();
       // The owner console must show every database-managed service, including hidden legacy/custom entries.
       // Only the explicitly retired malformed wall-screen aliases remain excluded.
-      const visibleServices = savedServices.filter(item => !isBrokenWallScreenService(item.name)).map(item => ({
+      const visibleServices = savedServices.map(item => ({
         ...item,
         isActive: item.isActive !== false && isPublicServiceRecord(item)
       }));
@@ -76,7 +76,6 @@ function createAdminServicesRouter({
       const nameErr = validateNameField(name || '');
       if (nameErr) return res.status(400).json({ message: nameErr });
       name = String(name).trim().replace(/\s+/g, ' ');
-      if (isBrokenWallScreenService(name)) return res.status(400).json({ message: 'الخدمة دي محذوفة نهائيًا ولا يمكن إضافتها مرة أخرى' });
   
       if (!category || !String(category).trim()) {
         const found = findCategoryByService(name);
