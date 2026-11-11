@@ -22,7 +22,12 @@ function createAdminPlatformRouter({
   const router = express.Router();
 
   router.get('/settings', auth('admin'), async (req, res, next) => {
-    try { const config = await getAdminConfig(); return res.set('Cache-Control', 'no-store').json({ settings: config.settings }); }
+    try {
+      const config = await getAdminConfig();
+      const settings = config.settings.toObject ? config.settings.toObject() : { ...config.settings };
+      if (!settings.siteName || settings.siteName === 'صُنّاع') settings.siteName = 'حمزاوي سات';
+      return res.set('Cache-Control', 'no-store').json({ settings });
+    }
     catch (err) { next(err); }
   });
   router.put('/settings', auth('admin'), async (req, res, next) => {

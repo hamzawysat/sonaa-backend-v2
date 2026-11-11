@@ -891,6 +891,32 @@ async function run() {
       assert.equal(r.status, 401);
     });
 
+    await test('legacy site name is presented as Hamzawy Sat without mutating stored settings', async () => {
+      const AdminConfig = require('../models/AdminConfig');
+      let config = await AdminConfig.findOne({ key: 'main' });
+      if (!config) config = await AdminConfig.create({ key: 'main' });
+      config.settings.siteName = 'صُنّاع';
+      await config.save();
+      const response = await request(app).get('/api/admin/settings').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(response.status, 200);
+      assert.equal(response.body.settings.siteName, 'حمزاوي سات');
+      const persisted = await AdminConfig.findOne({ key: 'main' }).lean();
+      assert.equal(persisted.settings.siteName, 'صُنّاع', 'GET must not rewrite persisted settings');
+    });
+
+    await test('public and admin service catalogs expose only the eight approved services', async () => {
+      const { ALL_SERVICES } = require('../config/professions');
+      assert.equal(ALL_SERVICES.length, 8);
+      const publicCatalog = await request(app).get('/api/services');
+      assert.equal(publicCatalog.status, 200);
+      assert.deepEqual([...publicCatalog.body.services].sort(), [...ALL_SERVICES].sort());
+      assert.ok(publicCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
+      const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(adminCatalog.status, 200);
+      assert.ok(adminCatalog.body.services.every(service => ALL_SERVICES.includes(service.name)));
+      assert.ok(adminCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
+    });
+
     await test('order creation rejects an unknown service', async () => {
       const r = await request(app).post('/api/orders')
         .set('Authorization', 'Bearer ' + clientToken)
