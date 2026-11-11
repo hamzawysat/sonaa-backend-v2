@@ -94,12 +94,12 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
           name,
           normalizedName: normalizeForCompare(name),
           emoji: cat.emoji,
-          isActive: true,
+          isActive: !hiddenLegacyKeys.has(key + '|' + normalizeForCompare(name)),
           source: 'legacy',
           category: cat.label,
           dbId: null,
           sortOrder: (index + 1) * 10
-        })).filter(service => !hiddenLegacyKeys.has(key + '|' + service.normalizedName))
+        }))
       });
     }
     for (const saved of savedServices) {
@@ -108,7 +108,7 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
         normalizeForCompare(cat.label) === catKey &&
         cat.services.some(name => normalizeForCompare(name) === normalizeForCompare(saved.name))
       );
-      if (isInactiveLegacyTombstone) continue;
+      // Keep hidden legacy rows in the owner console so their status can be changed back to visible.
       if (!map.has(catKey)) {
         map.set(catKey, {
           label: saved.category,
