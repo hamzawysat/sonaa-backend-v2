@@ -108,12 +108,9 @@ function createFanniCanHandleService({ CATEGORIES, normalizeServiceName }) {
       .filter(value => typeof value === 'string')
       .map(normalizeServiceName)
       .filter(Boolean);
-    if (normalizedSpecialties.includes(normalizedService)) return true;
-    const category = CATEGORIES.find(item =>
-      item.services.some(service => normalizeServiceName(service) === normalizedService)
-    );
-    if (!category) return false;
-    return normalizedSpecialties.includes(normalizeServiceName(category.label));
+    // Historical category labels must never activate every service in the new catalog.
+    // Only an explicitly selected, currently approved service can match an order.
+    return normalizedSpecialties.includes(normalizedService);
   };
 }
 
