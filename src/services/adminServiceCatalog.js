@@ -104,10 +104,6 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
     }
     for (const saved of savedServices) {
       const catKey = normalizeForCompare(saved.category);
-      const isInactiveLegacyTombstone = saved.isActive === false && CATEGORIES.some(cat =>
-        normalizeForCompare(cat.label) === catKey &&
-        cat.services.some(name => normalizeForCompare(name) === normalizeForCompare(saved.name))
-      );
       // Keep hidden legacy rows in the owner console so their status can be changed back to visible.
       if (!map.has(catKey)) {
         map.set(catKey, {
