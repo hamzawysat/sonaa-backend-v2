@@ -32,8 +32,7 @@ async function getActiveServiceNames(Service) {
   const records = await getServiceRecords(Service);
   // Old Sonaa services were stored as active but deliberately hidden from customers.
   // Only the current built-in catalog or an explicit owner opt-in may be public.
-  const active = new Map(records.filter(item => item.isActive !== false && !isExcludedService(item.name) &&
-    isPublicServiceRecord(item)).map(item => [normalizeServiceKey(item.name), item.name]));
+  const active = new Map(records.filter(item => item.isActive !== false && isPublicServiceRecord(item)).map(item => [normalizeServiceKey(item.name), item.name]));
   const recordsByPair = new Set(records.map(item => normalizeServiceKey(item.category) + '|' + normalizeServiceKey(item.name)));
   for (const category of CATEGORIES) {
     for (const name of category.services) {
@@ -46,7 +45,7 @@ async function getActiveServiceNames(Service) {
 
 async function isActiveService(Service, name) {
   const key = normalizeServiceKey(name);
-  if (!key || isExcludedService(name)) return false;
+  if (!key) return false;
   const activeNames = await getActiveServiceNames(Service);
   return activeNames.some(value => normalizeServiceKey(value) === key);
 }
