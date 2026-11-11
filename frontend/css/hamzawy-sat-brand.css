@@ -65,3 +65,12 @@ select:focus-visible, textarea:focus-visible {
 }
 :where(.edit-specialty-heading) { background: #F8F6F0; }
 :where(.edit-category-emoji,.service-icon) { background: #F5F0E5; border-color: #E8E0CF; }
+
+
+/* Final brand normalization: replace legacy blue UI accents across all pages. */
+:where([class*="text-blue-"],[class*="text-sky-"],[class*="text-cyan-"]){color:#5A4520!important}
+:where([class*="bg-blue-"],[class*="bg-sky-"],[class*="bg-cyan-"]){background-color:#F8F6F0!important}
+:where([class*="border-blue-"],[class*="border-sky-"],[class*="border-cyan-"]){border-color:#E8E0CF!important}
+:where([class*="ring-blue-"],[class*="ring-sky-"],[class*="ring-cyan-"]){--tw-ring-color:#C9A34F!important}
+:where([class*="from-blue-"],[class*="from-sky-"],[class*="from-cyan-"]){--tw-gradient-from:#C9A34F!important;--tw-gradient-to:rgb(201 163 79 / 0)!important;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)!important}
+:where([class*="to-blue-"],[class*="to-sky-"],[class*="to-cyan-"]){--tw-gradient-to:#A9822E!important}
