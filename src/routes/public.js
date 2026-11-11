@@ -89,7 +89,9 @@ router.get('/services', async (req, res, next) => {
     ]);
     const technicianCounts = new Map();
     const normalizedSpecialties = approvedTechnicians.map(technician =>
-      new Set((Array.isArray(technician.specialties) ? technician.specialties : []).map(normalize).filter(Boolean))
+      new Set((Array.isArray(technician.specialties) ? technician.specialties : [])
+        .map(normalize)
+        .filter(specialty => specialty && PUBLIC_SERVICE_NAMES.has(specialty)))
     );
     for (const specialties of normalizedSpecialties) {
       for (const specialty of specialties) technicianCounts.set(specialty, (technicianCounts.get(specialty) || 0) + 1);
@@ -105,7 +107,9 @@ router.get('/services', async (req, res, next) => {
           normalizeArea(value) === areaKey
         );
         if (!worksHere) continue;
-        const specialties = new Set((Array.isArray(technician.specialties) ? technician.specialties : []).map(normalize).filter(Boolean));
+        const specialties = new Set((Array.isArray(technician.specialties) ? technician.specialties : [])
+          .map(normalize)
+          .filter(specialty => specialty && PUBLIC_SERVICE_NAMES.has(specialty)));
         for (const specialty of specialties) counts.set(specialty, (counts.get(specialty) || 0) + 1);
       }
       areaCountsByName.set(area, counts);
