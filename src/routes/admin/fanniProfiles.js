@@ -199,16 +199,18 @@ function createAdminFanniProfilesRouter({
           ...(!sameArray(pending.specialties, current.specialties) ? ['specialties'] : []),
           ...(!sameArray(pending.areas, current.areas) ? ['areas'] : [])
         ];
+        const before = pending.before || current;
+        const currentServices = activeSpecialties(current.specialties);
+        const requestedServices = activeSpecialties(pending.specialties);
+        const beforeServices = activeSpecialties(before.specialties);
         return {
           _id: item._id, name: item.name, phone: item.phone,
-          specialties: current.specialties, activeSpecialties: activeSpecialties(current.specialties), areas: current.areas,
+          specialties: currentServices, activeSpecialties: currentServices, areas: current.areas,
           pendingProfileChange: {
             ...pending,
-            activeSpecialties: activeSpecialties(pending.specialties),
-            before: {
-              ...(pending.before || current),
-              activeSpecialties: activeSpecialties((pending.before || current).specialties)
-            },
+            specialties: requestedServices,
+            activeSpecialties: requestedServices,
+            before: { ...before, specialties: beforeServices, activeSpecialties: beforeServices },
             changedFields
           },
           status: item.status, createdAt: item.createdAt

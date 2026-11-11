@@ -125,10 +125,11 @@ function publicFanni(fanni) {
     actualStatus: item.status,
     isApproved: item.status === 'معتمد',
     isDisabled: item.status === 'معلق',
+    specialties: activeSpecialties,
     activeSpecialties,
     balance: Number(item.walletBalance || 0),
-    skill: Array.isArray(item.specialties) ? item.specialties.join('، ') : '',
-    service: Array.isArray(item.specialties) ? item.specialties.join('، ') : ''
+    skill: activeSpecialties.join('، '),
+    service: activeSpecialties.join('، ')
   };
 }
 
