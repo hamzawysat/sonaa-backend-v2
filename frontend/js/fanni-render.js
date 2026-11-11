@@ -6,7 +6,7 @@ function renderContent(){
   const previewTab=window.IS_EDITOR_PREVIEW?window.PREVIEW_REQUESTED_TAB:'';
   const authenticated=(!!previewTab&&!['login','register'].includes(previewTab))||(!!getToken()&&!forceTechnicianRegistration);
  document.title=authenticated?'لوحة الفني | حمزاوي سات':(state.tab==='register'?'تسجيل فني جديد | حمزاوي سات':'تسجيل دخول الفني | حمزاوي سات');
- const specialties=Array.isArray(user?.specialties)?user.specialties.filter(value=>ALL_SERVICES.includes(String(value||'').trim().replace(/\\s+/g,' '))):[];
+ const specialties=Array.isArray(user?.specialties)?user.specialties.filter(value=>ALL_SERVICES.includes(String(value||'').trim().replace(/\s+/g,' '))):[];
  const areas=Array.isArray(user?.areas)?user.areas:[];
  const balance=state.walletBalance||user?.walletBalance||user?.balance||user?.wallet||0;
  const approved=isApproved();
@@ -300,7 +300,7 @@ function renderContent(){
       <div class="grid grid-cols-2 gap-2"><button type="button" onclick="cancelEditProfile()" class="secondary-btn h-11" ${state.editSaving?'disabled':''}>إلغاء</button><button type="button" onclick="saveProfileChanges()" class="primary-btn h-11" ${state.editSaving?'disabled':''}>${state.editSaving?'جاري الحفظ...':'حفظ التعديلات'}</button></div>
      </div>
     `:`
-     <div class="mt-4 space-y-4 text-[12px]"><div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-3"><div class="mb-2 font-extrabold text-blue-900">بيانات الحساب</div>${[['الاسم',user?.name],['رقم الهاتف',user?.phone],['حالة الحساب',user?.status],['رصيد المحفظة',balance+' جنيه']].map(x=>`<div class="rounded-xl bg-white border p-3 mb-2"><div class="text-[10px] text-slate-500 mb-1">${x[0]}</div><b>${esc(x[1]||'غير متاح')}</b></div>`).join('')}</div><div class="rounded-2xl border border-slate-200 bg-slate-50 p-3"><div class="mb-2 font-extrabold text-slate-800">بيانات العمل</div>${[['التخصصات',specialties.join('، ')],['مناطق العمل',areas.join('، ') ]].map(x=>`<div class="rounded-xl bg-white border p-3 mb-2"><div class="text-[10px] text-slate-500 mb-1">${x[0]}</div><b>${esc(x[1]||'غير متاح')}</b></div>`).join('')}</div></div>
+     <div class="mt-4 space-y-4 text-[12px]"><div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-3"><div class="mb-2 font-extrabold text-blue-900">بيانات الحساب</div>${[['الاسم',user?.name],['رقم الهاتف',user?.phone],['حالة الحساب',user?.status],['رصيد المحفظة',balance+' جنيه']].map(x=>`<div class="rounded-xl bg-white border p-3 mb-2"><div class="text-[10px] text-slate-500 mb-1">${x[0]}</div><b>${esc(x[1]||'غير متاح')}</b></div>`).join('')}</div><div class="rounded-2xl border border-slate-200 bg-slate-50 p-3"><div class="mb-2 font-extrabold text-slate-800">بيانات العمل</div>${[['التخصصات',specialties.join('، ')||'لا توجد خدمات ضمن تخصص حمزاوي سات حاليًا'],['مناطق العمل',areas.join('، ') ]].map(x=>`<div class="rounded-xl bg-white border p-3 mb-2"><div class="text-[10px] text-slate-500 mb-1">${x[0]}</div><b>${esc(x[1]||'غير متاح')}</b></div>`).join('')}</div></div>
      <button type="button" onclick="beginEditProfile()" class="mt-4 w-full h-11 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-extrabold text-[12px]">✏️ تعديل البيانات</button>
      <div class="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
       <div class="font-extrabold text-[12px] text-emerald-900">شاراتي</div>
