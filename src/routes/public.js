@@ -15,6 +15,18 @@ const {
   normalizeServiceName
 } = require('../config/professions');
 
+const PUBLIC_SERVICE_NAMES = new Set([
+  'تركيب دش',
+  'صيانة دش',
+  'تركيب كاميرات مراقبة',
+  'صيانة كاميرات مراقبة',
+  'تركيب رسيفر',
+  'صيانة رسيفر',
+  'صيانة شاشة تلفزيون',
+  'تركيب شبكة إنترنت منزلية',
+  'صيانة أجهزة استقبال'
+].map(normalizeServiceName));
+
 const router = express.Router();
 
 // Publicly expose only the two transfer numbers needed by technician wallets.
@@ -123,12 +135,11 @@ router.get('/services', async (req, res, next) => {
       });
 
       for (const [index, name] of category.services.entries()) {
-        if (isBrokenWallScreenService(name)) continue;
+        if (isBrokenWallScreenService(name) || !PUBLIC_SERVICE_NAMES.has(normalizeServiceName(name))) continue;
 
         // A database row is authoritative for a legacy service. In particular,
         // an inactive row is a tombstone: do not re-add that service from CATEGORIES.
         const savedOverride = savedServices.some(saved =>
-          normalize(saved.category) === categoryKey &&
           normalize(saved.name) === normalize(name)
         );
         if (savedOverride) continue;
@@ -145,9 +156,13 @@ router.get('/services', async (req, res, next) => {
 
     // سجلات قاعدة البيانات تتحكم في الإضافة والتعديل والإخفاء.
     for (const saved of savedServices) {
-      const categoryKey = normalize(saved.category);
       const serviceKey = normalize(saved.name);
-      if (isBrokenWallScreenService(saved.name)) continue; // never expose either historical label of the broken service
+      if (isBrokenWallScreenService(saved.name) || !PUBLIC_SERVICE_NAMES.has(normalizeServiceName(saved.name))) continue;
+      const publicCategory = CATEGORIES.find(category =>
+        category.services.some(name => normalize(name) === serviceKey)
+      );
+      if (!publicCategory) continue;
+      const categoryKey = normalize(publicCategory.label);
 
       if (!categoriesMap.has(categoryKey)) {
         categoriesMap.set(categoryKey, {
@@ -240,7 +255,7 @@ router.get('/content', async (req, res, next) => {
     const config = await AdminConfig.findOne({ key: 'main' }).select('content settings.siteName settings.maintenance settings.maintenanceMessage').lean();
     const content = config?.content || { announcement: '', faqs: [] };
     return res.set('Cache-Control', 'no-store').json({
-      siteName: String(config?.settings?.siteName || 'صُنّاع'),
+      siteName: String(config?.settings?.siteName || 'حمزاوي سات'),
       maintenance: Boolean(config?.settings?.maintenance),
       maintenanceMessage: String(config?.settings?.maintenanceMessage || ''),
       announcement: String(content.announcement || ''),
