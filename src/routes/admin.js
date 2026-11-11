@@ -280,6 +280,7 @@ router.get(['/counts', '/stats'], auth('admin'), async (req, res, next) => {
     const acceptedFanniFilter = {
       $and: [
         { $or: [ { role: 'fanni' }, { role: { $ne: 'admin' }, specialties: { $exists: true, $ne: [] }, adminRole: null } ] },
+        { specialties: { $in: ALL_SERVICES } },
         { status: { $in: ['معتمد', 'معلق'] } }
       ]
     };
