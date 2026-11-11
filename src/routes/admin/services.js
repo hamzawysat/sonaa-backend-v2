@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { isBuiltInServiceRecord } = require('../../services/serviceCatalog');
+const { isPublicServiceRecord } = require('../../services/serviceCatalog');
 const {
   normalizeForCompare,
   isBrokenWallScreenService,
@@ -41,7 +41,7 @@ function createAdminServicesRouter({
       // Only the explicitly retired malformed wall-screen aliases remain excluded.
       const visibleServices = savedServices.filter(item => !isBrokenWallScreenService(item.name)).map(item => ({
         ...item,
-        isActive: item.isActive !== false && (isBuiltInServiceRecord(item) || item.isPublic === true)
+        isActive: item.isActive !== false && isPublicServiceRecord(item)
       }));
       const map = buildAdminCategoriesMap(visibleServices);
       const categoriesDetailed = Array.from(map.values()).map(cat => ({
