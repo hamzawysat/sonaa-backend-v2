@@ -560,6 +560,7 @@ async function run() {
       assert.equal(revokedFanniSession.status, 401);
       const fanniNewLogin = await request(app).post('/api/fanni/login').send({ phone: '01012345680', password: 'FanniNewPass123' });
       assert.equal(fanniNewLogin.status, 200);
+      assert.deepEqual(fanniNewLogin.body.user.specialties, [], 'login payload must not expose retired specialties');
       const activeFanniSession = await request(app).get('/api/fanni/me').set('Authorization', 'Bearer ' + fanniNewLogin.body.token);
       assert.equal(activeFanniSession.status, 200);
       assert.deepEqual(activeFanniSession.body.specialties, [], 'historical specialties stay in storage but are hidden from the technician self-service payload');

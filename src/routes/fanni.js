@@ -228,11 +228,13 @@ router.post(
         { expiresIn: supportLogin ? '15m' : '30d' }
       );
 
+      const safeUser = fanni.toSafeJSON();
+      safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
       return res.json({
         token,
         mustChangePassword: supportLogin,
         message: supportLogin ? 'تم الدخول بكلمة دعم مؤقتة. غيّر كلمة المرور الآن للمتابعة.' : 'تم تسجيل الدخول بنجاح',
-        user: fanni.toSafeJSON()
+        user: safeUser
       });
     } catch (err) {
       next(err);
