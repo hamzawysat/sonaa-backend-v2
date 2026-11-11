@@ -97,7 +97,7 @@ window.openFanniProfileEditor=async function(id){
   const results=await Promise.all([tryApi(['/api/admin/fannis/'+encodeURIComponent(id)+'/profile']),tryApi(['/api/areas']),tryApi(['/api/services'])]);
   const f=results[0].fanni||results[0],areas=Array.isArray(results[1].areas)?results[1].areas:[],cats=Array.isArray(results[2].categories)?results[2].categories:[];
   if(!f||!f._id||!areas.length||!cats.length)throw new Error('تعذر تحميل بيانات الفني أو القوائم المعتمدة.');
-  const normalizeService=value=>String(value||'').normalize('NFC').trim().replace(/\\s+/g,' ');
+  const normalizeService=value=>String(value||'').normalize('NFC').trim().replace(/\s+/g,' ');
   const activeServiceKeys=new Set(cats.flatMap(cat=>Array.isArray(cat.services)?cat.services:[]).map(normalizeService));
   const historicalSpecialties=[...new Set((Array.isArray(f.specialties)?f.specialties:[]).filter(value=>!activeServiceKeys.has(normalizeService(value))))];
   const esc=escHtml,chosenAreas=new Set(f.areas||[]),chosenServices=new Set(f.specialties||[]);
