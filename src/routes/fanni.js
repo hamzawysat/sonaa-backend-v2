@@ -116,7 +116,7 @@ router.post(
       }
 
       const specialties = [...new Set((req.body.specialties || []).map(value => String(value || '').normalize('NFC').trim()).filter(Boolean))];
-      const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+      const activeServiceKeys = new Set((await getActiveServiceNames(Service)).map(normalizeServiceKey));
       if (!specialties.length || specialties.some(specialty => !activeServiceKeys.has(normalizeServiceKey(specialty)))) {
         return res.status(400).json({ message: 'التسجيل متاح حاليًا لخدمات الدش والريسيفرات وكاميرات المراقبة والشاشات فقط.' });
       }
@@ -231,7 +231,7 @@ router.post(
       );
 
       const safeUser = fanni.toSafeJSON();
-      const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+      const activeServiceKeys = new Set((await getActiveServiceNames(Service)).map(normalizeServiceKey));
       safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
       return res.json({
         token,
@@ -260,7 +260,7 @@ router.post('/guidelines/accept', auth(), requireFanni, requireApprovedFanni, as
 
 router.get('/me', auth(), requireFanni, async (req, res) => {
   const safeUser = req.user.toSafeJSON();
-  const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+  const activeServiceKeys = new Set((await getActiveServiceNames(Service)).map(normalizeServiceKey));
   safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
   return res.json(safeUser);
 });
@@ -273,7 +273,7 @@ router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (
     const duplicate = await Fanni.findOne({ phone, _id: { $ne: req.user._id } }).select('_id');
     if (duplicate) return res.status(409).json({ message: 'رقم الهاتف مسجل بالفعل في حساب آخر' });
     const requestedSpecialties = Array.isArray(req.body.specialties) ? req.body.specialties : null;
-    const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+    const activeServiceKeys = new Set((await getActiveServiceNames(Service)).map(normalizeServiceKey));
     const normalizedSpecialties = requestedSpecialties
       ? [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(value => value && activeServiceKeys.has(normalizeServiceKey(value))))]
       : null;
