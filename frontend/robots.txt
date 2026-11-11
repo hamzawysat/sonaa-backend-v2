@@ -11,4 +11,4 @@ Disallow: /palette-preview.html
 Disallow: /admin-audio-review.js
 Disallow: /password.html
 
-Sitemap: https://sonaa-backend-v2.vercel.app/sitemap.xml
+Sitemap: https://hamzawy-sat.vercel.app/sitemap.xml
