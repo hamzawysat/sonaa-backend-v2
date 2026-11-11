@@ -19,6 +19,7 @@ const Complaint = require('../models/Complaint');
 const WalletTransaction = require('../models/WalletTransaction');
 const { createNotification } = require('../utils/notifications');
 const Service = require('../models/Service');
+const { getActiveServiceNames } = require('../services/serviceCatalog');
 const Region = require('../models/Region');
 const { AREA_OPTIONS } = require('../config/areas');
 const AdminConfig = require('../models/AdminConfig');
@@ -111,8 +112,7 @@ function publicFanni(fanni) {
     : { ...fanni };
   delete item.passwordHash;
   delete item.__v;
-  const activeSpecialties = (Array.isArray(item.specialties) ? item.specialties : [])
-    .filter(value => ALL_SERVICES.some(service => normalizeServiceName(service) === normalizeServiceName(value)));
+  const activeSpecialties = Array.isArray(item.specialties) ? item.specialties : [];
   const statusMap = {
     'معتمد': 'approved',
     'قيد المراجعة': 'pending',
@@ -281,10 +281,11 @@ router.use(createAdminComplaintsRouter({
 
 router.get(['/counts', '/stats'], auth('admin'), async (req, res, next) => {
   try {
+    const activeServices = await getActiveServiceNames(Service);
     const acceptedFanniFilter = {
       $and: [
         { $or: [ { role: 'fanni' }, { role: { $ne: 'admin' }, specialties: { $exists: true, $ne: [] }, adminRole: null } ] },
-        { specialties: { $in: ALL_SERVICES } },
+        { specialties: { $in: activeServices } },
         { status: { $in: ['معتمد', 'معلق'] } }
       ]
     };
@@ -369,7 +370,7 @@ router.delete('/clients/:phone', auth('admin'), async (req, res, next) => {
 
 router.use(createAdminOffersRouter({ auth, Order, Fanni, adminName, writeAdminAudit }));
 router.use(createAdminOrdersRouter({
-  auth, validate, Joi, ALL_SERVICES, reasonSchema, MAX_LIST_LIMIT,
+  auth, validate, Joi, ALL_SERVICES, Service, reasonSchema, MAX_LIST_LIMIT,
   Order, WalletTransaction, Fanni, AdminConfig, mongoose,
   normalizePhone, adminName, writeAdminAudit, createNotification, requireRootAdmin
 }));
