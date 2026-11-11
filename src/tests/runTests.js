@@ -60,6 +60,15 @@ async function run() {
       assert.equal(canAccessAdmin({ role: 'fanni', adminRole: 'مدير', adminPermissions: { __customOverrides: true, passwordRecovery: { read: true, write: false } } }, { path: '/password-recovery/admin/support-passwords', method: 'POST' }), false);
     });
 
+    await test('technician order matching accepts only explicit current services', async () => {
+      const { createFanniCanHandleService } = require('../utils/orderPresentation');
+      const { CATEGORIES, normalizeServiceName } = require('../config/professions');
+      const canHandle = createFanniCanHandleService({ CATEGORIES, normalizeServiceName });
+      assert.equal(canHandle(['صيانة دش'], 'صيانة دش'), true);
+      assert.equal(canHandle(['صيانة تكييف'], 'صيانة دش'), false);
+      assert.equal(canHandle(['دش وكاميرات وشاشات'], 'صيانة دش'), false, 'a historical category label must not grant every service');
+    });
+
     await test('role defaults are restored and manager can publish orders and moderate offers', async () => {
       const readOnly = { role: 'fanni', adminRole: 'قراءة فقط' };
       assert.equal(canAccessAdmin(readOnly, { path: '/orders', method: 'GET' }), true);
