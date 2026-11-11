@@ -45,7 +45,7 @@ function createOrderAdminPublicationRouter({
         });
       }
   
-      const reviewCheck = await Order.findOne({ sn }).select('+voiceRecordingData status voiceReviewedAt').lean();
+      const reviewCheck = await Order.findOne({ sn }).select('+voiceRecordingData status voiceReviewedAt service').lean();
       if (!reviewCheck) return res.status(404).json({ message: 'الطلب غير موجود' });
       if (reviewCheck.status !== 'قيد المراجعة') return res.status(409).json({ message: 'الطلب ليس قيد المراجعة، لذلك لم يتم نشره', status: reviewCheck.status });
       const isCurrentService = (ALL_SERVICES || []).some(service => normalizeServiceName(service) === normalizeServiceName(reviewCheck.service));
