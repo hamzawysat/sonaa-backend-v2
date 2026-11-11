@@ -943,7 +943,7 @@ async function run() {
       const hiddenBuiltIn = await Service.create({ name: ALL_SERVICES[0], category: 'دش وكاميرات وشاشات', isActive: false });
       const customActive = await Service.create({ name: 'كهرباء', category: 'خدمات منزلية', isActive: true, isPublic: true });
       const customHidden = await Service.create({ name: 'سباكة', category: 'خدمات منزلية', isActive: false, isPublic: false });
-      const legacyUnpublished = await Service.create({ name: 'سباك منازل', category: 'السباكة', isActive: true });
+      const legacyUnpublished = await Service.create({ name: 'سباك منازل', category: 'السباكة', isActive: true, createdAt: new Date('2026-10-21T00:00:00.000Z') });
       try {
         const publicCatalog = await request(app).get('/api/services');
         assert.equal(publicCatalog.status, 200);
