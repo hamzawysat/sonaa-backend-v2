@@ -436,16 +436,8 @@ function fanniCanHandleServiceFrontend(specialties, serviceName) {
  const service = normalize(serviceName);
  const selected = specialties.map(normalize).filter(Boolean);
 
- if (selected.includes(service)) return true;
-
- const category = CATEGORIES.find(cat =>
-  Array.isArray(cat.services) &&
-  cat.services.some(item => normalize(item) === service)
- );
-
- if (!category) return false;
-
- return selected.includes(normalize(category.label));
+ // Historical category labels must not activate every service in the new catalog.
+ return selected.includes(service);
 }
 
 function hasSubmittedOffer(sn){
