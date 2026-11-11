@@ -25,6 +25,7 @@ router.get('/available', auth(), async (req, res, next) => {
     const limit = 20;
     const skip = (page - 1) * limit;
     let specialties = [];
+    let matchingServices = [];
     let technicianAreas = [];
     let blockedPhones = [];
 
@@ -65,7 +66,7 @@ router.get('/available', auth(), async (req, res, next) => {
         return res.set('Cache-Control', 'no-store').json({ orders: [], data: [], pagination: { page, limit, total: 0, pages: 0 } });
       }
       const activeServices = await getActiveServiceNames(Service);
-      const matchingServices = activeServices.filter(service => fanniCanHandleService(specialties, service));
+      matchingServices = activeServices.filter(service => fanniCanHandleService(specialties, service));
       if (!matchingServices.length) {
         return res.set('Cache-Control', 'no-store').json({ orders: [], data: [], pagination: { page, limit, total: 0, pages: 0 } });
       }
