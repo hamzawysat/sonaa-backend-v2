@@ -225,7 +225,16 @@ function createAdminFanniProfilesRouter({
         if (duplicate) return res.status(409).json({ message: 'رقم الهاتف المطلوب أصبح مسجلًا في حساب آخر. ارفض الطلب واطلب من الفني رقمًا آخر.' });
         fanni.phone = pending.phone;
       }
-      if (changedFields.includes('specialties')) fanni.specialties = pending.specialties;
+      if (changedFields.includes('specialties')) {
+        const requestedSpecialties = [...new Set((Array.isArray(pending.specialties) ? pending.specialties : [])
+          .map(value => String(value || '').normalize('NFC').trim())
+          .filter(value => value && (ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(value))))];
+        if (!requestedSpecialties.length) {
+          return res.status(409).json({ message: 'طلب التعديل لا يحتوي على خدمة معتمدة حاليًا. ارفض الطلب واطلب من الفني اختيار خدمة من القائمة الجديدة.' });
+        }
+        // Preserve legacy specialties in history; only approved Hamzawy Sat services can be newly activated.
+        fanni.specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
+      }
       if (changedFields.includes('areas')) fanni.areas = pending.areas;
       fanni.pendingProfileChange = undefined;
       fanni.decisions.push(decision(req, 'اعتماد تعديل بيانات', 'اعتماد طلب تعديل بيانات الفني'));
