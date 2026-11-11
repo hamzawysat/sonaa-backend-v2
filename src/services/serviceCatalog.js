@@ -16,9 +16,17 @@ async function getServiceRecords(Service) {
   return Service.find({}).select('name category emoji isActive sortOrder categorySortOrder').lean();
 }
 
+function isBuiltInServiceRecord(item) {
+  return CATEGORIES.some(category => normalizeServiceKey(category.label) === normalizeServiceKey(item.category) &&
+    category.services.some(name => normalizeServiceKey(name) === normalizeServiceKey(item.name)));
+}
+
 async function getActiveServiceNames(Service) {
   const records = await getServiceRecords(Service);
-  const active = new Map(records.filter(item => item.isActive !== false && !isExcludedService(item.name)).map(item => [normalizeServiceKey(item.name), item.name]));
+  // Old Sonaa services were stored as active but deliberately hidden from customers.
+  // Only the current built-in catalog or an explicit owner opt-in may be public.
+  const active = new Map(records.filter(item => item.isActive !== false && !isExcludedService(item.name) &&
+    (isBuiltInServiceRecord(item) || item.isPublic === true)).map(item => [normalizeServiceKey(item.name), item.name]));
   const recordsByPair = new Set(records.map(item => normalizeServiceKey(item.category) + '|' + normalizeServiceKey(item.name)));
   for (const category of CATEGORIES) {
     for (const name of category.services) {
@@ -36,4 +44,4 @@ async function isActiveService(Service, name) {
   return activeNames.some(value => normalizeServiceKey(value) === key);
 }
 
-module.exports = { normalizeServiceKey, isExcludedService, getServiceRecords, getActiveServiceNames, isActiveService };
+module.exports = { normalizeServiceKey, isExcludedService, isBuiltInServiceRecord, getServiceRecords, getActiveServiceNames, isActiveService };
