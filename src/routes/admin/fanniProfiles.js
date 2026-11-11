@@ -1,6 +1,8 @@
 'use strict';
 
 const express = require('express');
+const Service = require('../../models/Service');
+const { getActiveServiceNames } = require('../../services/serviceCatalog');
 const { normalizeArea, getEffectiveAreaOptions } = require('../../config/areas');
 const { normalizePhone } = require('../../utils/phone');
 
@@ -42,7 +44,8 @@ function createAdminFanniProfilesRouter({
       if (!validId(req.params.id)) return sendBadId(res);
       const fanni = await Fanni.findOne({ _id: req.params.id, role: 'fanni' }).select('-passwordHash').lean();
       if (!fanni) return res.status(404).json({ message: 'حساب الفني غير موجود.' });
-      const specialties = (Array.isArray(fanni.specialties) ? fanni.specialties : []).filter(value => (ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(value)));
+      const activeServices = await getActiveServiceNames(Service);
+      const specialties = (Array.isArray(fanni.specialties) ? fanni.specialties : []).filter(value => activeServices.includes(normalizeServiceKey(value)));
       return res.set('Cache-Control', 'no-store').json({ fanni: { _id: String(fanni._id), name: fanni.name, phone: fanni.phone, specialties, areas: fanni.areas || [], status: fanni.status } });
     } catch (err) { next(err); }
   });
@@ -70,8 +73,9 @@ function createAdminFanniProfilesRouter({
       if (areas.some(item => !allowedAreas.has(normalizeArea(item)))) return res.status(400).json({ message: 'اختار مناطق العمل من القائمة المعتمدة فقط.' });
       const normalizedAreas = areas;
       const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()))];
-      if (requestedSpecialties.some(item => !(ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(item)))) return res.status(400).json({ message: 'توجد خدمة غير موجودة في قائمة الخدمات المعتمدة.' });
-      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
+      const activeServices = await getActiveServiceNames(Service);
+      if (requestedSpecialties.some(item => !activeServices.includes(normalizeServiceKey(item)))) return res.status(400).json({ message: 'توجد خدمة غير ظاهرة في قائمة الخدمات الحالية.' });
+      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, activeServices);
       const before = { phone: fanni.phone, specialties: [...(fanni.specialties || [])], areas: [...(fanni.areas || [])] };
       const auditDetails = JSON.stringify({ before, after: { phone, specialties, areas: normalizedAreas } });
       const profileDecision = decision(req, 'تعديل بيانات فني', 'تعديل مباشر من لوحة الإدارة');
@@ -166,9 +170,10 @@ function createAdminFanniProfilesRouter({
 
       const normalizedAreas = areas;
       const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()).filter(Boolean))];
-      const invalidSpecialties = requestedSpecialties.filter(item => !(ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(item)));
-      if (invalidSpecialties.length) return res.status(400).json({ message: 'توجد خدمة غير موجودة في قائمة الخدمات المعتمدة.', invalidSpecialties });
-      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
+      const activeServices = await getActiveServiceNames(Service);
+      const invalidSpecialties = requestedSpecialties.filter(item => !activeServices.includes(normalizeServiceKey(item)));
+      if (invalidSpecialties.length) return res.status(400).json({ message: 'توجد خدمة غير ظاهرة في قائمة الخدمات الحالية.', invalidSpecialties });
+      const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, activeServices);
       const before = { specialties: [...(fanni.specialties || [])], areas: [...(fanni.areas || [])] };
       fanni.specialties = specialties;
       fanni.areas = normalizedAreas;
@@ -188,10 +193,11 @@ function createAdminFanniProfilesRouter({
   router.get('/fanni-profile-edits', auth('admin'), async (req, res, next) => {
     try {
       const fannis = await Fanni.find({ role: 'fanni', 'pendingProfileChange.requestedAt': { $exists: true, $ne: null } }).select('-passwordHash').sort({ 'pendingProfileChange.requestedAt': 1 }).limit(MAX_LIST_LIMIT).lean();
+      const activeServices = await getActiveServiceNames(Service);
       return res.set('Cache-Control', 'no-store').json({ requests: fannis.map(item => {
         const pending = item.pendingProfileChange || {};
         const current = { phone: item.phone, specialties: item.specialties || [], areas: item.areas || [] };
-        const activeServiceKeys = new Set((ALL_SERVICES || []).map(normalizeServiceKey));
+        const activeServiceKeys = new Set(activeServices);
         const activeSpecialties = values => (Array.isArray(values) ? values : [])
           .filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
         const sameArray = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || []);
@@ -240,14 +246,15 @@ function createAdminFanniProfilesRouter({
         fanni.phone = pending.phone;
       }
       if (changedFields.includes('specialties')) {
+        const activeServices = await getActiveServiceNames(Service);
         const requestedSpecialties = [...new Set((Array.isArray(pending.specialties) ? pending.specialties : [])
           .map(value => String(value || '').normalize('NFC').trim())
-          .filter(value => value && (ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(value))))];
+          .filter(value => value && activeServices.includes(normalizeServiceKey(value))))];
         if (!requestedSpecialties.length) {
           return res.status(409).json({ message: 'طلب التعديل لا يحتوي على خدمة معتمدة حاليًا. ارفض الطلب واطلب من الفني اختيار خدمة من القائمة الجديدة.' });
         }
         // Preserve legacy specialties in history; only approved Hamzawy Sat services can be newly activated.
-        fanni.specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, ALL_SERVICES);
+        fanni.specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, activeServices);
       }
       if (changedFields.includes('areas')) fanni.areas = pending.areas;
       fanni.pendingProfileChange = undefined;
