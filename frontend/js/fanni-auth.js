@@ -115,7 +115,7 @@ function beginEditProfile(){
  state.editPhone=String(user.phone||'');
  state.editAreas=Array.isArray(user.areas)?user.areas.filter(area=>String(area||'').trim()!=='جميع المناطق'):[];
  state.editAreaSearch='';
- state.editSpecialties=Array.isArray(user.specialties)?user.specialties.filter(value=>ALL_SERVICES.includes(String(value||'').trim().replace(/\\s+/g,' '))):[];
+ state.editSpecialties=Array.isArray(user.specialties)?user.specialties.filter(value=>ALL_SERVICES.includes(String(value||'').trim().replace(/\s+/g,' '))):[];
  state.editProfileMode=true;state.openSpecialtyCategory='';state.error='';state.success='';render();
 }
 function cancelEditProfile(){state.editProfileMode=false;state.editSaving=false;state.error='';state.success='';render();}
