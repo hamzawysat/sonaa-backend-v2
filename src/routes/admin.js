@@ -302,6 +302,7 @@ router.get(['/counts', '/stats'], auth('admin'), async (req, res, next) => {
 
 router.use(createAdminFanniProfilesRouter({
   Region,
+  Service,
   AREA_OPTIONS,
   ALL_SERVICES,
   auth,
