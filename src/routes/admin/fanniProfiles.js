@@ -28,7 +28,7 @@ function createAdminFanniProfilesRouter({
   const router = express.Router();
 
   function normalizeServiceKey(value) {
-    return String(value || '').normalize('NFC').trim().replace(/\\s+/g, ' ');
+    return String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ');
   }
 
   function preserveHistoricalSpecialties(current, requested, allServices) {
