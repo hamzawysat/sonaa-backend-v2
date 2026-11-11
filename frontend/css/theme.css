@@ -445,7 +445,7 @@
 }
 
 
-/* Shared animated shimmer for the Sonaa brand name beside its logo in web headers. */
+/* Shared animated shimmer for the Hamzawy Sat brand name beside its logo in web headers. */
 .sonaa-brand-shimmer{
   display:inline-block;
   color:currentColor;
@@ -465,11 +465,11 @@
   .sonaa-brand-shimmer{animation:none;background-position:50% 50%}
 }
 
-/* Keep dashboard brand lettering solid and legible beneath the animated highlight. */
+/* Keep dashboard brand lettering solid and legible beneath the animated gold highlight. */
 #app .app-header h1 .sonaa-brand-shimmer,
 #app .fanni-app-header h1 .sonaa-brand-shimmer{
   color:#242832!important;
-  background-image:linear-gradient(108deg,#173c6c 0%,#173c6c 38%,rgba(201,163,79,.72) 46%,#fff 50%,#f5e5bd 54%,#173c6c 63%,#173c6c 100%);
+  background-image:linear-gradient(108deg,#242832 0%,#242832 38%,rgba(201,163,79,.72) 46%,#fff 50%,#f5e5bd 54%,#242832 63%,#242832 100%);
   background-size:240% 100%;
   background-position:100% 50%;
   background-clip:text;
