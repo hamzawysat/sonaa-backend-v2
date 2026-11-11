@@ -917,6 +917,13 @@ async function run() {
       assert.equal(persisted.service, 'صيانة تكييف');
     });
 
+    await test('admin order correction rejects historical services', async () => {
+      const response = await request(app).patch('/api/admin/orders/SN999991/correct')
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send({ clientPhone: '01012345678', service: 'صيانة تكييف', area: 'المعادي' });
+      assert.equal(response.status, 400, JSON.stringify(response.body));
+    });
+
     await test('order creation rejects historical services', async () => {
       const r = await request(app).post('/api/orders')
         .set('Authorization', 'Bearer ' + clientToken)

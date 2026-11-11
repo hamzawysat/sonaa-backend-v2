@@ -5,7 +5,7 @@ const express = require('express');
 function createOrderOfferRouter({
   Order, Rating, Fanni, auth, hasAcceptedGuidelines, sanitizeOffer,
   publicRatings, normalizePhone, sanitizeText, hasRatingBlock, validSN,
-  ACTIVE_STATUSES, currentPricing, DEFAULT_COMMISSION_RATE, money,
+  ACTIVE_STATUSES, ALL_SERVICES, currentPricing, DEFAULT_COMMISSION_RATE, money,
   findPhoneContainingField, fanniCanHandleService, fanniWorksInArea, createNotification, Joi
 }) {
   const router = express.Router();
@@ -196,6 +196,10 @@ function createOrderOfferRouter({
         });
       }
   
+      if (!ALL_SERVICES.includes(order.service)) {
+        return res.status(409).json({ message: 'الخدمة المرتبطة بهذا الطلب من الخدمات القديمة، ولم يعد استقبال عروض جديدة عليها متاحًا. بيانات الطلب محفوظة.' });
+      }
+
       if (!ACTIVE_STATUSES.includes(order.status)) {
         return res.status(409).json({
           message: 'الطلب غير منشور أو لم يعد متاحًا للعروض'

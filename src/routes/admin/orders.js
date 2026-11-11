@@ -6,6 +6,7 @@ function createAdminOrdersRouter({
   auth,
   validate,
   Joi,
+  ALL_SERVICES,
   reasonSchema,
   MAX_LIST_LIMIT,
   Order,
@@ -46,7 +47,7 @@ router.get('/orders', auth('admin'), async (req, res, next) => {
 router.patch('/orders/:sn/correct', auth('admin'), validate(Joi.object({
   clientName: Joi.string().trim().max(50).allow('').optional(),
   clientPhone: Joi.string().trim().min(10).max(20).required(),
-  service: Joi.string().trim().min(2).max(100).required(),
+  service: Joi.string().trim().valid(...ALL_SERVICES).required(),
   area: Joi.string().trim().min(2).max(250).required(),
   address: Joi.string().trim().max(250).allow('').optional(),
   description: Joi.string().trim().max(1000).allow('').optional(),

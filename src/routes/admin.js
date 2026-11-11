@@ -369,7 +369,7 @@ router.delete('/clients/:phone', auth('admin'), async (req, res, next) => {
 
 router.use(createAdminOffersRouter({ auth, Order, Fanni, adminName, writeAdminAudit }));
 router.use(createAdminOrdersRouter({
-  auth, validate, Joi, reasonSchema, MAX_LIST_LIMIT,
+  auth, validate, Joi, ALL_SERVICES, reasonSchema, MAX_LIST_LIMIT,
   Order, WalletTransaction, Fanni, AdminConfig, mongoose,
   normalizePhone, adminName, writeAdminAudit, createNotification, requireRootAdmin
 }));

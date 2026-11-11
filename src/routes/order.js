@@ -288,6 +288,7 @@ router.use(createOrderOfferRouter({
   hasRatingBlock,
   validSN,
   ACTIVE_STATUSES,
+  ALL_SERVICES,
   currentPricing,
   DEFAULT_COMMISSION_RATE,
   money,
