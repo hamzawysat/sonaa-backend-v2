@@ -55,7 +55,7 @@ function createAdminServicesRouter({
       for (const cat of map.values()) {
         for (const s of cat.services) allFlat.push(s);
       }
-      return res.json({
+      return res.set('Cache-Control', 'no-store').json({
         ok: true,
         categories: categoriesDetailed,
         services: allFlat,
