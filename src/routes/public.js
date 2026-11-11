@@ -255,7 +255,7 @@ router.get('/content', async (req, res, next) => {
     const config = await AdminConfig.findOne({ key: 'main' }).select('content settings.siteName settings.maintenance settings.maintenanceMessage').lean();
     const content = config?.content || { announcement: '', faqs: [] };
     return res.set('Cache-Control', 'no-store').json({
-      siteName: String(config?.settings?.siteName || 'حمزاوي سات'),
+      siteName: String(config?.settings?.siteName && config.settings.siteName !== 'صُنّاع' ? config.settings.siteName : 'حمزاوي سات'),
       maintenance: Boolean(config?.settings?.maintenance),
       maintenanceMessage: String(config?.settings?.maintenanceMessage || ''),
       announcement: String(content.announcement || ''),
