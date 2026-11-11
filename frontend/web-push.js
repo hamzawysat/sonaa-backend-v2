@@ -1,5 +1,7 @@
 'use strict';
 (()=> {
+  const API_BASE='https://hamzawy-sat.vercel.app';
+  const apiUrl=path=>API_BASE+path;
   const keys={client:'sonaa_client_account_token',fanni:'fanni_token_v4',admin:'admin_token_v3'};
   const bytes=s=>Uint8Array.from(atob((s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
   let hiddenFor='', checkedFor='', checkingFor='';
@@ -39,7 +41,7 @@
     b.disabled=false;
   }
   async function saveSubscription(a,s){
-    const r=await fetch('/api/notifications/'+a.role+'/web-subscription',{
+    const r=await fetch(apiUrl('/api/notifications/'+a.role+'/web-subscription'),{
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.token},
       body:JSON.stringify({subscription:s.toJSON()})
@@ -78,7 +80,7 @@
       let permission=Notification.permission;
       if(permission!=='granted')permission=await Notification.requestPermission();
       if(permission!=='granted')throw Error('لم يتم السماح بإشعارات المتصفح.');
-      const kr=await fetch('/api/notifications/web-push-public-key',{cache:'no-store'}),kd=await kr.json().catch(()=>({}));
+      const kr=await fetch(apiUrl('/api/notifications/web-push-public-key'),{cache:'no-store'}),kd=await kr.json().catch(()=>({}));
       if(!kr.ok||!kd.publicKey)throw Error(kd.message||'خدمة إشعارات المتصفح غير متاحة حاليًا. حاول مرة أخرى لاحقًا.');
       const reg=await navigator.serviceWorker.register('/service-worker.js',{scope:'/'});
       await navigator.serviceWorker.ready;
