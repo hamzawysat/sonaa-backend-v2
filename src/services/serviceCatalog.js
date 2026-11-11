@@ -3,7 +3,7 @@
 const { CATEGORIES } = require('../config/professions');
 
 function normalizeServiceKey(value) {
-  return String(value || '').normalize('NFC').trim().replace(/\\s+/g, ' ').toLocaleLowerCase('ar-EG');
+  return String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('ar-EG');
 }
 
 function isExcludedService(value) {
