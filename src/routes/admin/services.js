@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { isBuiltInServiceRecord } = require('../../services/serviceCatalog');
 const {
   normalizeForCompare,
   isBrokenWallScreenService,
@@ -38,7 +39,10 @@ function createAdminServicesRouter({
       const savedServices = await Service.find({}).sort({ category: 1, sortOrder: 1, name: 1 }).lean();
       // The owner console must show every database-managed service, including hidden legacy/custom entries.
       // Only the explicitly retired malformed wall-screen aliases remain excluded.
-      const visibleServices = savedServices.filter(item => !isBrokenWallScreenService(item.name));
+      const visibleServices = savedServices.filter(item => !isBrokenWallScreenService(item.name)).map(item => ({
+        ...item,
+        isActive: item.isActive !== false && (isBuiltInServiceRecord(item) || item.isPublic === true)
+      }));
       const map = buildAdminCategoriesMap(visibleServices);
       const categoriesDetailed = Array.from(map.values()).map(cat => ({
         label: cat.label,
@@ -97,7 +101,8 @@ function createAdminServicesRouter({
         emoji: emoji ? String(emoji).trim() : (findCategoryByLabel(category)?.emoji || findCategoryByService(name)?.emoji || '🔧'),
         sortOrder: sortOrder !== undefined && sortOrder !== '' ? Number(sortOrder) : 0,
         categorySortOrder: (findCategoryByLabel(category) ? (CATEGORIES.findIndex(c => normalizeForCompare(c.label) === normalizeForCompare(category)) + 1) * 10 : 100000),
-        isActive: true
+        isActive: true,
+        isPublic: true
       };
   
       const existingInCategory = (await Service.find({ category }).select('+normalizedName')).find(item =>
@@ -111,6 +116,7 @@ function createAdminServicesRouter({
         existingInCategory.sortOrder = payload.sortOrder;
         existingInCategory.categorySortOrder = payload.categorySortOrder;
         existingInCategory.isActive = true;
+        existingInCategory.isPublic = true;
         await existingInCategory.save();
         await writeAdminAudit(req, 'إعادة تفعيل خدمة', 'services', String(existingInCategory._id), JSON.stringify({ name: existingInCategory.name, category: existingInCategory.category }));
         return res.json({ ok: true, message: 'تمت إعادة إضافة الخدمة', service: existingInCategory, data: existingInCategory });
@@ -138,7 +144,7 @@ function createAdminServicesRouter({
         const categoryOrder = (index + 1) * 10, legacy = findCategoryByLabel(category);
         if (legacy) for (const [serviceIndex, name] of legacy.services.entries()) {
           let service = await Service.findOne({ normalizedName: normalizeForCompare(name), category });
-          if (!service) await Service.create({ name, category, emoji: legacy.emoji || '🔧', isActive: true, sortOrder: (serviceIndex + 1) * 10, categorySortOrder: categoryOrder });
+          if (!service) await Service.create({ name, category, emoji: legacy.emoji || '🔧', isActive: true, isPublic: true, sortOrder: (serviceIndex + 1) * 10, categorySortOrder: categoryOrder });
           else { service.categorySortOrder = categoryOrder; await service.save(); }
         }
         await Service.updateMany({ category }, { $set: { categorySortOrder: categoryOrder } });
@@ -166,11 +172,11 @@ function createAdminServicesRouter({
         let service = await Service.findOne({ normalizedName, category });
         if (service) {
           service.sortOrder = item.sortOrder; if (item.emoji) service.emoji = item.emoji;
-          if (item.isActive !== undefined) service.isActive = item.isActive;
+          if (item.isActive !== undefined) { service.isActive = item.isActive; service.isPublic = item.isActive; }
           await service.save();
         } else {
           const legacyCategory = findCategoryByLabel(category), legacyService = findCategoryByService(item.name);
-          await Service.create({ name: item.name, category, emoji: item.emoji || legacyService?.emoji || legacyCategory?.emoji || '🔧', isActive: item.isActive !== false, sortOrder: item.sortOrder });
+          await Service.create({ name: item.name, category, emoji: item.emoji || legacyService?.emoji || legacyCategory?.emoji || '🔧', isActive: item.isActive !== false, isPublic: item.isActive !== false, sortOrder: item.sortOrder });
         }
       }
       await writeAdminAudit(req, 'تغيير ترتيب الخدمات', 'services', category, JSON.stringify({ count: value.items.length }));
@@ -322,7 +328,8 @@ function createAdminServicesRouter({
             category: targetCategory,
             emoji: emoji ? String(emoji).trim() : (findCategoryByLabel(targetCategory)?.emoji || legacyCat.emoji),
             sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
-            isActive: true
+            isActive: true,
+            isPublic: true
           });
           oldNameForRollback = rawParam;
           oldCategoryForRollback = legacyCat.label;
@@ -382,6 +389,7 @@ function createAdminServicesRouter({
       if (sortOrder !== undefined) serviceDoc.sortOrder = Number(sortOrder);
       if (isActive !== undefined) {
         serviceDoc.isActive = isActive;
+        serviceDoc.isPublic = isActive;
       }
   
       try {
@@ -468,6 +476,7 @@ function createAdminServicesRouter({
   
       if (target) {
         target.isActive = false;
+        target.isPublic = false;
         await target.save();
         await writeAdminAudit(req, 'إخفاء خدمة', 'services', String(target._id), JSON.stringify({ name: target.name, category: target.category }));
         return res.json({ ok: true, message: 'تم إخفاء الخدمة - لن تظهر للعملاء بسبب الدمج في public.js', service: target });
@@ -535,6 +544,7 @@ function createAdminServicesRouter({
       if (!target) return res.status(404).json({ message: 'الخدمة غير موجودة' });
   
       target.isActive = true;
+      target.isPublic = true;
       await target.save();
       await writeAdminAudit(req, 'إظهار خدمة', 'services', String(target._id), JSON.stringify({ name: target.name, category: target.category }));
       return res.json({ ok: true, message: 'تمت إعادة تفعيل الخدمة', service: target });
