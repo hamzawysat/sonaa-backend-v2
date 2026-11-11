@@ -934,17 +934,28 @@ async function run() {
       assert.equal(clientAccount.includes('صُنّاع'), false);
     });
 
-    await test('public and admin service catalogs expose only the eight approved services', async () => {
+    await test('owner service catalog shows hidden and custom services while public catalog exposes active services only', async () => {
       const { ALL_SERVICES } = require('../config/professions');
+      const Service = require('../models/Service');
       assert.equal(ALL_SERVICES.length, 8);
-      const publicCatalog = await request(app).get('/api/services');
-      assert.equal(publicCatalog.status, 200);
-      assert.deepEqual([...publicCatalog.body.services].sort(), [...ALL_SERVICES].sort());
-      assert.ok(publicCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
-      const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
-      assert.equal(adminCatalog.status, 200);
-      assert.ok(adminCatalog.body.services.every(service => ALL_SERVICES.includes(service.name)));
-      assert.ok(adminCatalog.body.categories.every(category => category.services.every(service => ALL_SERVICES.includes(service))));
+      const hiddenBuiltIn = await Service.create({ name: ALL_SERVICES[0], category: 'دش وكاميرات وشاشات', isActive: false });
+      const customActive = await Service.create({ name: 'كهرباء', category: 'خدمات منزلية', isActive: true });
+      const customHidden = await Service.create({ name: 'سباكة', category: 'خدمات منزلية', isActive: false });
+      try {
+        const publicCatalog = await request(app).get('/api/services');
+        assert.equal(publicCatalog.status, 200);
+        assert.ok(publicCatalog.body.services.includes('كهرباء'), 'new active services must appear without code changes');
+        assert.ok(!publicCatalog.body.services.includes('سباكة'), 'hidden services must stay unavailable publicly');
+        assert.ok(!publicCatalog.body.services.includes(ALL_SERVICES[0]), 'a hidden built-in service must stay hidden publicly');
+        const adminCatalog = await request(app).get('/api/admin/services').set('Authorization', 'Bearer ' + adminToken);
+        assert.equal(adminCatalog.status, 200);
+        const adminServices = adminCatalog.body.services;
+        assert.ok(adminServices.some(service => service.name === 'كهرباء' && service.isActive === true));
+        assert.ok(adminServices.some(service => service.name === 'سباكة' && service.isActive === false));
+        assert.ok(adminServices.some(service => service.name === ALL_SERVICES[0] && service.isActive === false), 'hidden built-in services must remain visible to the owner');
+      } finally {
+        await Service.deleteMany({ _id: { $in: [hiddenBuiltIn._id, customActive._id, customHidden._id] } });
+      }
     });
 
     await test('order creation rejects an unknown service', async () => {
