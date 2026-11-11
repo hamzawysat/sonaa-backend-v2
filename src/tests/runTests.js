@@ -895,13 +895,19 @@ async function run() {
       const AdminConfig = require('../models/AdminConfig');
       let config = await AdminConfig.findOne({ key: 'main' });
       if (!config) config = await AdminConfig.create({ key: 'main' });
-      config.settings.siteName = 'صُنّاع';
-      await config.save();
-      const response = await request(app).get('/api/admin/settings').set('Authorization', 'Bearer ' + adminToken);
-      assert.equal(response.status, 200);
-      assert.equal(response.body.settings.siteName, 'حمزاوي سات');
-      const persisted = await AdminConfig.findOne({ key: 'main' }).lean();
-      assert.equal(persisted.settings.siteName, 'صُنّاع', 'GET must not rewrite persisted settings');
+      const previousSiteName = config.settings.siteName;
+      try {
+        config.settings.siteName = 'صُنّاع';
+        await config.save();
+        const response = await request(app).get('/api/admin/settings').set('Authorization', 'Bearer ' + adminToken);
+        assert.equal(response.status, 200);
+        assert.equal(response.body.settings.siteName, 'حمزاوي سات');
+        const persisted = await AdminConfig.findOne({ key: 'main' }).lean();
+        assert.equal(persisted.settings.siteName, 'صُنّاع', 'GET must not rewrite persisted settings');
+      } finally {
+        config.settings.siteName = previousSiteName || 'حمزاوي سات';
+        await config.save();
+      }
     });
 
     await test('public and admin service catalogs expose only the eight approved services', async () => {
