@@ -75,8 +75,7 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
 
   function buildAdminCategoriesMap(savedServices) {
     const map = new Map();
-    // Legacy services are seeded below, so an inactive database tombstone must
-    // suppress the seed itself; merely skipping the DB row leaves the old item visible.
+    // Seed built-in services, but reflect hidden database tombstones as hidden rows in the owner console.
     const hiddenLegacyKeys = new Set(savedServices
       .filter(saved => saved.isActive === false)
       .filter(saved => CATEGORIES.some(cat =>
