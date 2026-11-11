@@ -44,7 +44,7 @@ function createAdminFanniProfilesRouter({
       if (!validId(req.params.id)) return sendBadId(res);
       const fanni = await Fanni.findOne({ _id: req.params.id, role: 'fanni' }).select('-passwordHash').lean();
       if (!fanni) return res.status(404).json({ message: 'حساب الفني غير موجود.' });
-      const activeServices = await getActiveServiceNames(Service);
+      const activeServices = (await getActiveServiceNames(Service)).map(normalizeServiceKey);
       const specialties = (Array.isArray(fanni.specialties) ? fanni.specialties : []).filter(value => activeServices.includes(normalizeServiceKey(value)));
       return res.set('Cache-Control', 'no-store').json({ fanni: { _id: String(fanni._id), name: fanni.name, phone: fanni.phone, specialties, areas: fanni.areas || [], status: fanni.status } });
     } catch (err) { next(err); }
@@ -73,7 +73,7 @@ function createAdminFanniProfilesRouter({
       if (areas.some(item => !allowedAreas.has(normalizeArea(item)))) return res.status(400).json({ message: 'اختار مناطق العمل من القائمة المعتمدة فقط.' });
       const normalizedAreas = areas;
       const requestedSpecialties = [...new Set(value.specialties.map(item => item.normalize('NFC').trim()))];
-      const activeServices = await getActiveServiceNames(Service);
+      const activeServices = (await getActiveServiceNames(Service)).map(normalizeServiceKey);
       if (requestedSpecialties.some(item => !activeServices.includes(normalizeServiceKey(item)))) return res.status(400).json({ message: 'توجد خدمة غير ظاهرة في قائمة الخدمات الحالية.' });
       const specialties = preserveHistoricalSpecialties(fanni.specialties, requestedSpecialties, activeServices);
       const before = { phone: fanni.phone, specialties: [...(fanni.specialties || [])], areas: [...(fanni.areas || [])] };
