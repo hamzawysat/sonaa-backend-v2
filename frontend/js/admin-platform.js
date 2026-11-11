@@ -1,7 +1,7 @@
 'use strict';
 
 function renderServices(){
-  let html='<section class="mt-4 space-y-4"><div class="rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white"><p class="text-[12px] font-black">إدارة الخدمات والمهن والتخصصات</p><p class="text-[10px] text-blue-100 mt-1">إضافة • تعديل • حذف • ترتيب الأقسام والخدمات • مصدر موحد</p></div>';
+  let html='<section class="mt-4 space-y-4"><div class="rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white"><p class="text-[12px] font-black">إدارة خدمات حمزاوي سات</p><p class="text-[10px] text-blue-100 mt-1">إضافة • تعديل • حذف • ترتيب الأقسام والخدمات • مصدر موحد</p></div>';
   html+='<div class="premium-panel p-4"><div class="flex gap-2"><input id="new-service-name" placeholder="اسم خدمة جديدة" class="field flex-1"><input id="new-service-category" placeholder="القسم (اختياري)" class="field flex-1"><input id="new-service-emoji" placeholder="🔧" class="field !w-[60px]"><button onclick="addService()" class="pill-btn primary-pill">إضافة</button></div></div>';
   if(state.servicesLoading) html+='<div class="premium-panel p-10 text-center"><div class="h-8 w-8 rounded-full border-[3px] border-slate-200 border-t-blue-600 animate-spin mx-auto"></div></div>';
   if(state.filteredServices.length===0&&!state.servicesLoading) html+='<div class="premium-panel p-10 text-center text-[12px] font-bold text-slate-400">لا توجد خدمات</div>';
