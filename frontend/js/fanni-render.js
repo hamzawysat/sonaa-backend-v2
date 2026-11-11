@@ -6,7 +6,7 @@ function renderContent(){
   const previewTab=window.IS_EDITOR_PREVIEW?window.PREVIEW_REQUESTED_TAB:'';
   const authenticated=(!!previewTab&&!['login','register'].includes(previewTab))||(!!getToken()&&!forceTechnicianRegistration);
  document.title=authenticated?'لوحة الفني | حمزاوي سات':(state.tab==='register'?'تسجيل فني جديد | حمزاوي سات':'تسجيل دخول الفني | حمزاوي سات');
- const specialties=Array.isArray(user?.specialties)?user.specialties:[];
+ const specialties=Array.isArray(user?.specialties)?user.specialties.filter(value=>ALL_SERVICES.includes(String(value||'').trim().replace(/\\s+/g,' '))):[];
  const areas=Array.isArray(user?.areas)?user.areas:[];
  const balance=state.walletBalance||user?.walletBalance||user?.balance||user?.wallet||0;
  const approved=isApproved();
