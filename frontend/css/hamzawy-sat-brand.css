@@ -74,3 +74,53 @@ select:focus-visible, textarea:focus-visible {
 :where([class*="ring-blue-"],[class*="ring-sky-"],[class*="ring-cyan-"]){--tw-ring-color:#C9A34F!important}
 :where([class*="from-blue-"],[class*="from-sky-"],[class*="from-cyan-"]){--tw-gradient-from:#C9A34F!important;--tw-gradient-to:rgb(201 163 79 / 0)!important;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)!important}
 :where([class*="to-blue-"],[class*="to-sky-"],[class*="to-cyan-"]){--tw-gradient-to:#A9822E!important}
+
+
+/* Unified brand layer for legacy page-level styles. Keep semantic success/error colors intact. */
+:root,[data-sonaa-theme] {
+  --blue:#C9A34F!important; --blue2:#A9822E!important; --blue-dark:#A9822E!important;
+  --navy:#171A22!important; --navy2:#242832!important; --teal:#A9822E!important;
+  --page:#F8F6F0!important; --paper:#F8F6F0!important; --border:#E8E0CF!important;
+  --sonaa-color-0b1b3a:#171A22; --sonaa-color-1e3a8a:#242832;
+  --sonaa-color-2563eb:#C9A34F; --sonaa-color-3b82f6:#C9A34F;
+  --sonaa-color-1d4ed8:#A9822E; --sonaa-color-0284c7:#A9822E;
+  --sonaa-color-0891b2:#A9822E; --sonaa-color-0d9488:#A9822E;
+}
+body { background-color:#F8F6F0; color:#171A22; }
+:where(.header,.topbar,.hero,.page-header,.app-header) {
+  background:linear-gradient(135deg,#171A22,#242832)!important;
+  border-color:#C9A34F!important;color:#F8F6F0!important;
+}
+:where(.header,.topbar,.hero,.page-header,.app-header) :where(h1,h2,h3,p,small,strong,a,span,i,svg) {
+  color:inherit;
+}
+:where(button,a.btn,.btn,button.primary,button[type="submit"],.btn-primary,.account-support-float,.floating-support,.refresh-float,.refresh-button) {
+  background:#C9A34F!important;border:1px solid #A9822E!important;color:#171A22!important;
+  box-shadow:0 3px 0 #A9822E!important;text-shadow:none!important;
+}
+:where(button,a.btn,.btn,button.primary,button[type="submit"],.btn-primary,.account-support-float,.floating-support,.refresh-float,.refresh-button) :where(svg,i,span) { color:inherit!important; }
+:where(.btn.secondary,.btn.light,button.secondary,a.secondary) {
+  background:#F8F6F0!important;border:1px solid #C9A34F!important;color:#5A4520!important;
+  box-shadow:0 2px 0 #E8E0CF!important;
+}
+:where(a:not(.btn),.link,.text-link) { color:#A9822E; }
+:where(a:not(.btn),.link,.text-link):hover { color:#5A4520; }
+:where(.card,.panel,.modal,.topbar,.edit-picker-shell,.edit-specialty-category) {
+  border-color:#E8E0CF;
+}
+:where(input,select,textarea,.field) { accent-color:#C9A34F; }
+:where(input:focus,select:focus,textarea:focus,.field:focus) {
+  border-color:#C9A34F!important;outline-color:#C9A34F!important;
+  box-shadow:0 0 0 3px #C9A34F22!important;
+}
+:where([class*="text-blue-"],[class*="text-sky-"],[class*="text-cyan-"],[class*="text-indigo-"]) {color:#5A4520!important}
+:where([class*="bg-blue-"],[class*="bg-sky-"],[class*="bg-cyan-"],[class*="bg-indigo-"]) {background-color:#F8F6F0!important}
+:where([class*="border-blue-"],[class*="border-sky-"],[class*="border-cyan-"],[class*="border-indigo-"]) {border-color:#E8E0CF!important}
+:where([class*="ring-blue-"],[class*="ring-sky-"],[class*="ring-cyan-"],[class*="ring-indigo-"]) {--tw-ring-color:#C9A34F!important}
+:where(.edit-specialty-heading,.service-icon,.edit-category-emoji) {background-color:#F5F0E5!important;border-color:#E8E0CF!important}
+:where(.edit-picker-option.is-selected,.service-chip.selected,.edit-selected-chip,.edit-count-badge) {
+  background:#F5F0E5!important;border-color:#C9A34F!important;color:#5A4520!important;
+}
+:where(.account-support-float,.floating-support,.refresh-float,.refresh-button) {
+  width:auto;min-width:48px;min-height:48px;border-radius:14px!important;
+}
