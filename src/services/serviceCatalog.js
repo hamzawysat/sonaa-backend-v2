@@ -13,7 +13,7 @@ function isExcludedService(value) {
 }
 
 async function getServiceRecords(Service) {
-  return Service.find({}).select('name category emoji isActive sortOrder categorySortOrder').lean();
+  return Service.find({}).select('name category emoji isActive isPublic sortOrder categorySortOrder').lean();
 }
 
 function isBuiltInServiceRecord(item) {
