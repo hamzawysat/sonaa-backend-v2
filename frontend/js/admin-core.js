@@ -1,6 +1,6 @@
 
 'use strict';
-const BASE_URL='https://sonaa-backend-v2.vercel.app';
+const BASE_URL='https://hamzawy-sat.vercel.app';
 const TOKEN_KEY='admin_token_v3';
 function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function getToken(){if(window.IS_EDITOR_PREVIEW)return '';try{return localStorage.getItem(TOKEN_KEY)||''}catch{return ''}}
