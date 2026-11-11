@@ -60,6 +60,23 @@ async function run() {
       assert.equal(canAccessAdmin({ role: 'fanni', adminRole: 'مدير', adminPermissions: { __customOverrides: true, passwordRecovery: { read: true, write: false } } }, { path: '/password-recovery/admin/support-passwords', method: 'POST' }), false);
     });
 
+    await test('database service catalog supports owner-added services and respects hidden state', async () => {
+      const { getActiveServiceNames, isActiveService } = require('../services/serviceCatalog');
+      const records = [
+        { name: 'تركيب دش', category: 'دش وكاميرات وشاشات', isActive: true },
+        { name: 'كهرباء', category: 'خدمات منزلية', isActive: true },
+        { name: 'سباكة', category: 'خدمات منزلية', isActive: false }
+      ];
+      const fakeService = {
+        find: () => ({ select: () => ({ lean: async () => records }) })
+      };
+      const active = await getActiveServiceNames(fakeService);
+      assert.ok(active.includes('كهرباء'), 'new active database services must be accepted without code changes');
+      assert.ok(!active.includes('سباكة'), 'hidden services must not be available to clients or technicians');
+      assert.equal(await isActiveService(fakeService, 'كهرباء'), true);
+      assert.equal(await isActiveService(fakeService, 'سباكة'), false);
+    });
+
     await test('technician order matching accepts only explicit current services', async () => {
       const { createFanniCanHandleService } = require('../utils/orderPresentation');
       const { CATEGORIES, normalizeServiceName } = require('../config/professions');
