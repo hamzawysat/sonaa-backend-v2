@@ -36,13 +36,9 @@ function createAdminServicesRouter({
   router.get('/services', auth('admin'), async (req, res, next) => {
     try {
       const savedServices = await Service.find({}).sort({ category: 1, sortOrder: 1, name: 1 }).lean();
-      const visibleServices = savedServices.filter(item =>
-        !isBrokenWallScreenService(item.name) &&
-        CATEGORIES.some(category =>
-          normalizeForCompare(category.label) === normalizeForCompare(item.category) &&
-          category.services.some(name => normalizeForCompare(name) === normalizeForCompare(item.name))
-        )
-      );
+      // The owner console must show every database-managed service, including hidden legacy/custom entries.
+      // Only the explicitly retired malformed wall-screen aliases remain excluded.
+      const visibleServices = savedServices.filter(item => !isBrokenWallScreenService(item.name));
       const map = buildAdminCategoriesMap(visibleServices);
       const categoriesDetailed = Array.from(map.values()).map(cat => ({
         label: cat.label,
