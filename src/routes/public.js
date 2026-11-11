@@ -7,7 +7,7 @@ const Service = require('../models/Service');
 const Fanni = require('../models/Fanni');
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
-const { getActiveServiceNames, getServiceRecords, isExcludedService, isPublicServiceRecord } = require('../services/serviceCatalog');
+const { getActiveServiceNames, getServiceRecords, isPublicServiceRecord } = require('../services/serviceCatalog');
 
 const { CATEGORIES } = require('../config/professions');
 
@@ -94,7 +94,7 @@ router.get('/services', async (req, res, next) => {
     for (const [categoryIndex, category] of CATEGORIES.entries()) {
       const services = [];
       for (const [index, name] of category.services.entries()) {
-        if (isExcludedService(name) || savedPairs.has(normalize(category.label) + '|' + normalize(name))) continue;
+        if (savedPairs.has(normalize(category.label) + '|' + normalize(name))) continue;
         services.push({ name, emoji: category.emoji, isActive: true, sortOrder: (index + 1) * 10 });
       }
       if (services.length) categoriesMap.set(normalize(category.label), {
@@ -105,7 +105,7 @@ router.get('/services', async (req, res, next) => {
 
     // Publish current core services and custom services explicitly enabled by the owner.
     for (const saved of savedServices) {
-      if (saved.isActive === false || isExcludedService(saved.name) || !isPublicServiceRecord(saved)) continue;
+      if (saved.isActive === false || !isPublicServiceRecord(saved)) continue;
       const key = normalize(saved.category);
       if (!categoriesMap.has(key)) categoriesMap.set(key, {
         label: saved.category, emoji: saved.emoji || '🔧',
