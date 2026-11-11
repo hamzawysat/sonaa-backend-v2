@@ -15,17 +15,7 @@ const {
   normalizeServiceName
 } = require('../config/professions');
 
-const PUBLIC_SERVICE_NAMES = new Set([
-  'تركيب دش',
-  'صيانة دش',
-  'تركيب كاميرات مراقبة',
-  'صيانة كاميرات مراقبة',
-  'تركيب رسيفر',
-  'صيانة رسيفر',
-  'صيانة شاشة تلفزيون',
-  'تركيب شبكة إنترنت منزلية',
-  'صيانة أجهزة استقبال'
-].map(normalizeServiceName));
+const PUBLIC_SERVICE_NAMES = new Set(ALL_SERVICES.map(normalizeServiceName));
 
 const router = express.Router();
 
