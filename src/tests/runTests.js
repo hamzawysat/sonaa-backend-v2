@@ -302,11 +302,20 @@ async function run() {
 
     await test('technician registration and login preserve pending-review rules and Expo push-token lifecycle', async () => {
       const phone = '01012345681';
+      const legacyServiceRegistration = await request(app).post('/api/fanni/register').send({
+        name: 'فني تخصص قديم',
+        phone: '01012345682',
+        password: 'FanniTestPass123',
+        specialties: ['صيانة تكييف'],
+        areas: ['المعادي']
+      });
+      assert.equal(legacyServiceRegistration.status, 400, 'legacy professions must not be accepted for new registrations');
+
       const registration = await request(app).post('/api/fanni/register').send({
         name: 'فني اختبار التسجيل',
         phone,
         password: 'FanniTestPass123',
-        specialties: ['صيانة تكييف'],
+        specialties: ['صيانة دش'],
         areas: ['المعادي']
       });
       assert.equal(registration.status, 201);
@@ -327,7 +336,7 @@ async function run() {
         name: 'فني مكرر',
         phone,
         password: 'FanniTestPass123',
-        specialties: ['صيانة تكييف'],
+        specialties: ['صيانة دش'],
         areas: ['المعادي']
       });
       assert.equal(duplicate.status, 409);
@@ -562,13 +571,14 @@ async function run() {
       await test('technician profile edit request persists and appears in the admin review queue', async () => {
         const edit = await request(app).patch('/api/fanni/me')
           .set('Authorization', 'Bearer ' + fanniNewLogin.body.token)
-          .send({ phone: '01012345680', specialties: ['صيانة تكييف'], areas: ['مدينة نصر'] });
+          .send({ phone: '01012345680', specialties: ['صيانة دش'], areas: ['مدينة نصر'] });
         assert.equal(edit.status, 200, JSON.stringify(edit.body));
         assert.ok(edit.body.pendingProfileChange?.requestedAt);
         const Fanni = require('../models/Fanni');
         const persisted = await Fanni.findById(fanni._id).lean();
         assert.equal(persisted.pendingProfileChange.phone, '01012345680');
         assert.deepEqual(persisted.pendingProfileChange.areas, ['مدينة نصر']);
+        assert.deepEqual(persisted.pendingProfileChange.specialties, ['صيانة تكييف', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
         const queue = await request(app).get('/api/admin/fanni-profile-edits')
           .set('Authorization', 'Bearer ' + adminToken);
         assert.equal(queue.status, 200, JSON.stringify(queue.body));
