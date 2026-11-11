@@ -111,6 +111,8 @@ function publicFanni(fanni) {
     : { ...fanni };
   delete item.passwordHash;
   delete item.__v;
+  const activeSpecialties = (Array.isArray(item.specialties) ? item.specialties : [])
+    .filter(value => ALL_SERVICES.some(service => normalizeServiceName(service) === normalizeServiceName(value)));
   const statusMap = {
     'معتمد': 'approved',
     'قيد المراجعة': 'pending',
@@ -123,6 +125,7 @@ function publicFanni(fanni) {
     actualStatus: item.status,
     isApproved: item.status === 'معتمد',
     isDisabled: item.status === 'معلق',
+    activeSpecialties,
     balance: Number(item.walletBalance || 0),
     skill: Array.isArray(item.specialties) ? item.specialties.join('، ') : '',
     service: Array.isArray(item.specialties) ? item.specialties.join('، ') : ''

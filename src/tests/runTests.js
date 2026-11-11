@@ -545,8 +545,12 @@ async function run() {
 
       const fanni = await Fanni.create({
         name: 'فني اختبار', phone: '01012345680', passwordHash: await bcrypt.hash('FanniOldPass123', 12),
-        specialties: ['صيانة تكييف'], areas: ['القاهرة'], status: 'معتمد', role: 'fanni'
+        specialties: ['صيانة تكييف'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
       });
+      const legacyOnlyAreas = await request(app).get('/api/areas');
+      assert.equal(legacyOnlyAreas.status, 200);
+      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, 0,
+        'approved technicians with only historical services must not count as available');
       const oldFanniToken = jwt.sign({ id: String(fanni._id), role: 'fanni' }, process.env.JWT_SECRET, { expiresIn: '30d' });
       const fanniPasswordReset = await request(app).patch('/api/admin/fannis/' + fanni._id + '/password')
         .set('Authorization', 'Bearer ' + adminToken)
@@ -901,6 +905,16 @@ async function run() {
           description: 'اتصل بي على 01012345678 من فضلك'
         });
       assert.equal(r.status, 400);
+    });
+
+    await test('order creation rejects historical services', async () => {
+      const r = await request(app).post('/api/orders')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({
+          service: 'صيانة تكييف', area: 'المعادي', address: 'شارع التحرير 10',
+          description: 'أحتاج فني لصيانة الخدمة في المنزل'
+        });
+      assert.equal(r.status, 400, 'historical services must not be accepted for new orders');
     });
 
     await test('valid order returns tracking code and omits customer phone from public payload', async () => {

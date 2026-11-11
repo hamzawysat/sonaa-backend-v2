@@ -25,7 +25,7 @@ const ADMIN_SECTIONS = [
  {id:'dashboard',label:'الرئيسية',icon:'🏠',tabs:[{id:'dashboard',label:'ملخص الإدارة',count:()=>getAdminSectionCountById('dashboard')},{id:'stats',label:'الإحصائيات'}]},
  {id:'clients',label:'إدارة العملاء',icon:'👥',tabs:[{id:'clients',label:'كل العملاء'},{id:'orders',label:'طلبات العملاء',count:()=>getPendingOrderCount()}]},
  {id:'technicians',label:'إدارة الفنيين',icon:'👷',tabs:[{id:'fannis',label:'كل الفنيين'},{id:'pending',label:'انتظار الاعتماد',count:()=>getPendingTechnicianCount()},{id:'profileEdits',label:'طلبات تعديل البيانات',count:()=>state.pendingProfileEdits.length},{id:'disabled',label:'الفنيون الموقوفون'},{id:'levels',label:'المستويات والشارات'},{id:'offers',label:'عروض الفنيين'},{id:'wallets',label:'محافظ الفنيين'},{id:'topups',label:'طلبات شحن المحافظ',count:()=>getPendingTopupCount()}]},
- {id:'service-management',label:'إدارة الخدمات والمناطق',icon:'🧰',tabs:[{id:'services',label:'المهن والخدمات'},{id:'regions',label:'مناطق الخدمة'}]},
+ {id:'service-management',label:'إدارة الخدمات والمناطق',icon:'🧰',tabs:[{id:'services',label:'الخدمات'},{id:'regions',label:'مناطق الخدمة'}]},
  {id:'customer-operations',label:'خدمة العملاء والتواصل',icon:'💬',tabs:[{id:'complaints',label:'الشكاوى',count:()=>getPendingComplaintCount()},{id:'support',label:'الدعم والمخالفات',count:()=>getPendingRecoveryCount()},{id:'notifications',label:'الإشعارات'},{id:'content',label:'الإعلانات والأسئلة الشائعة'}]},
  {id:'platform-admin',label:'إعدادات وإدارة المنصة',icon:'⚙️',tabs:[{id:'pricing',label:'الأسعار والعمولات'},{id:'reports',label:'التقارير'},{id:'pageVisits',label:'سجل زيارات الموقع'},{id:'security',label:'سجل التدقيق والأمان'},{id:'settings',label:'إعدادات المنصة'},{id:'roles',label:'صلاحيات المشرفين'}]}
 ];

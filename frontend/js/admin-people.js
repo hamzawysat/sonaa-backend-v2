@@ -12,6 +12,7 @@ function renderFannis(){
       const pending = state.pendingActions[menuKey];
       const isMenuOpen = !!state.dropdowns[menuKey];
       const level = f.level||f.experience||'مبتدئ';
+      const activeServices = new Set(Array.isArray(f.activeSpecialties)?f.activeSpecialties:[]);
       const badge = f.isTrusted?'موثوق':''; 
       return `
         
@@ -68,15 +69,15 @@ function renderFannis(){
           `:''}
           <button type="button" onclick="openFanniProfileEditor('${id}')" class="mt-3 flex h-10 w-full items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-[11px] font-extrabold text-blue-800">✏️ تعديل البيانات</button>
           <div class="mt-4 grid grid-cols-2 gap-2">
-            <div class="rounded-[14px] bg-slate-50 border p-3"><p class="text-[10px] font-black text-slate-400">كل التخصصات</p><p class="text-[11.5px] font-black mt-1 leading-6 whitespace-pre-wrap break-words">${escHtml((Array.isArray(f.specialties)&&f.specialties.length?f.specialties:(f.skill||f.service?[f.skill||f.service]:[])).join('، ')||'غير محدد')}</p></div>
+            <div class="rounded-[14px] bg-slate-50 border p-3"><p class="text-[10px] font-black text-slate-400">خدمات حمزاوي سات المعتمدة</p><p class="text-[11.5px] font-black mt-1 leading-6 whitespace-pre-wrap break-words">${escHtml((Array.isArray(f.activeSpecialties)?f.activeSpecialties:[]).join('، ')||'لا توجد خدمات معتمدة حاليًا')}</p></div>
             <div class="rounded-[14px] bg-emerald-50 border border-emerald-100 p-3"><p class="text-[10px] font-black text-emerald-700">الرصيد</p><p class="text-[13px] font-black text-emerald-700 mt-1">${escHtml(String(f.balance??f.walletBalance??0))} ج</p></div>
           </div>
           <div class="mt-2 rounded-[14px] border border-blue-100 bg-blue-50/60 p-3">
             <p class="text-[11px] font-black text-blue-900 mb-2">📍 مناطق العمل المسجلة</p>
             <p class="text-[11px] font-bold leading-6 whitespace-pre-wrap break-words">${escHtml(Array.isArray(f.areas)&&f.areas.length?f.areas.join('، '):'لم يحدد مناطق عمل')}</p>
           </div>
-          ${Array.isArray(f.works)&&f.works.length?'<div class="mt-2 rounded-[14px] border bg-white p-3"><p class="text-[11px] font-black mb-2">الأعمال والخدمات المسجلة</p><p class="text-[11px] font-bold leading-6 whitespace-pre-wrap break-words">'+escHtml(f.works.join('، '))+'</p></div>':''}
-          ${f.prices&&Object.keys(f.prices).length?'<div class="mt-2 rounded-[14px] border bg-white p-3"><p class="text-[11px] font-black mb-2">الأسعار/تفاصيل الأعمال المسجلة</p><div class="space-y-2">'+Object.entries(f.prices instanceof Map?Object.fromEntries(f.prices):f.prices).map(([key,value])=>'<div class="border-b last:border-0 pb-2 last:pb-0"><p class="text-[10px] font-black">'+escHtml(key)+'</p><p class="text-[10px] leading-5">'+escHtml([value?.from,value?.desc].filter(Boolean).join(' — ')||String(value??''))+'</p></div>').join('')+'</div></div>':''}
+          ${Array.isArray(f.works)&&f.works.some(work=>activeServices.has(String(work||'').trim()))?'<div class="mt-2 rounded-[14px] border bg-white p-3"><p class="text-[11px] font-black mb-2">الأعمال والخدمات المسجلة</p><p class="text-[11px] font-bold leading-6 whitespace-pre-wrap break-words">'+escHtml(f.works.filter(work=>activeServices.has(String(work||'').trim())).join('، '))+'</p></div>':''}
+          ${f.prices&&Object.entries(f.prices instanceof Map?Object.fromEntries(f.prices):f.prices).some(([key])=>activeServices.has(String(key||'').trim()))?'<div class="mt-2 rounded-[14px] border bg-white p-3"><p class="text-[11px] font-black mb-2">الأسعار/تفاصيل الأعمال المسجلة</p><div class="space-y-2">'+Object.entries(f.prices instanceof Map?Object.fromEntries(f.prices):f.prices).filter(([key])=>activeServices.has(String(key||'').trim())).map(([key,value])=>'<div class="border-b last:border-0 pb-2 last:pb-0"><p class="text-[10px] font-black">'+escHtml(key)+'</p><p class="text-[10px] leading-5">'+escHtml([value?.from,value?.desc].filter(Boolean).join(' — ')||String(value??''))+'</p></div>').join('')+'</div></div>':''}
           <div class="mt-2 text-[10px] text-slate-500 font-bold">تاريخ التسجيل: ${escHtml(f.createdAt?new Date(f.createdAt).toLocaleString('ar-EG',{timeZone:'Africa/Cairo'}):'غير متاح')}</div>
           <details class="mt-4 rounded-[16px] border overflow-hidden">
             <summary class="cursor-pointer bg-slate-50 hover:bg-blue-50 px-4 py-3 text-[11px] font-black">💰 تسوية الرصيد • سجل النشاط • ملاحظات</summary>
