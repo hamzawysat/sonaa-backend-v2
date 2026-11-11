@@ -20,6 +20,29 @@
 :where(code, pre, kbd, samp) {
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
+
+/* Strict Hamzawy Sat palette overrides for remaining client UI controls */
+body #app .account-switch-link,body .account-gate .account-switch-link,body .account-gate button.account-switch-link{
+  border:1px solid #C9A34F!important;border-radius:12px!important;
+  background:linear-gradient(145deg,#F8F6F0 0%,#E8D9B5 100%)!important;
+  color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;
+  box-shadow:0 3px 0 #A9822E,0 6px 12px rgba(169,130,46,.16)!important;
+}
+body .account-gate .account-switch-link small{color:#77602F!important;-webkit-text-fill-color:#77602F!important}
+body #app .global-refresh-float{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;border:2px solid #F8F6F0!important;box-shadow:0 4px 0 #8D6C25,0 8px 18px rgba(169,130,46,.25)!important}
+body #app .support-float{background:linear-gradient(145deg,#F8F6F0,#E8D9B5)!important;color:#5A4520!important;border:2px solid #C9A34F!important;box-shadow:0 4px 0 #A9822E,0 8px 18px rgba(169,130,46,.2)!important}
+body #app header.app-header .dashboard-download-btn{display:inline-flex!important;flex:0 0 auto!important;min-width:112px!important;width:auto!important;gap:6px!important;padding-inline:9px!important;white-space:nowrap!important;overflow:visible!important;background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important;border:1px solid #8D6C25!important;box-shadow:0 3px 0 #8D6C25,0 6px 12px rgba(169,130,46,.2)!important}
+body #app header.app-header .dashboard-download-btn span{display:inline!important;visibility:visible!important;opacity:1!important;font-size:10px!important;white-space:nowrap!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important}
+body #app header.app-header a[href*="password.html?role=client&mode=account"]{background:#F8F6F0!important;color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;border-color:#E8E0CF!important}
+body #app header.app-header .client-home-main-btn{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important;border-color:#8D6C25!important}
+body #app nav.fixed.bottom-0 button[class*="text-blue-"],body #app nav.fixed.bottom-0 button[class*="bg-blue-"]{color:#5A4520!important;-webkit-text-fill-color:#5A4520!important;background:linear-gradient(145deg,#F8F6F0,#E8D9B5)!important;border-color:#C9A34F!important}
+body #app .client-section-tabs button.tab-active,body #app .client-orders-status-tabs .tab-active{background:linear-gradient(145deg,#C9A34F,#A9822E)!important;color:#171A22!important;border-color:#8D6C25!important}
+body #app [class*="text-blue-"],body #app [class*="text-sky-"],body #app [class*="text-cyan-"]{color:#5A4520!important;-webkit-text-fill-color:#5A4520!important}
+body #app [class*="bg-blue-"],body #app [class*="bg-sky-"],body #app [class*="bg-cyan-"]{background-color:#F8F6F0!important}
+body #app [class*="border-blue-"],body #app [class*="border-sky-"],body #app [class*="border-cyan-"]{border-color:#E8E0CF!important}
+body #app [class*="ring-blue-"],body #app [class*="ring-sky-"],body #app [class*="ring-cyan-"]{--tw-ring-color:#C9A34F!important}
+body #app [class*="underline"][class*="decoration-blue-"]{text-decoration-color:#C9A34F!important}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
