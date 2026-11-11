@@ -2,21 +2,14 @@
 'use strict';
 
 const express = require('express');
-const Settings = require('../models/Settings');
 const AdminConfig = require('../models/AdminConfig');
 const Service = require('../models/Service');
 const Fanni = require('../models/Fanni');
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
-const { getActiveServiceNames, getServiceRecords, normalizeServiceKey, isExcludedService } = require('../services/serviceCatalog');
+const { getActiveServiceNames, getServiceRecords, isExcludedService } = require('../services/serviceCatalog');
 
-const {
-  CATEGORIES,
-  ALL_SERVICES,
-  normalizeServiceName
-} = require('../config/professions');
-
-const PUBLIC_SERVICE_NAMES = new Set();
+const { CATEGORIES } = require('../config/professions');
 
 const router = express.Router();
 
