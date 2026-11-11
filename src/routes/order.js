@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 
 const Order = require('../models/Order');
 const Service = require('../models/Service');
-const { getActiveServiceNames } = require('../services/serviceCatalog');
 const Client = require('../models/Client');
 const { createNotification, notifyAdmins } = require('../utils/notifications');
 const Fanni = require('../models/Fanni');
@@ -86,14 +85,7 @@ const DEFAULT_COMMISSION_RATE = 10;
 
 
 const createSchema = Joi.object({
-  service: Joi.string()
-    .trim()
-    .valid(...ALL_SERVICES)
-    .required()
-    .messages({
-      'any.only': 'الخدمة المطلوبة غير موجودة في قائمة الخدمات المتاحة',
-      'any.required': 'الخدمة مطلوبة'
-    }),
+  service: Joi.string().trim().required().messages({ 'any.required': 'الخدمة مطلوبة' }),
   area: Joi.string().trim().min(2).max(100).required().messages({ 'any.required': 'اكتب المنطقة أو الحي' }),
   address: Joi.string().trim().min(2).max(250).allow('').optional(),
   phone: Joi.string().trim().required(),
@@ -233,6 +225,7 @@ router.use(createOrderAvailableRouter({
 
 router.use(createOrderCreationRouter({
   Region,
+  Service,
   AREA_OPTIONS,
   normalizeArea,
   getEffectiveAreaOptions,
@@ -252,6 +245,7 @@ router.use(createOrderAdminPublicationRouter({
   auth,
   validSN,
   Order,
+  Service,
   writeOrderAdminAudit,
   ORDER_EXPIRY_HOURS,
   ALL_SERVICES,
@@ -291,6 +285,7 @@ router.use(createOrderOfferRouter({
   validSN,
   ACTIVE_STATUSES,
   ALL_SERVICES,
+  Service,
   currentPricing,
   DEFAULT_COMMISSION_RATE,
   money,
