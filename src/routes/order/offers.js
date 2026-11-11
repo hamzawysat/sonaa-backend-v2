@@ -1,11 +1,12 @@
 'use strict';
 
 const express = require('express');
+const { isActiveService } = require('../../services/serviceCatalog');
 
 function createOrderOfferRouter({
   Order, Rating, Fanni, auth, hasAcceptedGuidelines, sanitizeOffer,
   publicRatings, normalizePhone, sanitizeText, hasRatingBlock, validSN,
-  ACTIVE_STATUSES, ALL_SERVICES, currentPricing, DEFAULT_COMMISSION_RATE, money,
+  ACTIVE_STATUSES, ALL_SERVICES, Service, currentPricing, DEFAULT_COMMISSION_RATE, money,
   findPhoneContainingField, fanniCanHandleService, fanniWorksInArea, createNotification, Joi
 }) {
   const router = express.Router();
@@ -196,7 +197,7 @@ function createOrderOfferRouter({
         });
       }
   
-      if (!ALL_SERVICES.includes(order.service)) {
+      if (!(await isActiveService(Service, order.service))) {
         return res.status(409).json({ message: 'الخدمة المرتبطة بهذا الطلب من الخدمات القديمة، ولم يعد استقبال عروض جديدة عليها متاحًا. بيانات الطلب محفوظة.' });
       }
 
