@@ -7,10 +7,11 @@ const Joi = require('joi');
 const crypto = require('crypto');
 
 const Fanni = require('../models/Fanni');
+const Service = require('../models/Service');
+const { getActiveServiceNames, normalizeServiceKey } = require('../services/serviceCatalog');
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
 const TopupRequest = require('../models/TopupRequest');
-const { isValidService } = require('../config/professions');
 
 const { auth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -115,7 +116,8 @@ router.post(
       }
 
       const specialties = [...new Set((req.body.specialties || []).map(value => String(value || '').normalize('NFC').trim()).filter(Boolean))];
-      if (!specialties.length || specialties.some(specialty => !isValidService(specialty))) {
+      const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+      if (!specialties.length || specialties.some(specialty => !activeServiceKeys.has(normalizeServiceKey(specialty)))) {
         return res.status(400).json({ message: 'التسجيل متاح حاليًا لخدمات الدش والريسيفرات وكاميرات المراقبة والشاشات فقط.' });
       }
 
@@ -229,7 +231,8 @@ router.post(
       );
 
       const safeUser = fanni.toSafeJSON();
-      safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
+      const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+      safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
       return res.json({
         token,
         mustChangePassword: supportLogin,
@@ -257,7 +260,8 @@ router.post('/guidelines/accept', auth(), requireFanni, requireApprovedFanni, as
 
 router.get('/me', auth(), requireFanni, async (req, res) => {
   const safeUser = req.user.toSafeJSON();
-  safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
+  const activeServiceKeys = new Set(await getActiveServiceNames(Service));
+  safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(value => activeServiceKeys.has(normalizeServiceKey(value)));
   return res.json(safeUser);
 });
 
@@ -269,8 +273,9 @@ router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (
     const duplicate = await Fanni.findOne({ phone, _id: { $ne: req.user._id } }).select('_id');
     if (duplicate) return res.status(409).json({ message: 'رقم الهاتف مسجل بالفعل في حساب آخر' });
     const requestedSpecialties = Array.isArray(req.body.specialties) ? req.body.specialties : null;
+    const activeServiceKeys = new Set(await getActiveServiceNames(Service));
     const normalizedSpecialties = requestedSpecialties
-      ? [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(value => value && isValidService(value)))]
+      ? [...new Set(requestedSpecialties.map(value => String(value).normalize('NFC').trim()).filter(value => value && activeServiceKeys.has(normalizeServiceKey(value))))]
       : null;
     if (requestedSpecialties && !normalizedSpecialties.length) {
       return res.status(400).json({ message: 'اختار تخصصًا واحدًا على الأقل من خدمات حمزاوي سات المعتمدة.' });
@@ -282,7 +287,7 @@ router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (
     };
     // نخفي المهن القديمة من الاختيارات الجديدة، لكن نحتفظ بها في السجل التاريخي.
     // أي تعديل لبيانات الحساب يدمج التخصصات الجديدة المعتمدة مع التخصصات القديمة المحفوظة.
-    const historicalSpecialties = current.specialties.filter(value => !isValidService(value));
+    const historicalSpecialties = current.specialties.filter(value => !activeServiceKeys.has(normalizeServiceKey(value)));
     const specialties = normalizedSpecialties
       ? [...new Set([...historicalSpecialties, ...normalizedSpecialties])]
       : [...current.specialties];
