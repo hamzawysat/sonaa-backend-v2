@@ -907,6 +907,16 @@ async function run() {
       assert.equal(r.status, 400);
     });
 
+    await test('legacy orders remain stored but cannot be published to technicians', async () => {
+      const Order = require('../models/Order');
+      const legacyOrder = await Order.create({ sn: 'SN999991', service: 'صيانة تكييف', area: 'المعادي', clientPhone: '01012345678', status: 'قيد المراجعة' });
+      const response = await request(app).post('/api/orders/admin/' + legacyOrder.sn + '/publish').set('Authorization', 'Bearer ' + adminToken);
+      assert.equal(response.status, 409, JSON.stringify(response.body));
+      const persisted = await Order.findById(legacyOrder._id).lean();
+      assert.equal(persisted.status, 'قيد المراجعة');
+      assert.equal(persisted.service, 'صيانة تكييف');
+    });
+
     await test('order creation rejects historical services', async () => {
       const r = await request(app).post('/api/orders')
         .set('Authorization', 'Bearer ' + clientToken)
