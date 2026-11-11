@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
 const Order = require('../models/Order');
+const Service = require('../models/Service');
+const { getActiveServiceNames } = require('../services/serviceCatalog');
 const Client = require('../models/Client');
 const { createNotification, notifyAdmins } = require('../utils/notifications');
 const Fanni = require('../models/Fanni');
@@ -225,7 +227,7 @@ router.use(createOrderRatingRouter({
   sanitizeText, autoPromoteFanni, createNotification
 }));
 router.use(createOrderAvailableRouter({
-  auth, Order, ACTIVE_STATUSES, Fanni, Rating, normalizePhone, ALL_SERVICES,
+  auth, Order, ACTIVE_STATUSES, Fanni, Rating, normalizePhone, ALL_SERVICES, Service,
   fanniCanHandleService, fanniWorksInArea, publicOrder
 }));
 
