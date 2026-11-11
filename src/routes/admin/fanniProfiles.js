@@ -42,7 +42,8 @@ function createAdminFanniProfilesRouter({
       if (!validId(req.params.id)) return sendBadId(res);
       const fanni = await Fanni.findOne({ _id: req.params.id, role: 'fanni' }).select('-passwordHash').lean();
       if (!fanni) return res.status(404).json({ message: 'حساب الفني غير موجود.' });
-      return res.set('Cache-Control', 'no-store').json({ fanni: { _id: String(fanni._id), name: fanni.name, phone: fanni.phone, specialties: fanni.specialties || [], areas: fanni.areas || [], status: fanni.status } });
+      const specialties = (Array.isArray(fanni.specialties) ? fanni.specialties : []).filter(value => (ALL_SERVICES || []).some(service => normalizeServiceKey(service) === normalizeServiceKey(value)));
+      return res.set('Cache-Control', 'no-store').json({ fanni: { _id: String(fanni._id), name: fanni.name, phone: fanni.phone, specialties, areas: fanni.areas || [], status: fanni.status } });
     } catch (err) { next(err); }
   });
 

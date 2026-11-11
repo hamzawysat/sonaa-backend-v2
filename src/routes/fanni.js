@@ -254,7 +254,9 @@ router.post('/guidelines/accept', auth(), requireFanni, requireApprovedFanni, as
 });
 
 router.get('/me', auth(), requireFanni, async (req, res) => {
-  return res.json(req.user.toSafeJSON());
+  const safeUser = req.user.toSafeJSON();
+  safeUser.specialties = (Array.isArray(safeUser.specialties) ? safeUser.specialties : []).filter(isValidService);
+  return res.json(safeUser);
 });
 
 router.patch('/me', auth(), requireFanni, validate(profileUpdateSchema), async (req, res, next) => {
