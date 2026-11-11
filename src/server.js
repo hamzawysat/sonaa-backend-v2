@@ -110,6 +110,7 @@ const allowedOrigins = new Set([
   ...configuredOrigins,
   'https://sonaa-backend-v2.vercel.app',
   'https://hamzawy-sat.vercel.app',
+  'https://hamzawy-sat-git-hamzawy-sat-brand-conversion-hmzawy-sat.vercel.app',
   ...(process.env.NODE_ENV === 'production'
     ? []
     : ['http://localhost:3000', 'http://localhost:5173'])
