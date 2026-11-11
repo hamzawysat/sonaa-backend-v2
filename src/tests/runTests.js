@@ -911,6 +911,12 @@ async function run() {
       }
     });
 
+    await test('client account screens use Hamzawy Sat branding', async () => {
+      const clientAccount = fs.readFileSync(path.join(__dirname, '../../frontend/js/client-account.js'), 'utf8');
+      assert.ok(clientAccount.includes('حمزاوي سات'));
+      assert.equal(clientAccount.includes('صُنّاع'), false);
+    });
+
     await test('public and admin service catalogs expose only the eight approved services', async () => {
       const { ALL_SERVICES } = require('../config/professions');
       assert.equal(ALL_SERVICES.length, 8);
