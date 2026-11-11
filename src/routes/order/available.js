@@ -1,12 +1,14 @@
 'use strict';
 
 const express = require('express');
+const { getActiveServiceNames } = require('../../services/serviceCatalog');
 
 function createOrderAvailableRouter({
   auth,
   Order,
   ACTIVE_STATUSES,
   ALL_SERVICES,
+  Service,
   Fanni,
   Rating,
   normalizePhone,
@@ -62,7 +64,8 @@ router.get('/available', auth(), async (req, res, next) => {
       if (specialties.length === 0) {
         return res.set('Cache-Control', 'no-store').json({ orders: [], data: [], pagination: { page, limit, total: 0, pages: 0 } });
       }
-      const matchingServices = ALL_SERVICES.filter(service => fanniCanHandleService(specialties, service));
+      const activeServices = await getActiveServiceNames(Service);
+      const matchingServices = activeServices.filter(service => fanniCanHandleService(specialties, service));
       if (!matchingServices.length) {
         return res.set('Cache-Control', 'no-store').json({ orders: [], data: [], pagination: { page, limit, total: 0, pages: 0 } });
       }
@@ -75,7 +78,7 @@ router.get('/available', auth(), async (req, res, next) => {
 
     const query = { status: { $in: ACTIVE_STATUSES }, expiresAt: { $gt: new Date() } };
     if (req.user.role !== 'admin') {
-      query.service = { $in: ALL_SERVICES.filter(service => fanniCanHandleService(specialties, service)) };
+      query.service = { $in: matchingServices };
       query.$or = technicianAreas.length
         ? [{ areaMatchingEnabled: { $ne: true } }, { area: { $in: technicianAreas } }]
         : [{ areaMatchingEnabled: { $ne: true } }];
