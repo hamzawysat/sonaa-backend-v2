@@ -41,3 +41,27 @@ select:focus-visible, textarea:focus-visible {
   outline: 2px solid #C9A34F;
   outline-offset: 2px;
 }
+
+
+/* Cross-page Hamzawy Sat finish: replace leftover blue surfaces with the brand palette. */
+:where(.card,.panel,.modal,.topbar,.edit-picker-shell,.edit-specialty-category,.edit-picker-list) {
+  border-color: #E8E0CF;
+}
+:where(.field,input,select,textarea) {
+  border-color: #D8CFBD;
+  accent-color: #C9A34F;
+}
+:where(.field:focus,input:focus,select:focus,textarea:focus) {
+  border-color: #C9A34F;
+  box-shadow: 0 0 0 3px #C9A34F20;
+}
+:where(.btn,.btn-primary,.primary,.edit-picker-option.is-selected,.service-chip.selected) {
+  --brand-action-bg: #C9A34F;
+}
+:where(.edit-picker-summary span,.edit-count-badge,.edit-selected-chip,.edit-picker-option.is-selected,.service-chip.selected) {
+  background: #F5F0E5;
+  border-color: #D8C79F;
+  color: #5A4520;
+}
+:where(.edit-specialty-heading) { background: #F8F6F0; }
+:where(.edit-category-emoji,.service-icon) { background: #F5F0E5; border-color: #E8E0CF; }

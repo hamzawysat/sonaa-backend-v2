@@ -159,11 +159,19 @@
       .entry{padding:13px 10px}
     }
 
+    .hero-badge{background:#fff;border:1px solid #E8E0CF;color:#171A22;box-shadow:0 12px 28px rgba(23,26,34,.12);backdrop-filter:none;gap:12px}
+    .services-title{margin:0;color:#171A22;font-size:21px;font-weight:900;text-align:right}
+    .services-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+    .services-list li{position:relative;padding:8px 30px 8px 8px;color:#34312a;font-size:14px;font-weight:800;line-height:1.7;border-bottom:1px solid #eee8dc}
+    .services-list li:last-child{border-bottom:0}
+    .services-list li::before{content:"";position:absolute;right:5px;top:17px;width:9px;height:9px;border-radius:50%;background:#C9A34F;box-shadow:0 0 0 4px #C9A34F22}
+    .topbar .download-link{animation:none!important;border:1px solid #C9A34F!important;background:#C9A34F!important;color:#171A22!important;-webkit-text-fill-color:#171A22!important;box-shadow:0 4px 0 #A9822E,0 8px 16px rgba(23,26,34,.12)!important;text-shadow:none!important}
+    .topbar .download-link:hover{background:#171A22!important;color:#F8F6F0!important;-webkit-text-fill-color:#F8F6F0!important}
     /* === FIX FINAL - الهيدر في سطر واحد === */
     .topbar{ min-height:76px !important; }
     .top-note{ display:none !important; }
     .home-nav{ display:none !important; }
-    .topbar .download-link{ animation:none !important; border-color:rgba(191,219,254,.9); background:linear-gradient(180deg,#315fc5 0%,#214ca8 48%,#173779 100%); color:#fff; display:inline-flex; align-items:center; gap:6px; border-radius:12px; padding:10px 14px; font-size:12px; font-weight:900; box-shadow:0 4px 0 #102858,0 7px 12px rgba(16,40,88,.28),inset 0 1px 0 rgba(255,255,255,.4); }
+    .topbar .download-link{ animation:none !important; border:1px solid #C9A34F !important; background:#C9A34F !important; color:#171A22 !important; -webkit-text-fill-color:#171A22 !important; display:inline-flex; align-items:center; gap:6px; border-radius:12px; padding:10px 14px; font-size:12px; font-weight:900; box-shadow:0 4px 0 #A9822E,0 8px 16px rgba(23,26,34,.12) !important; }
     .brand-mark{ width:52px !important; height:52px !important; }
     .brand-mark img{ width:42px !important; height:42px !important; }
     .topbar .sonaa-brand-shimmer{ font-size:28px !important; }
@@ -188,13 +196,13 @@
         <p class="hero-copy">تركيب وصيانة الدش والريسيفرات وكاميرات المراقبة والشاشات، مع توفير الأجهزة والمستلزمات.</p>
       </div>
       <div class="hero-badge" aria-label="خدمات حمزاوي سات">
-        <div class="hero-badge-heading"><span aria-hidden="true">✓</span><div>متخصصون في<br><b>الدش والكاميرات والشاشات</b></div></div>
-        <div class="profession-tags" aria-label="خدماتنا">
-          <span class="profession-tag" style="--tag-bg:#DBEAFE;--tag-border:#93C5FD;--tag-ink:#1D4ED8">تركيب وصيانة الدش</span>
-          <span class="profession-tag" style="--tag-bg:#CCFBF1;--tag-border:#5EEAD4;--tag-ink:#115E59">كاميرات المراقبة</span>
-          <span class="profession-tag" style="--tag-bg:#E0F2FE;--tag-border:#7DD3FC;--tag-ink:#075985">الشاشات</span>
-          <span class="profession-tag" style="--tag-bg:#EDE9FE;--tag-border:#C4B5FD;--tag-ink:#5B21B6">الريسيفرات</span>
-        </div>
+        <h2 class="services-title">متخصصون في</h2>
+        <ul class="services-list">
+          <li>تركيب الدش وصيانته</li>
+          <li>تركيب كاميرات المراقبة وصيانتها</li>
+          <li>صيانة الشاشات</li>
+          <li>توريد جميع الأجهزة والمستلزمات</li>
+        </ul>
       </div>
     </section>
     <section class="choose">
