@@ -175,6 +175,13 @@
     .brand-mark{ width:52px !important; height:52px !important; }
     .brand-mark img{ width:42px !important; height:42px !important; }
     .topbar .sonaa-brand-shimmer{ font-size:28px !important; }
+    /* Compact customer and technician entry cards */
+    .entry{min-height:0!important;align-items:center;padding:18px 20px 16px!important}
+    .entry-icon{margin:0 0 12px!important}
+    .entry-action{width:100%;justify-content:center;margin-top:0!important;padding-top:0!important}
+    @media(max-width:700px){.entry{min-height:0!important;padding:14px 12px 12px!important}.entry-icon{margin-bottom:10px!important}}
+    @media(max-width:380px){.entry{padding:12px 9px 10px!important}}
+
   </style>
 <link rel="stylesheet" href="/css/theme.css">
 <link rel="stylesheet" href="/css/hamzawy-sat-brand.css">
@@ -218,22 +225,16 @@
           <span class="entry-icon">
             <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21 24 7l17 14"/><path d="M12 19v22h24V19"/><path d="M20 41V28h8v13"/></svg>
           </span>
-          <h3>الدخول كعميل</h3>
-          <p>محتاج تركيب أو صيانة دش أو ريسيفر أو كاميرات مراقبة أو شاشة؟ اطلب خدمتك وتابعها بسهولة.</p>
           <span class="entry-action">
             <span class="action-label">ابدأ كعميل <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5m7 7-7-7 7-7"/></svg></span>
-            <span class="action-hint">خدمتك على بُعد خطوة</span>
           </span>
         </a>
         <a class="entry technician" href="/fanni.html">
           <span class="entry-icon">
             <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M27.5 9.5a12 12 0 0 0-15.8 15.8L5 32l11 11 6.7-6.7a12 12 0 0 0 15.8-15.8L29 30l-11-11 9.5-9.5Z"/></svg>
           </span>
-          <h3>الدخول كفني</h3>
-          <p>مهارتك هي رزقك. انضم وابدأ تستقبل طلبات قريبة منك.</p>
           <span class="entry-action">
             <span class="action-label">ابدأ كفني <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5m7 7-7-7 7-7"/></svg></span>
-            <span class="action-hint">فرصتك تبدأ هنا</span>
           </span>
         </a>
       </div>
