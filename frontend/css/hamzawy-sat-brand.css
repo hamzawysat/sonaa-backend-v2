@@ -124,3 +124,90 @@ body { background-color:#F8F6F0; color:#171A22; }
 :where(.account-support-float,.floating-support,.refresh-float,.refresh-button) {
   width:auto;min-width:48px;min-height:48px;border-radius:14px!important;
 }
+
+/* Dashboard readability pass: brighter gold while preserving the raised 3D treatment. */
+html[data-sonaa-theme] body #app button.primary-btn,
+html[data-sonaa-theme] body #app button.blue-btn,
+html[data-sonaa-theme] body #app button.primary,
+html[data-sonaa-theme] body #app button[type="submit"]:not(.danger):not(.success),
+html[data-sonaa-theme] body #app .btn-primary,
+html[data-sonaa-theme] body #app .client-home-main-btn,
+html[data-sonaa-theme] body #app .fanni-wallet-shortcut,
+html[data-sonaa-theme] body .account-top-nav .account-home-btn,
+html[data-sonaa-theme] body .account-top-nav a.account-home-btn {
+  background:linear-gradient(145deg,#F9E2A5 0%,#F1CC79 52%,#E7B95E 100%)!important;
+  background-color:#F1CC79!important;
+  border-color:#D6A746!important;
+  color:#171A22!important;
+  -webkit-text-fill-color:#171A22!important;
+  box-shadow:0 4px 0 #B8872D,0 7px 13px rgba(135,94,24,.2),inset 0 1px 0 rgba(255,255,255,.72)!important;
+  text-shadow:none!important;
+}
+html[data-sonaa-theme] body #app button.primary-btn:hover,
+html[data-sonaa-theme] body #app button.blue-btn:hover,
+html[data-sonaa-theme] body #app button.primary:hover,
+html[data-sonaa-theme] body #app button[type="submit"]:not(.danger):not(.success):hover,
+html[data-sonaa-theme] body #app .btn-primary:hover,
+html[data-sonaa-theme] body #app .client-home-main-btn:hover,
+html[data-sonaa-theme] body #app .fanni-wallet-shortcut:hover {
+  background:linear-gradient(145deg,#FFEDBD 0%,#F6D88F 55%,#EBC36F 100%)!important;
+  color:#171A22!important;
+  -webkit-text-fill-color:#171A22!important;
+}
+html[data-sonaa-theme] body #app button.primary-btn:active,
+html[data-sonaa-theme] body #app button.blue-btn:active,
+html[data-sonaa-theme] body #app button.primary:active,
+html[data-sonaa-theme] body #app button[type="submit"]:not(.danger):not(.success):active,
+html[data-sonaa-theme] body #app .btn-primary:active,
+html[data-sonaa-theme] body #app .client-home-main-btn:active,
+html[data-sonaa-theme] body #app .fanni-wallet-shortcut:active {
+  box-shadow:0 1px 0 #B8872D,0 2px 5px rgba(135,94,24,.16),inset 0 1px 0 rgba(255,255,255,.5)!important;
+}
+
+/* Technician dashboard counters: restore legible labels and count badges. */
+#app .fanni-dashboard-tabs>div>button {
+  min-height:72px!important;
+  padding:7px 4px!important;
+  gap:5px!important;
+}
+#app .fanni-dashboard-tabs>div>button>span:first-child {
+  font-size:19px!important;
+}
+#app .fanni-dashboard-tabs>div>button>span:nth-child(2) {
+  font-size:11px!important;
+  line-height:1.3!important;
+}
+#app .fanni-dashboard-tabs>div>button>span:nth-child(3) {
+  min-width:20px!important;
+  min-height:18px!important;
+  padding:2px 6px!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+}
+
+/* Larger notification controls on both dashboards, including the unread count. */
+#app header button[onclick="toggleNotifications()"],
+#app .fanni-notification-top-btn {
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  font-size:23px!important;
+  border-radius:13px!important;
+}
+#app .fanni-notification-top-btn span,
+#app header button[onclick="toggleNotifications()"] #notificationBadge,
+#app .app-header #notificationBadge {
+  font-size:11px!important;
+  line-height:1.2!important;
+  min-width:17px!important;
+  min-height:17px!important;
+  padding:2px 4px!important;
+}
+
+/* Client tabs and their touch targets remain balanced on small screens. */
+#app .client-section-tabs button {
+  min-height:47px!important;
+  height:47px!important;
+  font-size:13px!important;
+}
