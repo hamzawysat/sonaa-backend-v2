@@ -160,7 +160,7 @@
     }
 
     .hero-badge{background:#fff;border:1px solid #E8E0CF;color:#171A22;box-shadow:0 12px 28px rgba(23,26,34,.12);backdrop-filter:none;gap:12px}
-    .services-title{margin:0;color:#171A22;font-size:21px;font-weight:900;text-align:right}
+    .services-accordion{width:100%}.services-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;color:#171A22;font-size:21px;font-weight:900;text-align:right;cursor:pointer;list-style:none;user-select:none}.services-title::-webkit-details-marker{display:none}.services-title::after{content:"⌄";flex:0 0 auto;margin-right:auto;font-size:25px;line-height:1;color:#A9822E;transition:transform .2s ease}.services-accordion[open]>.services-title::after{transform:rotate(180deg)}.services-title:focus-visible{outline:2px solid #C9A34F;outline-offset:5px;border-radius:5px}
     .services-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
     .services-list li{position:relative;padding:8px 30px 8px 8px;color:#34312a;font-size:14px;font-weight:800;line-height:1.7;border-bottom:1px solid #eee8dc}
     .services-list li:last-child{border-bottom:0}
@@ -197,13 +197,15 @@
         <p class="hero-copy">تركيب وصيانة الدش والريسيفرات وكاميرات المراقبة والشاشات، مع توفير الأجهزة والمستلزمات.</p>
       </div>
       <div class="hero-badge" aria-label="خدمات حمزاوي سات">
-        <h2 class="services-title">متخصصون في</h2>
-        <ul class="services-list">
-          <li>تركيب الدش وصيانته</li>
-          <li>تركيب كاميرات المراقبة وصيانتها</li>
-          <li>صيانة الشاشات</li>
-          <li>توريد جميع الأجهزة والمستلزمات</li>
-        </ul>
+        <details class="services-accordion">
+          <summary class="services-title">خدماتنا</summary>
+          <ul class="services-list">
+            <li>تركيب الدش وصيانته</li>
+            <li>تركيب كاميرات المراقبة وصيانتها</li>
+            <li>صيانة الشاشات</li>
+            <li>توريد جميع الأجهزة والمستلزمات</li>
+          </ul>
+        </details>
       </div>
     </section>
     <section class="choose">
