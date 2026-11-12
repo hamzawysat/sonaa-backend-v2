@@ -40,6 +40,23 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
+// Retire the legacy Sonaa website hostname without interrupting the API
+// consumed by the Hamzawy Sat website and apps. This runs before static files
+// and page routes, so every non-API URL on the retired hostname returns 404.
+const RETIRED_SONAA_HOST = 'sonaa-backend-v2.vercel.app';
+app.use((req, res, next) => {
+  const requestHost = String(req.headers.host || '').split(':')[0].toLowerCase();
+  const isApiRequest = req.path === '/api' || req.path.startsWith('/api/');
+  const isHealthCheck = req.path === '/health';
+
+  if (requestHost === RETIRED_SONAA_HOST && !isApiRequest && !isHealthCheck) {
+    return res.status(404).type('text/plain; charset=utf-8')
+      .send('هذا الموقع القديم لم يعد متاحًا. يرجى زيارة حمزاوي سات.');
+  }
+
+  return next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
