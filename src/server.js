@@ -50,8 +50,32 @@ app.use((req, res, next) => {
   const isHealthCheck = req.path === '/health';
 
   if (requestHost === RETIRED_SONAA_HOST && !isApiRequest && !isHealthCheck) {
-    return res.status(404).type('text/plain; charset=utf-8')
-      .send('هذا الموقع القديم لم يعد متاحًا. يرجى زيارة حمزاوي سات.');
+    return res.status(404).type('html')
+      .send(`<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>موقع صناع القديم</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f5f7fb;color:#172033;font-family:Tahoma,Arial,sans-serif;text-align:center}
+    main{width:min(100%,520px);padding:36px 24px;background:#fff;border:1px solid #e5eaf2;border-radius:20px;box-shadow:0 12px 36px #17203312}
+    h1{margin:0 0 14px;font-size:24px;line-height:1.7}
+    p{margin:0 0 24px;color:#536176;font-size:16px;line-height:2}
+    a{display:inline-block;padding:13px 22px;border-radius:12px;background:#087fbd;color:#fff;text-decoration:none;font-weight:700}
+    a:focus-visible{outline:3px solid #172033;outline-offset:3px}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>هذا الموقع القديم لم يعد يعمل.</h1>
+    <p>برجاء زيارة موقع حمزاوي سات من خلال الرابط التالي:</p>
+    <a href="https://hamzawy-sat.vercel.app/">زيارة موقع حمزاوي سات</a>
+  </main>
+</body>
+</html>`);
   }
 
   return next();
