@@ -75,8 +75,7 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
 
   function buildAdminCategoriesMap(savedServices) {
     const map = new Map();
-    // Legacy services are seeded below, so an inactive database tombstone must
-    // suppress the seed itself; merely skipping the DB row leaves the old item visible.
+    // Seed built-in services, but reflect hidden database tombstones as hidden rows in the owner console.
     const hiddenLegacyKeys = new Set(savedServices
       .filter(saved => saved.isActive === false)
       .filter(saved => CATEGORIES.some(cat =>
@@ -94,21 +93,17 @@ function createAdminServiceCatalog({ Service, CATEGORIES, findCategoryByService,
           name,
           normalizedName: normalizeForCompare(name),
           emoji: cat.emoji,
-          isActive: true,
+          isActive: !hiddenLegacyKeys.has(key + '|' + normalizeForCompare(name)),
           source: 'legacy',
           category: cat.label,
           dbId: null,
           sortOrder: (index + 1) * 10
-        })).filter(service => !hiddenLegacyKeys.has(key + '|' + service.normalizedName))
+        }))
       });
     }
     for (const saved of savedServices) {
       const catKey = normalizeForCompare(saved.category);
-      const isInactiveLegacyTombstone = saved.isActive === false && CATEGORIES.some(cat =>
-        normalizeForCompare(cat.label) === catKey &&
-        cat.services.some(name => normalizeForCompare(name) === normalizeForCompare(saved.name))
-      );
-      if (isInactiveLegacyTombstone) continue;
+      // Keep hidden legacy rows in the owner console so their status can be changed back to visible.
       if (!map.has(catKey)) {
         map.set(catKey, {
           label: saved.category,

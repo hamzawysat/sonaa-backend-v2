@@ -84,6 +84,9 @@ const serviceSchema = new mongoose.Schema(
       default: true
     },
 
+    // Explicit owner opt-in for services outside the current Hamzawy Sat core catalog.
+    isPublic: { type: Boolean, default: false, index: true },
+
     sortOrder: {
       type: Number,
       default: 0,

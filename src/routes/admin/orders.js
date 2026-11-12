@@ -1,12 +1,14 @@
 'use strict';
 
 const express = require('express');
+const { isActiveService } = require('../../services/serviceCatalog');
 
 function createAdminOrdersRouter({
   auth,
   validate,
   Joi,
   ALL_SERVICES,
+  Service,
   reasonSchema,
   MAX_LIST_LIMIT,
   Order,
@@ -47,7 +49,7 @@ router.get('/orders', auth('admin'), async (req, res, next) => {
 router.patch('/orders/:sn/correct', auth('admin'), validate(Joi.object({
   clientName: Joi.string().trim().max(50).allow('').optional(),
   clientPhone: Joi.string().trim().min(10).max(20).required(),
-  service: Joi.string().trim().valid(...ALL_SERVICES).required(),
+  service: Joi.string().trim().min(1).max(100).required(),
   area: Joi.string().trim().min(2).max(250).required(),
   address: Joi.string().trim().max(250).allow('').optional(),
   description: Joi.string().trim().max(1000).allow('').optional(),
@@ -56,6 +58,7 @@ router.patch('/orders/:sn/correct', auth('admin'), validate(Joi.object({
   try {
     const sn = String(req.params.sn || '').trim().toUpperCase();
     if (!/^SN\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صالح' });
+    if (!(await isActiveService(Service, req.body.service))) return res.status(400).json({ message: 'الخدمة المختارة غير ظاهرة حاليًا في قائمة الخدمات.' });
     const order = await Order.findOne({ sn });
     if (!order) return res.status(404).json({ message: 'الطلب غير موجود' });
     if (order.status !== 'قيد المراجعة' || order.assignedFanni || (Array.isArray(order.offers) && order.offers.length > 0)) {

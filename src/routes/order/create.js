@@ -1,9 +1,11 @@
 'use strict';
 
 const express = require('express');
+const { isActiveService } = require('../../services/serviceCatalog');
 
 function createOrderCreationRouter({
   Region,
+  Service,
   AREA_OPTIONS,
   normalizeArea,
   getEffectiveAreaOptions,
@@ -36,6 +38,10 @@ function createOrderCreationRouter({
         stripUnknown: false
       });
   
+      if (!error && !(await isActiveService(Service, value.service))) {
+        return res.status(400).json({ message: 'الخدمة المختارة غير ظاهرة حاليًا. حدّث قائمة الخدمات أو راجع الإدارة.' });
+      }
+
       if (error) {
         return res.status(400).json({
           message: 'بيانات الطلب غير مكتملة أو غير صحيحة',
