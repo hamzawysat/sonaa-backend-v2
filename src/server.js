@@ -208,6 +208,11 @@ app.get('/frontend/editor.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/editor.html'));
 });
 
+// Keep the public Hamzawy Sat download page available even when frontend-dist is selected.
+app.get('/download.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/download.html'));
+});
+
 app.use(express.static(frontendPath, {
   index: false,
   dotfiles: 'ignore'
