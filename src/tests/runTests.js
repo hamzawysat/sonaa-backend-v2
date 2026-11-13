@@ -679,7 +679,7 @@ async function run() {
       const adminFanniProfile = await request(app).get('/api/admin/fannis/' + fanni._id + '/profile').set('Authorization', 'Bearer ' + adminToken);
       assert.equal(adminFanniProfile.status, 200);
       assert.deepEqual(adminFanniProfile.body.fanni.specialties, [], 'admin profile editor must receive only active services');
-      assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['صيانة تكييف'], 'historical specialties must remain preserved in the database');
+      assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['خدمة تاريخية غير منشورة للاختبار'], 'historical specialties must remain preserved in the database');
 
       await test('admin technician trust and visibility controls save their decision history', async () => {
         const response = await request(app).patch('/api/admin/fannis/' + fanni._id + '/profile-controls')
