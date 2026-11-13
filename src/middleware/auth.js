@@ -6,11 +6,11 @@ const { normalizePhone } = require('../utils/phone');
 
 const ADMIN_ROLES = ['مشرف', 'مشرف أول', 'مدير', 'قراءة فقط'];
 
-const ADMIN_PERMISSION_KEYS = ['dashboard','fannis','orders','publishOrders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','settings','content','support','regions','offers','notifications','clientsData'];
+const ADMIN_PERMISSION_KEYS = ['dashboard','fannis','orders','publishOrders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','settings','content','support','regions','offers','notifications','clientsData','commerce'];
 const ROLE_WRITE_SECTIONS = {
   'قراءة فقط': [],
   'مشرف': ['orders','complaints','support','offers'],
-  'مشرف أول': ['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData'],
+  'مشرف أول': ['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData','commerce'],
   'مدير': ADMIN_PERMISSION_KEYS
 };
 function defaultAdminPermissions(role) {
