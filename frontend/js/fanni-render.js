@@ -129,7 +129,7 @@ function renderContent(){
    </details>
   </section>
 
-   <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-4 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','طلبات متاحه',state.filteredOrders.length],myOffers:['💼','طلبات جاريه',state.myOffers.length],completed:['🏁','المهام المكتملة',state.completedOffers.length],wallet:['💳','محفظتي','']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border p-1.5 flex flex-col items-center justify-center gap-1 min-h-[64px] ${state.tab===t.id?'bg-[#F8F6F0] border-[#E8E0CF] 300 text-[#5A4520] 800':'bg-white border-slate-200 text-slate-600'}"><span class="text-base leading-none">${info[0]}</span><span class="text-[9px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
+   <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-5 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','طلبات متاحه',state.filteredOrders.length],myOffers:['💼','طلبات جاريه',state.myOffers.length],completed:['🏁','المهام المكتملة',state.completedOffers.length],wallet:['💳','محفظتي',''],store:['🛍️','المتجر','']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border p-1.5 flex flex-col items-center justify-center gap-1 min-h-[64px] ${state.tab===t.id?'bg-[#F8F6F0] border-[#E8E0CF] 300 text-[#5A4520] 800':'bg-white border-slate-200 text-slate-600'}"><span class="text-base leading-none">${info[0]}</span><span class="text-[9px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
 
   ${state.tab==='available'?`
    <section class="mt-4 space-y-3">
@@ -232,6 +232,8 @@ function renderContent(){
      ${Array.isArray(o.ratings)&&o.ratings.length ? '<div class="rounded-xl border border-slate-200 p-3"><p class="text-[12px] font-extrabold">التقييمات المتبادلة</p>'+o.ratings.map(r=>'<div class="mt-2 border-t border-slate-100 pt-2"><p class="text-[12px] font-bold">'+(r.reviewerRole==='client'?'تقييم العميل لك':'تقييمك للعميل')+' — '+('★'.repeat(Number(r.stars)||0))+' ('+(Number(r.stars)||0)+'/5)</p>'+(r.comment?'<p class="text-[12px] mt-1">'+esc(r.comment)+'</p>':'')+'</div>').join('')+'</div>' : ''}
     </article>`).join('')}
    </section>`:''}
+
+  ${state.tab==='store'?renderStoreCatalog('fanni'):''}
 
   ${state.tab==='wallet'?`
    <section class="mt-4 space-y-4">

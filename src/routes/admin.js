@@ -17,7 +17,9 @@ const Order = require('../models/Order');
 const Rating = require('../models/Rating');
 const Complaint = require('../models/Complaint');
 const WalletTransaction = require('../models/WalletTransaction');
-const { createNotification } = require('../utils/notifications');
+const StoreProduct = require('../models/StoreProduct');
+const StoreOrder = require('../models/StoreOrder');
+const { createNotification, notifyAdmins } = require('../utils/notifications');
 const Service = require('../models/Service');
 const { getActiveServiceNames } = require('../services/serviceCatalog');
 const Region = require('../models/Region');
@@ -85,6 +87,7 @@ const CommerceItem = require('../models/CommerceItem');
 const ClientSubscription = require('../models/ClientSubscription');
 const createAdminCommerceRouter = require('./admin/commerce');
 const createAdminFanniManagementRouter = require('./admin/fanniManagement');
+const createAdminStoreRouter = require('./admin/store');
 
 const ADMIN_TOKEN_EXPIRY = '1d';
 const CON_ADMIN_TOKEN_EXPIRY = '30d';
@@ -348,6 +351,8 @@ router.use(createAdminClientWalletRouter({
 
 router.use(createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
 
+router.use(createAdminStoreRouter({ auth, Joi, StoreProduct, StoreOrder, notifyAdmins, createNotification, writeAdminAudit }));
+
 router.delete('/clients/:phone/account', auth('admin'), async (req, res, next) => {
   try {
     const phone = normalizePhone(String(req.params.phone || '').trim());
@@ -442,7 +447,7 @@ const ADMIN_LAYOUT_SECTIONS = {
   commerce: ['commercePlans', 'commerceSubscriptions'],
   technicians: ['fannis', 'pending', 'profileEdits', 'disabled', 'levels', 'offers', 'wallets', 'topups'],
   'service-management': ['services', 'regions'],
-  'customer-operations': ['complaints', 'support', 'notifications', 'content'],
+  'customer-operations': ['complaints', 'support', 'notifications', 'content', 'store', 'storeOrders'],
   'platform-admin': ['pricing', 'reports', 'pageVisits', 'security', 'settings', 'roles']
 };
 const ADMIN_LAYOUT_TABS = Object.values(ADMIN_LAYOUT_SECTIONS).flat();

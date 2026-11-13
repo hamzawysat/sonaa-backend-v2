@@ -306,6 +306,7 @@ let dashboardSpecialtiesCollapsed=true;
 function toggleDashboardSpecialties(){dashboardSpecialtiesCollapsed=!dashboardSpecialtiesCollapsed;render();}
 let forceTechnicianRegistration=(new URLSearchParams(window.location.search).get('tab')||'').replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').trim()==='register';
 let state={
+ storeProducts:[],myStoreOrders:[],
  tab:forceTechnicianRegistration?'register':'login',
  loginPhone:'',loginPass:'',loginSubmitAllowed:false,
  regName:'',regPhone:'',regPass:'',regPassConfirm:'',regGuidelinesAccepted:false,
@@ -396,7 +397,7 @@ function performFanniLogout(){
  toast('تم تسجيل الخروج');
 }
 
-const TECHNICIAN_TAB_DEFINITIONS=[{id:'available',label:'طلبات متاحة'},{id:'myOffers',label:'طلبات جارية'},{id:'completed',label:'المهام المكتملة'},{id:'wallet',label:'محفظتي'}];
+const TECHNICIAN_TAB_DEFINITIONS=[{id:'available',label:'طلبات متاحة'},{id:'myOffers',label:'طلبات جارية'},{id:'completed',label:'المهام المكتملة'},{id:'wallet',label:'محفظتي'},{id:'store',label:'المتجر'}];
 function setTab(tab){
  state.tab=tab;
  state.error='';
@@ -408,6 +409,7 @@ function setTab(tab){
 if(tab==='myOffers'||tab==='completed')loadMyOffers();
  if(tab==='wallet'){loadWalletHistory();loadWalletTransferNumbers();}
  if(tab==='profile')loadProfile();
+ if(tab==='store'&&getToken())loadStoreForRole('fanni');
 }
 
 function toggleSpecialtyCategory(label){
