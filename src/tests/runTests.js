@@ -609,6 +609,23 @@ async function run() {
       });
 
 
+
+      await test('admin credit endpoint records the adjustment and rejects the same operation key twice', async () => {
+        const Client = require('../models/Client');
+        const WalletTransaction = require('../models/WalletTransaction');
+        await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 100 } });
+        const payload = { amount: 50, reason: 'إضافة اختبار موثقة', idempotencyKey: 'wallet-credit-test-unique-key' };
+        const credit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/add-balance')
+          .set('Authorization', 'Bearer ' + adminToken).send(payload);
+        assert.equal(credit.status, 200, JSON.stringify(credit.body));
+        assert.equal(Number(credit.body.balance), 150);
+        const repeated = await request(app).post('/api/admin/clients/' + clientId + '/wallet/add-balance')
+          .set('Authorization', 'Bearer ' + adminToken).send(payload);
+        assert.equal(repeated.status, 409);
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 150);
+        assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: 'client-admin-credit:' + String(clientId) + ':wallet-credit-test-unique-key' }), 1);
+      });
+
       await test('admin can deduct client wallet without allowing a negative balance and settle the exact final balance', async () => {
         const Client = require('../models/Client');
         const WalletTransaction = require('../models/WalletTransaction');
