@@ -23,18 +23,14 @@ async function purchaseClientSubscription(itemId){
   if(!item)return showToast('الباقة غير متاحة حاليًا.');
   const price=Number(item.price||0);
   if(!Number.isFinite(price)||price<0)return showToast('سعر الباقة غير صحيح.');
-  if(Number(state.walletBalance||0)<price){
-    showToast('رصيد محفظتك غير كافٍ. اشحن المحفظة أولًا.');
-    setTab('wallet');return;
-  }
-  if(!window.confirm('تأكيد شراء باقة '+item.name+' بمبلغ '+price+' جنيه من محفظتك؟'))return;
+  if(!window.confirm('إرسال طلب الاشتراك في '+item.name+' بقيمة '+price+' جنيه؟ لن يتم خصم أي مبلغ الآن. سيتم إشعار الإدارة، والخصم يتم فقط بعد الموافقة والتفعيل.'))return;
   state.commerceSubmitting=String(itemId);state.commerceError='';render();
   try{
     const result=await API.purchaseClientSubscription({itemId:String(itemId),idempotencyKey:clientCommerceKey()});
     state.walletBalance=Number(result.balance??state.walletBalance);
-    state.commerceSuccess=result.message||'تم تفعيل الاشتراك.';
+    state.commerceSuccess=result.message||'تم إرسال طلب الاشتراك للمراجعة.';
     await Promise.all([loadClientCommerce(),loadClientWallet()]);
-    showToast(result.message||'تم تفعيل الاشتراك.','success');
+    showToast(result.message||'تم إرسال طلب الاشتراك للمراجعة.','success');
   }catch(error){state.commerceError=error.message||'تعذر شراء الاشتراك.';showToast(state.commerceError);}
   finally{state.commerceSubmitting='';render();}
 }
@@ -60,12 +56,12 @@ function renderClientSubscriptions(){
   const items=state.commerceItems||[],subs=state.commerceSubscriptions||[];
   const statusLabel={active:'نشط',pending:'قيد المراجعة',paused:'موقوف مؤقتًا',cancelled:'ملغي',expired:'منتهي'};
   return `<section class="mt-4 space-y-4 animate-fade">
-    <div class="panel p-4"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[15px]">اشتراكاتي</h3><p class="mt-1 text-[11px] text-slate-500">اشترك أو جدّد مباشرة من رصيد محفظتك.</p></div><div class="text-left"><span class="text-[10px] text-slate-500">رصيد المحفظة</span><p class="font-black text-[16px]">${escHtml(Number(state.walletBalance||0).toLocaleString('ar-EG'))} ج</p></div></div>
+    <div class="panel p-4"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[15px]">اشتراكاتي</h3><p class="mt-1 text-[11px] text-slate-500">قدّم طلب الاشتراك، والإدارة تراجعه قبل التفعيل والخصم.</p></div><div class="text-left"><span class="text-[10px] text-slate-500">رصيد المحفظة</span><p class="font-black text-[16px]">${escHtml(Number(state.walletBalance||0).toLocaleString('ar-EG'))} ج</p></div></div>
     <button type="button" onclick="loadClientCommerce()" class="mt-3 w-full h-10 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-extrabold">تحديث الاشتراكات والباقات</button>
     ${state.commerceLoading?'<p class="py-4 text-center text-[12px] text-slate-500">جاري تحميل البيانات...</p>':''}
     ${state.commerceError?'<p class="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[11px] font-bold text-red-700">'+escHtml(state.commerceError)+'</p>':''}</div>
     <div class="panel p-4"><h3 class="font-extrabold text-[14px]">الباقات المتاحة</h3><div class="mt-3 space-y-3">
-    ${items.length?items.map(item=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><h4 class="font-extrabold text-[13px]">'+escHtml(item.name)+'</h4><p class="mt-1 text-[11px] text-slate-500">'+escHtml(item.description||'')+'</p><p class="mt-1 text-[10px] text-slate-500">المدة: '+escHtml(String(item.durationDays||30))+' يوم</p></div><strong class="shrink-0 text-[14px]">'+escHtml(String(item.price))+' ج</strong></div>'+(Array.isArray(item.features)&&item.features.length?'<ul class="mt-2 list-disc pr-5 text-[10px] text-slate-600">'+item.features.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>':'')+'<button type="button" onclick="purchaseClientSubscription(\''+escAttr(item._id)+'\')" '+(state.commerceSubmitting?'disabled':'')+' class="mt-3 w-full h-10 rounded-xl blue-btn text-[11px] font-extrabold">'+(state.commerceSubmitting===String(item._id)?'جاري تنفيذ الدفع...':'اشترك الآن من المحفظة')+'</button></article>').join(''):'<p class="rounded-xl bg-slate-50 p-4 text-center text-[11px] text-slate-500">لا توجد باقات متاحة حاليًا.</p>'}
+    ${items.length?items.map(item=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><h4 class="font-extrabold text-[13px]">'+escHtml(item.name)+'</h4><p class="mt-1 text-[11px] text-slate-500">'+escHtml(item.description||'')+'</p><p class="mt-1 text-[10px] text-slate-500">المدة: '+escHtml(String(item.durationDays||30))+' يوم</p></div><strong class="shrink-0 text-[14px]">'+escHtml(String(item.price))+' ج</strong></div>'+(Array.isArray(item.features)&&item.features.length?'<ul class="mt-2 list-disc pr-5 text-[10px] text-slate-600">'+item.features.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>':'')+'<button type="button" onclick="purchaseClientSubscription(\''+escAttr(item._id)+'\')" '+(state.commerceSubmitting?'disabled':'')+' class="mt-3 w-full h-10 rounded-xl blue-btn text-[11px] font-extrabold">'+(state.commerceSubmitting===String(item._id)?'جاري تنفيذ الدفع...':'إرسال طلب الاشتراك')+'</button></article>').join(''):'<p class="rounded-xl bg-slate-50 p-4 text-center text-[11px] text-slate-500">لا توجد باقات متاحة حاليًا.</p>'}
     </div></div>
     <div class="panel p-4"><h3 class="font-extrabold text-[14px]">اشتراكاتك الحالية والسابقة</h3><div class="mt-3 space-y-2">
     ${subs.length?subs.map(sub=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-2"><div><b class="text-[12px]">'+escHtml(sub.itemName||'اشتراك')+'</b><p class="mt-1 text-[10px] text-slate-500">'+(sub.startsAt?'من '+escHtml(new Date(sub.startsAt).toLocaleDateString('ar-EG')):'')+(sub.endsAt?' إلى '+escHtml(new Date(sub.endsAt).toLocaleDateString('ar-EG')):'')+'</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold">'+escHtml(statusLabel[sub.status]||sub.status)+'</span></div><div class="mt-2 flex items-center justify-between text-[11px]"><span>قيمة التجديد</span><b>'+escHtml(String(sub.amount||0))+' جنيه</b></div>'+(['active','expired'].includes(sub.status)?'<button type="button" onclick="renewClientSubscription(\''+escAttr(sub._id)+'\')" '+(state.commerceSubmitting?'disabled':'')+' class="mt-3 w-full h-10 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-[11px] font-extrabold">تجديد الاشتراك</button>':'')+'</article>').join(''):'<p class="rounded-xl bg-slate-50 p-4 text-center text-[11px] text-slate-500">لم تشترك في أي باقة حتى الآن.</p>'}
