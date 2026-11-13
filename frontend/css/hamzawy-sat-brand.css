@@ -1,0 +1,183 @@
+/* Shared brand components: flat teal pill actions, white cards, and readable form controls. */
+html[data-sonaa-theme] :is(button, [role="button"], input[type="button"], input[type="submit"], .btn, .blue-btn, .primary-btn, .secondary-btn, .account-submit, .account-nav-btn, .account-home-btn, .account-download-btn, .account-switch-link, .download-link, .dashboard-download-btn, .client-home-main-btn, .action-label, a.button, a.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 18px;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  background: #087f83;
+  background-color: #087f83;
+  background-image: none;
+  border: 1px solid #087f83;
+  border-radius: 999px;
+  box-shadow: none;
+  text-shadow: none;
+  filter: none;
+  font-family: "Cairo", sans-serif;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background-color .16s ease, transform .16s ease;
+}
+
+html[data-sonaa-theme] :is(button, [role="button"], input[type="button"], input[type="submit"], .btn, .blue-btn, .primary-btn, .secondary-btn, .account-submit, .account-nav-btn, .account-home-btn, .account-download-btn, .account-switch-link, .download-link, .dashboard-download-btn, .client-home-main-btn, .action-label, a.button, a.btn):hover {
+  color: #ffffff;
+  background: #06696d;
+  background-color: #06696d;
+  background-image: none;
+  border-color: #06696d;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] :is(button, [role="button"], input[type="button"], input[type="submit"], .btn, .blue-btn, .primary-btn, .secondary-btn, .account-submit, .account-nav-btn, .account-home-btn, .account-download-btn, .account-switch-link, .download-link, .dashboard-download-btn, .client-home-main-btn, .action-label, a.button, a.btn):focus-visible {
+  outline: 3px solid rgba(8,127,131,.22);
+  outline-offset: 2px;
+}
+
+html[data-sonaa-theme] .entry .action-label {
+  min-height: 42px;
+  padding: 10px 20px;
+  border-radius: 999px;
+}
+
+html[data-sonaa-theme] .account-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 8px;
+}
+
+html[data-sonaa-theme] .account-switch-link {
+  min-height: 36px;
+  padding: 7px 16px;
+}
+
+html[data-sonaa-theme] .account-panel .account-switch-link,
+html[data-sonaa-theme] .fanni-login-panel .account-switch-link {
+  border-style: solid;
+}
+
+html[data-sonaa-theme] .account-top-nav .account-nav-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+html[data-sonaa-theme] .account-gate .account-panel,
+html[data-sonaa-theme] .fanni-login-gate .fanni-login-panel {
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+html[data-sonaa-theme] .fanni-login-gate {
+  align-items: center;
+  background: #f2f9fb;
+  border-radius: 0;
+}
+
+html[data-sonaa-theme] .fanni-login-gate .panel,
+html[data-sonaa-theme] .fanni-login-panel {
+  width: 100%;
+  border-radius: 20px;
+}
+
+html[data-sonaa-theme] .fanni-login-brand {
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+}
+
+html[data-sonaa-theme] .app-header .brand-mark {
+  border-radius: 12px;
+}
+
+html[data-sonaa-theme] .app-header .sonaa-logo-svg {
+  object-fit: contain;
+}
+
+html[data-sonaa-theme] .fanni-specialty-category-head {
+  background: #ffffff;
+  color: #173244;
+}
+
+html[data-sonaa-theme] .service-chip,
+html[data-sonaa-theme] .category-tile,
+html[data-sonaa-theme] .service-choice {
+  color: #173244;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .logout-confirm-card,
+html[data-sonaa-theme] .notification-panel,
+html[data-sonaa-theme] .service-picker-dialog {
+  background: #ffffff;
+  border: 1px solid #dce7eb;
+  border-radius: 18px;
+  box-shadow: 0 5px 18px rgba(23,50,68,.08);
+}
+
+html[data-sonaa-theme] .logout-confirm-yes,
+html[data-sonaa-theme] .logout-confirm-cancel {
+  border-radius: 999px;
+}
+
+html[data-sonaa-theme] footer .footer-contact,
+html[data-sonaa-theme] footer a[href*="contact"],
+html[data-sonaa-theme] footer .contact-link {
+  color: #173244;
+  -webkit-text-fill-color: #173244;
+  background: #c9a45c;
+  background-color: #c9a45c;
+  background-image: none;
+  border-color: #c9a45c;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .footer-social a {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  opacity: 1;
+}
+
+html[data-sonaa-theme] .field,
+html[data-sonaa-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+html[data-sonaa-theme] textarea,
+html[data-sonaa-theme] select {
+  color: #173244;
+  background: #ffffff;
+  border: 1px solid #d5e0e5;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .field::placeholder,
+html[data-sonaa-theme] input::placeholder,
+html[data-sonaa-theme] textarea::placeholder {
+  color: #84949b;
+  opacity: 1;
+}
+
+html[data-sonaa-theme] .account-panel,
+html[data-sonaa-theme] .fanni-login-panel,
+html[data-sonaa-theme] .panel {
+  background: #ffffff;
+  border: 1px solid #dce7eb;
+  border-radius: 20px;
+  box-shadow: 0 5px 18px rgba(23,50,68,.08);
+}
+
+html[data-sonaa-theme] .support-float,
+html[data-sonaa-theme] .global-refresh-float {
+  color: #ffffff;
+  background: #087f83;
+  border: 1px solid #087f83;
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(23,50,68,.12);
+}
+
+html[data-sonaa-theme] .footer-social a:hover {
+  color: #ffffff;
+  background: rgba(255,255,255,.18);
+}
