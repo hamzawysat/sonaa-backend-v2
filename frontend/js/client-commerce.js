@@ -72,3 +72,19 @@ function renderClientSubscriptions(){
     </div></div>
   </section>`;
 }
+
+async function payForClientOrder(sn){
+  if(!state.accountToken)return showToast('سجّل الدخول بحساب العميل للدفع من المحفظة.');
+  if(!window.confirm('تأكيد حجز قيمة الخدمة من محفظتك؟ سيتم تحويل المبلغ للفني بعد إتمام المهمة.'))return;
+  try{
+    const result=await API.payForClientOrder(sn);
+    if(state.tracked&&String(state.tracked.sn)===String(sn)){
+      state.tracked.clientPaymentStatus=result.paymentStatus||'held';
+      state.tracked.clientPaymentAmount=Number(result.amount||state.tracked.acceptedOfferPrice||0);
+    }
+    if(result.balance!==undefined)state.walletBalance=Number(result.balance);
+    await loadClientWallet();
+    render();
+    showToast(result.message||'تم حجز قيمة الخدمة بنجاح.','success');
+  }catch(error){showToast(error.message||'تعذر تنفيذ الدفع.');}
+}
