@@ -188,24 +188,62 @@ function copySn(){
     navigator.clipboard.writeText(state.sn).then(()=>showToast('تم نسخ الكود: '+state.sn,'success')).catch(()=>showToast('تعذر النسخ التلقائي. الكود: '+state.sn));
   }else{showToast('انسخ الكود يدويًا: '+state.sn,'success');}
 }
-async function loadServices(){
-  if(state.servicesLoading&&state.servicesLoaded)return;
-  state.servicesLoading=true;state.servicesError='';render();
-  try{
-    const data=await API.getServices();
-    try{const areas=await API.getAreas();AREA_OPTIONS=Array.isArray(areas)?areas:[];}catch(error){AREA_OPTIONS=[];log('تعذر تحميل المناطق:',error);}
-    CATEGORIES=data.categories;ALL_SERVICES=data.services;
-    TECHNICIAN_COUNTS=Object.fromEntries(CATEGORIES.flatMap(category=>Object.entries(category.serviceTechnicianCounts||{})));
-    const flat=[...new Set(CATEGORIES.flatMap(c=>c.services))];
-    if(flat.length!==ALL_SERVICES.length){ALL_SERVICES=[...new Set(ALL_SERVICES)];}
-    state.servicesLoading=false;state.servicesError='';state.servicesLoaded=true;
-    if(state.service&&!ALL_SERVICES.includes(state.service)){state.service='';}
-    render();
-    log('تم تحميل الخدمات من API:',CATEGORIES.length+' قسم, '+ALL_SERVICES.length+' خدمة');
-  }catch(error){
-    state.servicesLoading=false;state.servicesError=error.message||'تعذر تحميل الخدمات';state.servicesLoaded=false;CATEGORIES=[];ALL_SERVICES=[];
-    render();showToast(state.servicesError);log('فشل تحميل الخدمات:',error);
+let servicesLoadPromise=null,areasLoadPromise=null;
+async function retryCatalogRequest(request,attempts=3){
+  let lastError;
+  for(let attempt=0;attempt<attempts;attempt++){
+    try{return await request();}
+    catch(error){
+      lastError=error;
+      const status=Number(error?.status||0);
+      const retryable=!status||status===429||status>=500;
+      if(!retryable||attempt===attempts-1)throw error;
+      await new Promise(resolve=>setTimeout(resolve,attempt===0?500:1400));
+    }
   }
+  throw lastError||new Error('تعذر تحميل البيانات حاليًا.');
+}
+async function loadAreas(){
+  if(areasLoadPromise)return areasLoadPromise;
+  state.areasLoading=true;state.areasError='';render();
+  areasLoadPromise=(async()=>{
+    try{
+      const areas=await retryCatalogRequest(()=>API.getAreas());
+      if(!Array.isArray(areas)||!areas.length)throw new Error('قائمة المناطق غير متاحة حاليًا.');
+      AREA_OPTIONS=areas;
+      state.areasLoaded=true;state.areasError='';
+      if(state.area&&!AREA_OPTIONS.includes(state.area))state.area='';
+    }catch(error){
+      AREA_OPTIONS=[];
+      state.areasLoaded=false;
+      state.areasError=error.message||'تعذر تحميل المناطق';
+      log('فشل تحميل المناطق:',error);
+    }finally{
+      state.areasLoading=false;areasLoadPromise=null;render();
+    }
+  })();
+  return areasLoadPromise;
+}
+async function loadServices(){
+  if(servicesLoadPromise)return servicesLoadPromise;
+  state.servicesLoading=true;state.servicesError='';render();
+  servicesLoadPromise=(async()=>{
+    try{
+      const data=await retryCatalogRequest(()=>API.getServices());
+      CATEGORIES=data.categories;ALL_SERVICES=data.services;
+      TECHNICIAN_COUNTS=Object.fromEntries(CATEGORIES.flatMap(category=>Object.entries(category.serviceTechnicianCounts||{})));
+      const flat=[...new Set(CATEGORIES.flatMap(c=>c.services))];
+      if(flat.length!==ALL_SERVICES.length)ALL_SERVICES=[...new Set(ALL_SERVICES)];
+      state.servicesLoading=false;state.servicesError='';state.servicesLoaded=true;
+      if(state.service&&!ALL_SERVICES.includes(state.service))state.service='';
+      render();
+      log('تم تحميل الخدمات من API:',CATEGORIES.length+' قسم, '+ALL_SERVICES.length+' خدمة');
+    }catch(error){
+      state.servicesLoading=false;state.servicesError=error.message||'تعذر تحميل الخدمات';state.servicesLoaded=false;CATEGORIES=[];ALL_SERVICES=[];
+      render();showToast(state.servicesError);log('فشل تحميل الخدمات:',error);
+    }finally{servicesLoadPromise=null;}
+  })();
+  return servicesLoadPromise;
 }
 let voiceStream=null,voiceRecordingTimer=null,voiceRecordingStartedAt=0;
 function formatVoiceTime(seconds){const value=Math.max(0,Math.min(30,Math.floor(seconds)));return String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0')}
@@ -328,7 +366,7 @@ async function sendComplaint(){
   }catch(error){showToast(error.message||'تعذر إرسال الشكوى حاليًا.');}finally{state.complaintLoading=false;render();}
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  loadServices();loadPublicContent();initializeClientAccount();render();
+  loadServices();loadAreas();loadPublicContent();initializeClientAccount();render();
   // The editor preview bypasses the shared layout loader's splash timer.
   // Release the static customer splash after the first preview render.
   if(window.IS_EDITOR_PREVIEW){
@@ -336,6 +374,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     requestAnimationFrame(()=>requestAnimationFrame(()=>previewSplash?.classList.add('is-hidden')));
   }
   document.addEventListener('click',handleOutsideServiceClick);
+  window.addEventListener('online',()=>{
+    if(!state.servicesLoaded)loadServices();
+    if(!state.areasLoaded)loadAreas();
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)return;
+    if(!state.servicesLoaded&&!state.servicesLoading)loadServices();
+    if(!state.areasLoaded&&!state.areasLoading)loadAreas();
+  });
   let clientLivePollInFlight=false,clientNotificationPollInFlight=false;
   setInterval(async function(){
     if(document.hidden||clientLivePollInFlight)return;
