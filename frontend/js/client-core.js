@@ -173,6 +173,9 @@ const API={
   async getClientWallet(){return this.request('/api/client/wallet',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
   async payForClientOrder(sn){return this.request('/api/client/orders/'+encodeURIComponent(sn)+'/pay',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify({})});},
   async getClientCommerce(){return this.request('/api/client/commerce/catalog',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
+   async getClientStoreProducts(){return this.request('/api/client/commerce/products',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
+   async getClientStoreOrders(){return this.request('/api/client/commerce/product-orders',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
+   async createClientStoreOrder(payload){return this.request('/api/client/commerce/product-orders',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify(payload)});},
   async getClientSubscriptions(){return this.request('/api/client/commerce/subscriptions',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
   async purchaseClientSubscription(payload){return this.request('/api/client/commerce/subscriptions/purchase',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify(payload)});},
   async renewClientSubscription(id,payload){return this.request('/api/client/commerce/subscriptions/'+encodeURIComponent(id)+'/renew',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify(payload)});},
@@ -298,7 +301,7 @@ const API={
 };
 const forceClientRegistration=(new URLSearchParams(window.location.search).get('tab')||'').replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').trim().toLowerCase()==='register';
 let state={
-  commerceItems:[],commerceSubscriptions:[],commerceLoading:false,commerceError:'',commerceSubmitting:'',walletBalance:0,walletFrozen:false,walletTransactions:[],walletTopupRequests:[],walletTransferNumbers:[],walletLoading:false,walletSubmitting:false,walletFromPhone:'',walletAmount:'',walletMethod:'vodafone_cash',walletReference:'',walletIdempotencyKey:'',walletError:'',walletSuccess:'',
+  commerceItems:[],commerceSubscriptions:[],storeProducts:[],storeOrders:[],commerceLoading:false,commerceError:'',commerceSubmitting:'',walletBalance:0,walletFrozen:false,walletTransactions:[],walletTopupRequests:[],walletTransferNumbers:[],walletLoading:false,walletSubmitting:false,walletFromPhone:'',walletAmount:'',walletMethod:'vodafone_cash',walletReference:'',walletIdempotencyKey:'',walletError:'',walletSuccess:'',
   account:null,accountInitializing:false,accountToken:(()=>{if(window.IS_EDITOR_PREVIEW)return '';try{return localStorage.getItem('sonaa_client_account_token')||'';}catch{return '';}})(),accountAuthMode:forceClientRegistration?'register':'login',accountLoading:false,accountError:'',myOrders:[],accountOrdersLoading:false,accountOrdersTab:'current',notifications:[],notificationsUnread:0,notificationsOpen:false,
   tab:'orders',service:'',clientName:'',area:'',areaSearch:'',address:'',phone:'',budget:'',desc:'',voiceBlob:null,voiceUrl:'',voiceRecordingData:'',voiceRecorder:null,voiceChunks:[],voiceRecording:false,loading:false,sn:null,
   trackInput:'',tracked:null,trackError:'',trackLoading:false,acceptingOffer:'',
@@ -309,7 +312,7 @@ let state={
   servicesLoading:true,servicesError:'',servicesLoaded:false,publicContent:{siteName:'حمزاوي سات',maintenance:false,maintenanceMessage:'',announcement:'',faqs:[]},
   
 };
-const CLIENT_TAB_DEFINITIONS=[{id:'new',label:'طلب جديد'},{id:'orders',label:'طلباتي'},{id:'wallet',label:'محفظتي'},{id:'subscriptions',label:'الاشتراكات'},{id:'complaint',label:'شكوى'}];
+const CLIENT_TAB_DEFINITIONS=[{id:'new',label:'طلب جديد'},{id:'orders',label:'طلباتي'},{id:'wallet',label:'محفظتي'},{id:'subscriptions',label:'الاشتراكات والمتجر'},{id:'complaint',label:'شكوى'}];
 if(window.IS_EDITOR_PREVIEW){
   const previewTab=window.PREVIEW_REQUESTED_TAB||'login';
   if(previewTab==='register'){
