@@ -437,6 +437,42 @@ async function run() {
       assert.ok(history.body.requests.some(item => item.id === String(storedRequest._id)));
     });
 
+    await test('client wallet top-up requests remain pending until verified by admin', async () => {
+      const Client = require('../models/Client');
+      const ClientTopupRequest = require('../models/ClientTopupRequest');
+      const client = await Client.findById(clientId);
+      assert.ok(client);
+      const beforeBalance = Number(client.walletBalance || 0);
+
+      const wallet = await request(app).get('/api/client/wallet')
+        .set('Authorization', 'Bearer ' + clientToken);
+      assert.equal(wallet.status, 200);
+      assert.equal(wallet.body.balance, beforeBalance);
+      assert.deepEqual(wallet.body.transactions, []);
+
+      const invalid = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: 'not-a-phone', amount: 100, method: 'vodafone_cash' });
+      assert.equal(invalid.status, 400);
+
+      const submitted = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST' });
+      assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
+      assert.equal(submitted.body.request.status, 'قيد المراجعة');
+      const stored = await ClientTopupRequest.findById(submitted.body.request.id).lean();
+      assert.ok(stored);
+      assert.equal(stored.isCredited, false);
+      assert.equal(stored.status, 'قيد المراجعة');
+      const after = await Client.findById(clientId).lean();
+      assert.equal(Number(after.walletBalance || 0), beforeBalance, 'a pending top-up must never change the client balance');
+
+      const history = await request(app).get('/api/client/wallet')
+        .set('Authorization', 'Bearer ' + clientToken);
+      assert.equal(history.status, 200);
+      assert.ok(history.body.topupRequests.some(item => item.id === String(stored._id)));
+    });
+
     await test('client notifications support unread counts, single-read, read-all, and role isolation', async () => {
       const Notification = require('../models/Notification');
       const own = await Notification.create({
@@ -512,6 +548,41 @@ async function run() {
         specialties: ['إدارة'], areas: ['الإدارة'], status: 'معتمد', role: 'admin'
       });
       adminToken = jwt.sign({ id: String(admin._id), role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      await test('admin approves a client top-up once and writes a client wallet ledger entry', async () => {
+        const Client = require('../models/Client');
+        const ClientTopupRequest = require('../models/ClientTopupRequest');
+        const WalletTransaction = require('../models/WalletTransaction');
+        const pending = await ClientTopupRequest.findOne({ client: clientId, status: 'قيد المراجعة', isCredited: false });
+        assert.ok(pending, 'client top-up fixture must be pending');
+        const before = await Client.findById(clientId).lean();
+        const beforeBalance = Number(before.walletBalance || 0);
+
+        const queue = await request(app).get('/api/admin/client-wallet/topup-requests')
+          .set('Authorization', 'Bearer ' + adminToken);
+        assert.equal(queue.status, 200);
+        assert.ok(queue.body.requests.some(item => String(item._id) === String(pending._id)));
+
+        const approved = await request(app).post('/api/admin/client-wallet/topup-requests/' + pending._id + '/approve')
+          .set('Authorization', 'Bearer ' + adminToken).send({});
+        assert.equal(approved.status, 200, JSON.stringify(approved.body));
+        assert.equal(approved.body.balance, beforeBalance + Number(pending.amount));
+
+        const after = await Client.findById(clientId).lean();
+        assert.equal(Number(after.walletBalance), beforeBalance + Number(pending.amount));
+        const ledger = await WalletTransaction.findOne({ client: clientId, type: 'client_topup', idempotencyKey: 'client-topup:' + String(pending._id) }).lean();
+        assert.ok(ledger);
+        assert.equal(Number(ledger.amount), Number(pending.amount));
+        assert.equal(Number(ledger.balanceAfter), Number(after.walletBalance));
+
+        const duplicate = await request(app).post('/api/admin/client-wallet/topup-requests/' + pending._id + '/approve')
+          .set('Authorization', 'Bearer ' + adminToken).send({});
+        assert.equal(duplicate.status, 409, 'a second approval must not credit the same request twice');
+        const finalClient = await Client.findById(clientId).lean();
+        assert.equal(Number(finalClient.walletBalance), Number(after.walletBalance));
+        assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: 'client-topup:' + String(pending._id) }), 1);
+      });
+
 
       const adminPasswordChange = await request(app).post('/api/password-recovery/change/admin')
         .set('Authorization', 'Bearer ' + adminToken)
