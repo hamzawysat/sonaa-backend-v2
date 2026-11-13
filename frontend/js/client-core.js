@@ -171,6 +171,7 @@ const API={
   async getClientMe(token){return this.request('/api/client/me',{method:'GET',headers:{Authorization:'Bearer '+token}});},
   async getMyOrders(){return this.request('/api/client/orders',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
   async getClientWallet(){return this.request('/api/client/wallet',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
+  async payForClientOrder(sn){return this.request('/api/client/orders/'+encodeURIComponent(sn)+'/pay',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify({})});},
   async getClientCommerce(){return this.request('/api/client/commerce/catalog',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
   async getClientSubscriptions(){return this.request('/api/client/commerce/subscriptions',{method:'GET',headers:{Authorization:'Bearer '+state.accountToken}});},
   async purchaseClientSubscription(payload){return this.request('/api/client/commerce/subscriptions/purchase',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.accountToken},body:JSON.stringify(payload)});},
