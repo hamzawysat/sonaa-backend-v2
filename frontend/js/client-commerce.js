@@ -46,7 +46,7 @@ async function purchaseStoreProduct(itemId){
   const note=window.prompt('أي تفاصيل إضافية للطلب؟ (اختياري)','')||'';
   if(!window.confirm('تأكيد طلب '+quantity+' من '+item.name+' بإجمالي '+(Number(item.price)*quantity)+' جنيه؟ لن يتم خصم أي مبلغ الآن.'))return;
   state.commerceSubmitting=String(itemId);render();
-  try{const result=await API.createClientStoreOrder({itemId:String(itemId),quantity,note});showToast(result.message||'تم تسجيل طلبك وإشعار الإدارة.','success');await loadClientCommerce();}
+  try{const result=await API.createClientStoreOrder({itemId:String(itemId),quantity,note,requestKey:clientCommerceKey()});showToast(result.message||'تم تسجيل طلبك وإشعار الإدارة.','success');await loadClientCommerce();}
   catch(error){showToast(error.message||'تعذر تسجيل الطلب.','error');}
   finally{state.commerceSubmitting='';render();}
 }
