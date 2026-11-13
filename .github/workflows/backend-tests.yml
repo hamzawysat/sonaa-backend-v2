@@ -35,8 +35,6 @@ jobs:
           npm audit --json > /tmp/npm-audit-full.json || true
           npm audit --omit=dev --json > /tmp/npm-audit-production.json || true
           node -e "for (const file of ['/tmp/npm-audit-full.json','/tmp/npm-audit-production.json']) { const report = JSON.parse(require('fs').readFileSync(file, 'utf8')); console.log('AUDIT ' + file + ': ' + JSON.stringify(report.metadata?.vulnerabilities || {})); for (const [name, item] of Object.entries(report.vulnerabilities || {})) console.log(JSON.stringify({name, severity:item.severity, direct:item.isDirect, range:item.range, fixAvailable:item.fixAvailable, via:item.via})); }"
-      - name: Enforce high-severity dependency audit
-        run: npm audit --audit-level=high
       - name: Run backend integration and security tests
         run: npm test
       - name: Install isolated browser test runner
@@ -54,3 +52,6 @@ jobs:
           done
           curl -fsS http://127.0.0.1:4173/index.html >/dev/null
           SONAA_SMOKE_REAL_API=1 NODE_PATH=/tmp/sonaa-playwright/node_modules node scripts/ui-smoke.cjs
+
+      - name: Enforce high-severity dependency audit
+        run: npm audit --audit-level=high
