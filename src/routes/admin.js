@@ -17,7 +17,7 @@ const Order = require('../models/Order');
 const Rating = require('../models/Rating');
 const Complaint = require('../models/Complaint');
 const WalletTransaction = require('../models/WalletTransaction');
-const { createNotification } = require('../utils/notifications');
+const { createNotification, notifyAdmins } = require('../utils/notifications');
 const Service = require('../models/Service');
 const { getActiveServiceNames } = require('../services/serviceCatalog');
 const Region = require('../models/Region');
@@ -82,6 +82,7 @@ const createAdminWalletRouter = require('./admin/wallet');
 const createAdminClientWalletRouter = require('./admin/clientWallet');
 const ClientTopupRequest = require('../models/ClientTopupRequest');
 const CommerceItem = require('../models/CommerceItem');
+const CommerceOrder = require('../models/CommerceOrder');
 const ClientSubscription = require('../models/ClientSubscription');
 const createAdminCommerceRouter = require('./admin/commerce');
 const createAdminFanniManagementRouter = require('./admin/fanniManagement');
@@ -346,7 +347,7 @@ router.use(createAdminClientWalletRouter({
   adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT
 }));
 
-router.use(createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
+router.use(createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, CommerceOrder, ClientSubscription, WalletTransaction, notifyAdmins, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
 
 router.delete('/clients/:phone/account', auth('admin'), async (req, res, next) => {
   try {
