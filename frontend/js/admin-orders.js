@@ -31,6 +31,7 @@ function renderOrders(){
                   ${o.status==='قيد المراجعة'&&canPublishOrders()?`<button onclick="event.stopPropagation();setPendingAction('${menuKey}','publish','نشر الطلب')" class="dropdown-item">🚀 نشر للفنيين</button>`:''}
                   ${canAssignOrders()?`<button onclick="event.stopPropagation();setPendingAction('${menuKey}','assign','تعيين فني')" class="dropdown-item">👷 تعيين فني</button>`:''}
                   ${o.status==='قيد المراجعة'&&!offers.length&&!o.assignedFanni?`<button onclick="event.stopPropagation();setPendingAction('${menuKey}','edit','تصحيح البيانات')" class="dropdown-item">✏️ تصحيح</button>`:''}
+                  ${o.clientPaymentStatus==='held'?'<button onclick="event.stopPropagation();setPendingAction(\''+menuKey+'\',\'refund\',\'استرداد قيمة الخدمة\')" class="dropdown-item text-red-700">↩️ استرداد المبلغ للعميل</button>':''}
                   <button onclick="event.stopPropagation();setPendingAction('${menuKey}','cancel','إلغاء الطلب')" class="dropdown-item">❌ إلغاء</button>
                   <button onclick="event.stopPropagation();setPendingAction('${menuKey}','archive','أرشفة')" class="dropdown-item">📦 أرشفة</button>
                   <div class="h-px bg-slate-100 my-1"></div>
