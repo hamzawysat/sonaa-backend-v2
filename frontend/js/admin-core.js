@@ -5,9 +5,9 @@ const TOKEN_KEY='admin_token_v3';
 function escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function getToken(){if(window.IS_EDITOR_PREVIEW)return '';try{return localStorage.getItem(TOKEN_KEY)||''}catch{return ''}}
 function currentAdminRoleLabel(){return String(state.currentAdminRoleLabel||'').trim();}
-function canReadVoiceReview(){return currentAdminRoleLabel()==='أدمن رئيسي'||state.currentAdminPermissions?.voiceReview?.read===true;}
-function canWriteVoiceReview(){return currentAdminRoleLabel()==='أدمن رئيسي'||state.currentAdminPermissions?.voiceReview?.write===true;}
-function canPublishOrders(){const role=currentAdminRoleLabel();return role==='أدمن رئيسي'||state.currentAdminPermissions?.publishOrders?.write===true;}
+function canReadVoiceReview(){return isRootAdminUI()||state.currentAdminPermissions?.voiceReview?.read===true;}
+function canWriteVoiceReview(){return isRootAdminUI()||state.currentAdminPermissions?.voiceReview?.write===true;}
+function canPublishOrders(){return isRootAdminUI()||state.currentAdminPermissions?.publishOrders?.write===true;}
 function canAssignOrders(){return isRootAdminUI();}
 function toggleOrderSelection(sn,checked){sn=String(sn||'').trim().toUpperCase();if(!/^SN\d{6}$/.test(sn))return;const selected=new Set(state.selectedOrderSNs||[]);if(checked)selected.add(sn);else selected.delete(sn);state.selectedOrderSNs=Array.from(selected);render();}
 function toggleAllVisibleOrders(checked){const selected=new Set(state.selectedOrderSNs||[]);for(const order of (state.filteredOrders||[])){const sn=String(order.sn||'').trim().toUpperCase();if(!/^SN\d{6}$/.test(sn))continue;if(checked)selected.add(sn);else selected.delete(sn);}state.selectedOrderSNs=Array.from(selected);render();}
@@ -43,7 +43,7 @@ function renderSectionCount(item){
   return '<span class="section-nav-count'+(count>0?' has-pending':'')+'" aria-label="عدد الحالات التي تحتاج تدخل">'+escHtml(String(count))+'</span>';
 }
 function getAdminSectionCount(section){if(!section)return 0;if(section.id==='dashboard')return getAdminSectionCountById('dashboard');if(section.id==='clients')return getPendingOrderCount()+getPendingClientTopupCount();if(section.id==='technicians')return getPendingTechnicianCount()+state.pendingProfileEdits.length+getPendingTopupCount();if(section.id==='customer-operations')return getPendingComplaintCount()+getPendingRecoveryCount();return 0;}
-function isRootAdminUI(){return currentAdminRoleLabel()==='أدمن رئيسي';}
+function isRootAdminUI(){return state.currentAdminIsRoot===true||['أدمن رئيسي','مدير عام'].includes(currentAdminRoleLabel());}
 function permissionKeyForTab(tab){if(['dashboard','stats','reports','pageVisits'].includes(tab))return 'dashboard';if(['fannis','pending','profileEdits','disabled','levels'].includes(tab))return 'fannis';if(tab==='orders')return 'orders';if(tab==='offers')return 'offers';if(tab==='wallets')return 'wallet';if(tab==='topups')return 'topups';if(tab==='clientWallet')return 'wallet';if(['commercePlans','commerceSubscriptions'].includes(tab))return 'commerce';if(tab==='clients')return 'clients';if(tab==='pricing')return 'pricing';if(tab==='settings')return 'settings';if(tab==='services')return 'services';if(tab==='regions')return 'regions';if(tab==='complaints')return 'complaints';if(tab==='support')return 'support';if(tab==='notifications')return 'notifications';if(tab==='content')return 'content';if(['store','storeOrders'].includes(tab))return 'store';return null;}
 function canReadTab(tab){if(!currentAdminRoleLabel())return true;if(isRootAdminUI())return true;if(tab==='roles'||tab==='security')return false;const key=permissionKeyForTab(tab);return key?state.currentAdminPermissions?.[key]?.read===true:false;}
 function canWriteTab(tab){if(!currentAdminRoleLabel()||isRootAdminUI())return true;const key=permissionKeyForTab(tab);return key?state.currentAdminPermissions?.[key]?.write===true:false;}
@@ -55,7 +55,7 @@ function setClientStatusFilter(value){state.clientStatusFilter=['all','active','
 
 let state={
   tab:'dashboard',pageMode:'home',clientStatusFilter:'all',
-  adminEmail:'',adminPass:'',currentAdminRoleLabel:'',currentAdminPermissions:{},loading:false,loadingOrders:false,publishingOrders:[],deletingItems:[],
+  adminEmail:'',adminPass:'',currentAdminRoleLabel:'',currentAdminIsRoot:false,currentAdminPermissions:{},loading:false,loadingOrders:false,publishingOrders:[],deletingItems:[],
   dropdowns:{}, pendingActions:{},
   fannis:[],filtered:[],pendingProfileEdits:[],topups:[],filteredTopups:[],orders:[],filteredOrders:[],complaints:[],filteredComplaints:[],recoveryRequests:[],loadingComplaints:false,
   services:[],filteredServices:[],servicesLoading:false,servicesError:'',openServices:{},
