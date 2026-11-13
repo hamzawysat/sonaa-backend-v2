@@ -125,14 +125,14 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       }).save({ session });
       await session.commitTransaction();
 
-      await writeAdminAudit(req, 'تفعيل اشتراك عميل وخصم قيمته', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; amount=' + amount);
+      await writeAdminAudit(req, 'تفعيل اشتراك عميل وخصم قيمته', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; amount=' + amount).catch(() => {});
       await createNotification({
         recipientRole: 'client', recipientId: client._id, type: 'subscription_activated',
         title: 'تم تفعيل اشتراكك بنجاح',
         message: 'تم تفعيل اشتراك ' + item.name + ' بنجاح، والخدمة فعّالة الآن.',
         link: '/client.html?tab=subscriptions',
         dedupeKey: 'admin-client-subscription-activated:' + String(subscription._id)
-      });
+      }).catch(() => {});
       return res.status(201).json({ message: 'تم تفعيل الاشتراك وخصم قيمته من محفظة العميل.', subscription, walletBalance: Number(updatedClient.walletBalance) });
     } catch (error) {
       if (session?.inTransaction()) await session.abortTransaction().catch(() => {});
