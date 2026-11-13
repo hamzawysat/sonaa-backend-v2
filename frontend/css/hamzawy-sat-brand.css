@@ -164,25 +164,29 @@ html[data-sonaa-theme] body #app .fanni-wallet-shortcut:active {
   box-shadow:0 1px 0 #B8872D,0 2px 5px rgba(135,94,24,.16),inset 0 1px 0 rgba(255,255,255,.5)!important;
 }
 
-/* Technician dashboard counters: restore legible labels and count badges. */
+/* Technician dashboard: compact five-tab cards; keep labels and counters readable. */
 #app .fanni-dashboard-tabs>div>button {
-  min-height:72px!important;
-  padding:7px 4px!important;
-  gap:5px!important;
+  min-height:48px!important;
+  height:48px!important;
+  padding:3px 2px!important;
+  gap:2px!important;
+  border-radius:10px!important;
 }
 #app .fanni-dashboard-tabs>div>button>span:first-child {
-  font-size:19px!important;
+  font-size:14px!important;
+  line-height:1!important;
 }
 #app .fanni-dashboard-tabs>div>button>span:nth-child(2) {
-  font-size:11px!important;
-  line-height:1.3!important;
+  font-size:8px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
 }
 #app .fanni-dashboard-tabs>div>button>span:nth-child(3) {
-  min-width:20px!important;
-  min-height:18px!important;
-  padding:2px 6px!important;
-  font-size:11px!important;
-  line-height:1.2!important;
+  min-width:16px!important;
+  min-height:14px!important;
+  padding:1px 4px!important;
+  font-size:9px!important;
+  line-height:1!important;
 }
 
 /* Larger notification controls on both dashboards, including the unread count. */
