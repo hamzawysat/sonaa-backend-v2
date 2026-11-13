@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }) {
+function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, CommerceOrder, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }) {
   const router = express.Router();
   const itemSchema = Joi.object({
     name: Joi.string().trim().min(2).max(100).required(),
@@ -18,6 +18,29 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
     features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30),
     active: Joi.boolean()
   }).min(1);
+  const productSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100).required(),
+    description: Joi.string().trim().max(1500).allow('').default(''),
+    price: Joi.number().strict().min(0).max(100000000).required(),
+    sku: Joi.string().trim().max(40).allow('').default(''),
+    features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30).default([]),
+    active: Joi.boolean().default(true),
+    metadata: Joi.object().unknown(false).default({})
+  });
+  const productPatchSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100),
+    description: Joi.string().trim().max(1500).allow(''),
+    price: Joi.number().strict().min(0).max(100000000),
+    sku: Joi.string().trim().max(40).allow(''),
+    features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30),
+    active: Joi.boolean(),
+    metadata: Joi.object().unknown(false)
+  }).min(1);
+  const storeOrderStatusSchema = Joi.object({
+    status: Joi.string().valid('pending','contacted','confirmed','completed','cancelled').required(),
+    paymentMethod: Joi.string().valid('pending','cash_on_delivery','transfer').optional(),
+    adminNote: Joi.string().trim().max(1000).allow('').optional()
+  });
   const subscriptionSchema = Joi.object({
     clientPhone: Joi.string().trim().required(),
     itemId: Joi.string().trim().required(),
@@ -51,6 +74,62 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       return res.json({ message: 'تم تحديث الباقة.', item });
     } catch (error) { next(error); }
   });
+
+  router.get('/commerce/products', auth('admin'), async (req, res, next) => {
+    try {
+      const items = await CommerceItem.find({ kind: 'product' }).sort({ active: -1, createdAt: -1 }).limit(MAX_LIST_LIMIT).lean();
+      return res.set('Cache-Control', 'no-store').json({ items });
+    } catch (error) { next(error); }
+  });
+  router.post('/commerce/products', auth('admin'), validate(productSchema), async (req, res, next) => {
+    try {
+      const item = await CommerceItem.create({ ...req.body, kind: 'product', currency: 'EGP', durationDays: null });
+      await writeAdminAudit(req, 'إضافة صنف للمتجر', 'commerce-products', String(item._id), 'name=' + item.name + '; price=' + item.price);
+      return res.status(201).json({ message: 'تم إضافة الصنف للمتجر.', item });
+    } catch (error) { next(error); }
+  });
+  router.patch('/commerce/products/:id', auth('admin'), validate(productPatchSchema), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const item = await CommerceItem.findOneAndUpdate({ _id: req.params.id, kind: 'product' }, { $set: req.body }, { new: true, runValidators: true });
+      if (!item) return res.status(404).json({ message: 'الصنف غير موجود.' });
+      await writeAdminAudit(req, 'تعديل صنف بالمتجر', 'commerce-products', String(item._id), JSON.stringify(req.body));
+      return res.json({ message: 'تم تحديث الصنف.', item });
+    } catch (error) { next(error); }
+  });
+  router.get('/commerce/product-orders', auth('admin'), async (req, res, next) => {
+    try {
+      const filter = {};
+      if (['pending','contacted','confirmed','completed','cancelled'].includes(String(req.query.status || ''))) filter.status = String(req.query.status);
+      const orders = await CommerceOrder.find(filter).sort({ createdAt: -1 }).limit(MAX_LIST_LIMIT).lean();
+      return res.set('Cache-Control', 'no-store').json({ orders });
+    } catch (error) { next(error); }
+  });
+  router.patch('/commerce/product-orders/:id', auth('admin'), validate(storeOrderStatusSchema), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const order = await CommerceOrder.findById(req.params.id);
+      if (!order) return res.status(404).json({ message: 'طلب الشراء غير موجود.' });
+      const previousStatus = order.status;
+      order.status = req.body.status;
+      if (req.body.paymentMethod) order.paymentMethod = req.body.paymentMethod;
+      if (req.body.adminNote !== undefined) order.adminNote = req.body.adminNote;
+      order.statusHistory.push({ status: order.status, note: order.adminNote || '', changedBy: adminName(req), at: new Date() });
+      await order.save();
+      await writeAdminAudit(req, 'تحديث طلب شراء من المتجر', 'commerce-orders', String(order._id), 'status=' + order.status + '; payment=' + order.paymentMethod);
+      try {
+        await createNotification({
+          recipientRole: order.buyerRole, recipientId: order.buyer,
+          type: 'store_order_update', title: 'تحديث طلب المتجر',
+          message: 'تم تحديث حالة طلبك رقم ' + order.orderNumber + ' إلى ' + ({pending:'قيد المراجعة',contacted:'تم التواصل معك',confirmed:'تم تأكيد الطلب',completed:'تم إتمام الطلب',cancelled:'تم إلغاء الطلب'}[order.status] || order.status) + '.',
+          link: order.buyerRole === 'client' ? '/client.html?tab=subscriptions' : '/fanni',
+          dedupeKey: 'store-order-update:' + String(order._id) + ':' + order.status + ':' + order.updatedAt.getTime()
+        });
+      } catch (notificationError) { console.error('Store buyer notification failed:', notificationError.message); }
+      return res.json({ message: previousStatus === order.status ? 'تم حفظ بيانات الطلب.' : 'تم تحديث حالة الطلب وإشعار المشتري.', order });
+    } catch (error) { next(error); }
+  });
+
   router.get('/commerce/subscriptions', auth('admin'), async (req, res, next) => {
     try {
       const filter = {};
