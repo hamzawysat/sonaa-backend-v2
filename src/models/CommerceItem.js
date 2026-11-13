@@ -5,6 +5,7 @@ const commerceItemSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
   description: { type: String, trim: true, maxlength: 1500, default: '' },
   price: { type: Number, required: true, min: 0, max: 100000000 },
+  originalPrice: { type: Number, min: 0, max: 100000000, default: null },
   currency: { type: String, trim: true, maxlength: 8, default: 'EGP' },
   durationDays: { type: Number, min: 1, max: 3650, default: null },
   features: [{ type: String, trim: true, maxlength: 180 }],

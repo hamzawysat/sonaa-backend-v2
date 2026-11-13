@@ -12,6 +12,7 @@ const Rating = require('../models/Rating');
 const WalletTransaction = require('../models/WalletTransaction');
 const ClientTopupRequest = require('../models/ClientTopupRequest');
 const CommerceItem = require('../models/CommerceItem');
+const CommerceOrder = require('../models/CommerceOrder');
 const ClientSubscription = require('../models/ClientSubscription');
 const createClientCommerceRouter = require('./clientCommerce');
 const { clientAuth } = require('../middleware/clientAuth');
@@ -21,7 +22,7 @@ const { notifyAdmins, createNotification } = require('../utils/notifications');
 
 const router = express.Router();
 
-router.use(createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification, notifyAdmins }));
+router.use(createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, CommerceOrder, ClientSubscription, WalletTransaction, mongoose, createNotification, notifyAdmins }));
 
 const registerSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50).required(),

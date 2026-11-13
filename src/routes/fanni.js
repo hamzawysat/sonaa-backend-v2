@@ -13,6 +13,8 @@ const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
 const TopupRequest = require('../models/TopupRequest');
 const WalletTransaction = require('../models/WalletTransaction');
+const CommerceItem = require('../models/CommerceItem');
+const CommerceOrder = require('../models/CommerceOrder');
 
 const { auth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -484,5 +486,67 @@ router.get(
     }
   }
 );
+
+
+const storeOrderSchema = Joi.object({
+  itemId: Joi.string().trim().required(),
+  requestKey: Joi.string().trim().pattern(/^[a-zA-Z0-9:_-]{16,150}$/).required(),
+  quantity: Joi.number().integer().min(1).max(100).default(1),
+  note: Joi.string().trim().max(500).allow('').default('')
+}).unknown(false);
+
+router.get('/commerce/products', auth('fanni'), requireFanni, async (req, res, next) => {
+  try {
+    const items = await CommerceItem.find({ kind: 'product', active: true })
+      .select('name description price originalPrice currency sku features metadata')
+      .sort({ createdAt: -1 }).limit(100).lean();
+    return res.set('Cache-Control', 'no-store').json({ items });
+  } catch (error) { return next(error); }
+});
+
+router.get('/commerce/product-orders', auth('fanni'), requireFanni, async (req, res, next) => {
+  try {
+    const orders = await CommerceOrder.find({ buyerRole: 'fanni', buyer: req.user._id })
+      .sort({ createdAt: -1 }).limit(100).lean();
+    return res.set('Cache-Control', 'no-store').json({ orders });
+  } catch (error) { return next(error); }
+});
+
+router.post('/commerce/product-orders', auth('fanni'), requireFanni, validate(storeOrderSchema), async (req, res, next) => {
+  try {
+    const itemId = String(req.body.itemId || '').trim();
+    const requestKey = String(req.body.requestKey || '').trim();
+    if (!/^[a-zA-Z0-9:_-]{16,150}$/.test(requestKey)) return res.status(400).json({ message: 'معرّف طلب الشراء غير صالح.' });
+    const existingOrder = await CommerceOrder.findOne({ buyerRole: 'fanni', buyer: req.user._id, requestKey }).lean();
+    if (existingOrder) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: existingOrder, duplicate: true });
+    if (!/^[a-f0-9]{24}$/i.test(itemId)) return res.status(400).json({ message: 'الصنف غير صالح.' });
+    const item = await CommerceItem.findOne({ _id: itemId, kind: 'product', active: true }).lean();
+    if (!item) return res.status(404).json({ message: 'الصنف غير متاح حاليًا.' });
+    const quantity = Number(req.body.quantity || 1);
+    const total = Number(item.price) * quantity;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100 || !Number.isFinite(total) || total > 100000000) return res.status(400).json({ message: 'الكمية أو قيمة الطلب غير صالحة.' });
+    const orderNumber = 'ST' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 90 + 10);
+    const order = await CommerceOrder.create({
+      orderNumber, buyerRole: 'fanni', buyer: req.user._id, requestKey,
+      buyerName: req.user.name || '', buyerPhone: req.user.phone || '',
+      item: item._id, itemName: item.name, sku: item.sku || '',
+      unitPrice: Number(item.price), quantity, total,
+      buyerNote: req.body.note || '', status: 'pending', paymentMethod: 'pending',
+      statusHistory: [{ status: 'pending', note: 'طلب شراء جديد من الفني', changedBy: 'الفني' }]
+    });
+    try {
+      await notifyAdmins({ type: 'admin_store_order', title: 'طلب شراء جديد من المتجر',
+        message: 'طلب الفني ' + (order.buyerName || order.buyerPhone) + ' شراء ' + item.name + ' بإجمالي ' + total + ' جنيه. رقم الطلب ' + orderNumber + '.',
+        link: '/admin?tab=commerceOrders', dedupeKey: 'admin-store-order:' + String(order._id) });
+    } catch (notificationError) { console.error('Store order admin notification failed:', notificationError.message); }
+    return res.status(201).json({ message: 'تم تسجيل طلبك وإشعار الإدارة. هنتواصل معاك لتأكيد الطلب وطريقة الدفع.', order });
+  } catch (error) {
+    if (error?.code === 11000) {
+      const existing = await CommerceOrder.findOne({ buyerRole: 'fanni', buyer: req.user._id, requestKey: String(req.body?.requestKey || '').trim() }).lean();
+      if (existing) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: existing, duplicate: true });
+    }
+    return next(error);
+  }
+});
 
 module.exports = router;

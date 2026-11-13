@@ -10,9 +10,11 @@ async function loadClientCommerce(){
   if(!state.accountToken||!state.account||state.commerceLoading)return;
   state.commerceLoading=true;state.commerceError='';render();
   try{
-    const [catalog,subscriptions]=await Promise.all([API.getClientCommerce(),API.getClientSubscriptions()]);
+    const [catalog,subscriptions,products,orders]=await Promise.all([API.getClientCommerce(),API.getClientSubscriptions(),API.getClientStoreProducts(),API.getClientStoreOrders()]);
     state.commerceItems=Array.isArray(catalog.items)?catalog.items:[];
     state.commerceSubscriptions=Array.isArray(subscriptions.subscriptions)?subscriptions.subscriptions:[];
+    state.storeProducts=Array.isArray(products.items)?products.items:[];
+    state.storeOrders=Array.isArray(orders.orders)?orders.orders:[];
   }catch(error){state.commerceError=error.message||'تعذر تحميل الاشتراكات.';}
   finally{state.commerceLoading=false;render();}
 }
@@ -35,6 +37,20 @@ async function purchaseClientSubscription(itemId){
   finally{state.commerceSubmitting='';render();}
 }
 
+async function purchaseStoreProduct(itemId){
+  if(state.commerceSubmitting)return;
+  const item=(state.storeProducts||[]).find(x=>String(x._id)===String(itemId));
+  if(!item)return showToast('الصنف غير متاح حاليًا.');
+  const quantity=Number(window.prompt('اكتب الكمية المطلوبة:','1'));
+  if(!Number.isInteger(quantity)||quantity<1||quantity>100)return showToast('الكمية يجب أن تكون من 1 إلى 100.');
+  const note=window.prompt('أي تفاصيل إضافية للطلب؟ (اختياري)','')||'';
+  if(!window.confirm('تأكيد طلب '+quantity+' من '+item.name+' بإجمالي '+(Number(item.price)*quantity)+' جنيه؟ لن يتم خصم أي مبلغ الآن.'))return;
+  state.commerceSubmitting=String(itemId);render();
+  try{const result=await API.createClientStoreOrder({itemId:String(itemId),quantity,note,requestKey:clientCommerceKey()});showToast(result.message||'تم تسجيل طلبك وإشعار الإدارة.','success');await loadClientCommerce();}
+  catch(error){showToast(error.message||'تعذر تسجيل الطلب.','error');}
+  finally{state.commerceSubmitting='';render();}
+}
+
 async function renewClientSubscription(subscriptionId){
   if(state.commerceSubmitting)return;
   const sub=(state.commerceSubscriptions||[]).find(x=>String(x._id)===String(subscriptionId));
@@ -54,7 +70,7 @@ async function renewClientSubscription(subscriptionId){
 
 // Customer subscriptions use a single panel with two switchable inner views.
 function setClientCommerceView(view){
-  state.commerceView=view==='available'?'available':'current';
+  state.commerceView=['available','store'].includes(view)?view:'current';
   render();
 }
 
@@ -69,9 +85,10 @@ function renderClientSubscriptions(){
     ${state.commerceError?'<p class="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[11px] font-bold text-red-700">'+escHtml(state.commerceError)+'</p>':''}</div>
     <div class="client-commerce-tabs flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2" role="tablist" aria-label="أقسام الاشتراكات">
       <button type="button" role="tab" aria-selected="${activeView==='current'}" onclick="setClientCommerceView('current')" class="flex-1 rounded-xl px-3 py-3 text-[11px] font-extrabold transition ${activeView==='current'?'tab-active':'tab-idle bg-white border border-slate-200'}">اشتراكاتي الحالية <span class="mr-1 text-[10px] opacity-80">(${subs.length})</span></button>
-      <button type="button" role="tab" aria-selected="${activeView==='available'}" onclick="setClientCommerceView('available')" class="flex-1 rounded-xl px-3 py-3 text-[11px] font-extrabold transition ${activeView==='available'?'tab-active':'tab-idle bg-white border border-slate-200'}">الاشتراكات المتاحة <span class="mr-1 text-[10px] opacity-80">(${items.length})</span></button>
+      <button type="button" role="tab" aria-selected="${activeView==='available'}" onclick="setClientCommerceView('available')" class="flex-1 rounded-xl px-3 py-3 text-[11px] font-extrabold transition ${activeView==='available'?'tab-active':'tab-idle bg-white border border-slate-200'}">الاشتراكات المتاحة</button>
+      <button type="button" role="tab" aria-selected="${activeView==='store'}" onclick="setClientCommerceView('store')" class="flex-1 rounded-xl px-3 py-3 text-[11px] font-extrabold transition ${activeView==='store'?'tab-active':'tab-idle bg-white border border-slate-200'}">المتجر</button>
     </div>
-    ${activeView==='available'?`<div class="panel p-4"><h3 class="font-extrabold text-[14px]">الاشتراكات المتاحة</h3><div class="mt-3 space-y-3">
+    ${activeView==='store'?`<div class="panel p-4"><h3 class="font-extrabold text-[14px]">البضاعة المتاحة والعروض</h3><p class="mt-1 text-[11px] text-slate-500">اطلب الصنف، والإدارة هتتواصل معاك لتأكيد الطلب والدفع.</p><div class="mt-3 space-y-3"><h4 class="font-bold text-xs">البضاعة المتاحة</h4>${(state.storeProducts||[]).filter(item=>!(Number(item.originalPrice)>Number(item.price))).map(item=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-3"><div><h4 class="font-extrabold text-[13px]">'+escHtml(item.name)+'</h4><p class="mt-1 text-[11px] text-slate-500">'+escHtml(item.description||'')+'</p></div><strong>'+escHtml(String(item.price))+' ج</strong></div><button type="button" onclick="purchaseStoreProduct(&quot;'+escAttr(item._id)+'&quot;)" class="mt-3 w-full h-10 rounded-xl blue-btn text-[11px] font-extrabold">طلب شراء</button></article>').join('')||'<p class="text-center text-xs text-slate-500">لا توجد أصناف متاحة حاليًا.</p>'}<h4 class="mt-5 font-extrabold text-xs">العروض</h4>${(state.storeProducts||[]).filter(item=>Number(item.originalPrice)>Number(item.price)).map(item=>'<article class="rounded-xl border border-amber-200 bg-amber-50 p-3"><div class="flex justify-between gap-3"><b>'+escHtml(item.name)+'</b><b>'+Number(item.price).toLocaleString('ar-EG')+' ج <del class="text-slate-400">'+Number(item.originalPrice).toLocaleString('ar-EG')+'</del></b></div><p class="mt-1 text-[11px]">'+escHtml(item.description||'')+'</p><button type="button" onclick="purchaseStoreProduct(&quot;'+escAttr(item._id)+'&quot;)" class="mt-3 w-full h-10 rounded-xl blue-btn text-[11px] font-extrabold">طلب العرض</button></article>').join('')||'<p class="text-[11px] text-slate-500">لا توجد عروض حاليًا.</p>'}</div><h4 class="mt-5 font-extrabold text-[13px]">طلباتي من المتجر</h4><div class="mt-2 space-y-2">${(state.storeOrders||[]).map(o=>'<article class="rounded-xl border border-slate-100 p-3 text-[11px]"><b>'+escHtml(o.itemName)+'</b> · '+escHtml(String(o.total))+' جنيه<p class="mt-1 text-slate-500">'+escHtml(o.orderNumber)+' · '+escHtml(({pending:'قيد المراجعة',contacted:'تم التواصل',confirmed:'تم التأكيد',completed:'مكتمل',cancelled:'ملغي'})[o.status]||o.status)+'</p></article>').join('')||'<p class="text-[11px] text-slate-500">لا توجد طلبات شراء حتى الآن.</p>'}</div></div>`:activeView==='available'?`<div class="panel p-4"><h3 class="font-extrabold text-[14px]">الاشتراكات المتاحة</h3><div class="mt-3 space-y-3">
     ${items.length?items.map(item=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><h4 class="font-extrabold text-[13px]">'+escHtml(item.name)+'</h4><p class="mt-1 text-[11px] text-slate-500">'+escHtml(item.description||'')+'</p><p class="mt-1 text-[10px] text-slate-500">المدة: '+escHtml(String(item.durationDays||30))+' يوم</p></div><strong class="shrink-0 text-[14px]">'+escHtml(String(item.price))+' ج</strong></div>'+(Array.isArray(item.features)&&item.features.length?'<ul class="mt-2 list-disc pr-5 text-[10px] text-slate-600">'+item.features.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>':'')+'<button type="button" onclick="purchaseClientSubscription(&quot;'+escAttr(item._id)+'&quot;)" '+(state.commerceSubmitting?'disabled':'')+' class="mt-3 w-full h-10 rounded-xl blue-btn text-[11px] font-extrabold">'+(state.commerceSubmitting===String(item._id)?'جاري إرسال الطلب...':'إرسال طلب الاشتراك')+'</button></article>').join(''):'<p class="rounded-xl bg-slate-50 p-4 text-center text-[11px] text-slate-500">لا توجد باقات متاحة حاليًا.</p>'}
     </div></div>`:`<div class="panel p-4"><h3 class="font-extrabold text-[14px]">اشتراكاتي الحالية</h3><div class="mt-3 space-y-2">
     ${subs.length?subs.map(sub=>'<article class="rounded-xl border border-slate-200 p-3"><div class="flex items-start justify-between gap-2"><div><b class="text-[12px]">'+escHtml(sub.itemName||'اشتراك')+'</b><p class="mt-1 text-[10px] text-slate-500">'+(sub.startsAt?'من '+escHtml(new Date(sub.startsAt).toLocaleDateString('ar-EG')):'')+(sub.endsAt?' إلى '+escHtml(new Date(sub.endsAt).toLocaleDateString('ar-EG')):'')+'</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold">'+escHtml(statusLabel[sub.status]||sub.status)+'</span></div><div class="mt-2 flex items-center justify-between text-[11px]"><span>قيمة التجديد</span><b>'+escHtml(String(sub.amount||0))+' جنيه</b></div>'+(['active','expired'].includes(sub.status)?'<button type="button" onclick="renewClientSubscription(&quot;'+escAttr(sub._id)+'&quot;)" '+(state.commerceSubmitting?'disabled':'')+' class="mt-3 w-full h-10 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-[11px] font-extrabold">تجديد الاشتراك</button>':'')+'</article>').join(''):'<p class="rounded-xl bg-slate-50 p-4 text-center text-[11px] text-slate-500">لم تشترك في أي باقة حتى الآن.</p>'}
