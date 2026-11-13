@@ -1240,6 +1240,42 @@ async function run() {
         .set('Authorization', 'Bearer ' + fanniToken).send({});
       assert.equal(duplicateCompletion.status, 409, 'completed orders must not credit the technician twice');
       assert.equal((await Fanni.findById(fanni._id).lean()).walletBalance, 1450);
+
+      const CommerceItem = require('../models/CommerceItem');
+      const ClientSubscription = require('../models/ClientSubscription');
+      const plan = await CommerceItem.create({
+        kind: 'subscription', name: 'باقة اختبار العميل', price: 50,
+        durationDays: 30, active: true, features: ['تجربة الدفع']
+      });
+      const purchaseKey = 'test-client-subscription-purchase-0001';
+      const purchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });
+      assert.equal(purchase.status, 201, JSON.stringify(purchase.body));
+      assert.equal(purchase.body.balance, 450);
+      assert.equal(purchase.body.subscription.status, 'active');
+      assert.equal(purchase.body.subscription.paymentStatus, 'paid');
+      assert.equal(purchase.body.subscription.durationDays, 30);
+      const subscriptionId = String(purchase.body.subscription._id);
+      const purchaseLedger = await WalletTransaction.findOne({ client: clientId, idempotencyKey: purchaseKey }).lean();
+      assert.ok(purchaseLedger);
+      assert.equal(purchaseLedger.amount, -50);
+
+      const renewalKey = 'test-client-subscription-renew-0001';
+      const renewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ idempotencyKey: renewalKey });
+      assert.equal(renewal.status, 200, JSON.stringify(renewal.body));
+      assert.equal(renewal.body.balance, 400);
+      const renewed = await ClientSubscription.findById(subscriptionId).lean();
+      assert.equal(renewed.history.length, 2);
+      const duplicateRenewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ idempotencyKey: renewalKey });
+      assert.equal(duplicateRenewal.status, 200);
+      assert.equal(duplicateRenewal.body.duplicate, true);
+      assert.equal((await ClientSubscription.findById(subscriptionId).lean()).history.length, 2);
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 400);
     });
 
     await test('order chat rejects revoked technician sessions after password changes', async () => {
