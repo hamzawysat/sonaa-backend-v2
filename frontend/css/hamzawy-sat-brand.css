@@ -1468,3 +1468,38 @@ html[data-sonaa-theme="support"] [data-hs-inline="support-8"]{display:flex;align
 html[data-sonaa-theme="support"] [data-hs-inline="support-9"]{flex-wrap:wrap;margin-top:9px}
 
 html[data-sonaa-theme="support"] [data-hs-inline="support-10"]{flex:1}
+
+
+/* Final cross-page identity enforcement — applied after migrated page rules. */
+html[data-sonaa-theme] body{background:#F5FAFC;color:#173244}
+html[data-sonaa-theme] body :is(h1,h2,h3,.section-title,.page-title){color:#102B3F}
+html[data-sonaa-theme] body :is(button,a.btn,.btn,button.primary,button[type="submit"],.btn-primary,.primary-btn,.blue-btn,.action-label,.home-nav a,.home-nav button){
+ border-radius:999px;background:#087F83;border-color:#06696D;color:#fff;-webkit-text-fill-color:#fff;
+ box-shadow:0 3px 8px rgba(8,127,131,.16);text-shadow:none
+}
+html[data-sonaa-theme] body :is(button,a.btn,.btn,button.primary,button[type="submit"],.btn-primary,.primary-btn,.blue-btn,.action-label,.home-nav a,.home-nav button):hover{background:#06696D;color:#fff;-webkit-text-fill-color:#fff}
+html[data-sonaa-theme] body :is(a:not(.btn),.link,.text-link){color:#087F83}
+html[data-sonaa-theme] body :is(.card,.panel,.modal,.entry,.premium-card,.premium-panel,.edit-picker-shell,.edit-specialty-category,.service-card){
+ background:#fff;border:1px solid #DCE9ED;border-radius:20px;box-shadow:0 5px 18px rgba(16,43,63,.07)
+}
+html[data-sonaa-theme] body :is(.entry-icon,.service-icon,.edit-category-emoji,.icon-circle,.feature-icon){
+ background:#E2F4F6;border-color:#CDE9EC;color:#087F83;border-radius:50%
+}
+html[data-sonaa-theme="index"] body .hero{background:linear-gradient(135deg,#102B3F 0%,#173F55 100%);border-color:#173F55;color:#F5FAFC}
+html[data-sonaa-theme="index"] body .hero h1,
+html[data-sonaa-theme="index"] body .hero h1 span,
+html[data-sonaa-theme="index"] body .hero .eyebrow,
+html[data-sonaa-theme="index"] body .hero .hero-badge-heading b{color:#F5FAFC}
+html[data-sonaa-theme="index"] body .hero .hero-copy{color:#D8E9EE}
+html[data-sonaa-theme="index"] body .hero-badge{background:#fff;border-color:#DCE9ED;color:#173244}
+html[data-sonaa-theme="index"] body .topbar{background:#fff;border-color:#DCE9ED}
+html[data-sonaa-theme="index"] body .trust-row{background:#E2F4F6;color:#47616D}
+html[data-sonaa-theme] body :is(.features,.feature-strip,.advantages,.benefits,.trust-row){background:#E2F4F6}
+html[data-sonaa-theme] body :is(.app-header,.fanni-app-header,.page-header,.header){background:#102B3F;color:#F5FAFC;border-color:#173F55}
+html[data-sonaa-theme] body :is(footer,.site-footer){background:#102B3F;color:#F4FAFC;border-color:#173F55}
+html[data-sonaa-theme] body :is(footer a,.site-footer a){color:#D8F1F2}
+html[data-sonaa-theme] body :is(footer .contact-btn,footer a.contact-btn,footer .btn-contact,.site-footer .contact-btn){
+ background:#C9A45C;border-color:#B18A45;color:#102B3F;-webkit-text-fill-color:#102B3F
+}
+html[data-sonaa-theme] body :is(input,select,textarea,.field){accent-color:#087F83}
+html[data-sonaa-theme] body :is(input:focus,select:focus,textarea:focus,.field:focus){border-color:#087F83;box-shadow:0 0 0 3px rgba(8,127,131,.14)}
