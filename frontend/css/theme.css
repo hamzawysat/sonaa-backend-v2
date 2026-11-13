@@ -405,15 +405,15 @@
   --sonaa-info: var(--sonaa-color-0284c7);
 }
 
-:root[data-sonaa-theme="index"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --gold:var(--sonaa-color-f5b928); --ink:var(--sonaa-color-152544); --muted:var(--sonaa-color-64748b); --line:var(--sonaa-color-e7edf5); --paper:var(--sonaa-color-f7f9fc); }
+:root[data-sonaa-theme="index"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; --page:#F5FAFC; }
 
-:root[data-sonaa-theme="client"] { --navy:var(--sonaa-color-0b1b3a); --navy2:var(--sonaa-color-173c6c); --blue:var(--sonaa-color-2563eb); --blue-dark:var(--sonaa-color-1d4ed8); --page:var(--sonaa-color-f4f7fb); --border:var(--sonaa-color-e2e8f0); --text:var(--sonaa-color-0f172a); --muted:var(--sonaa-color-64748b); }
+:root[data-sonaa-theme="client"] { --navy:#173244; --navy2:#244B5B; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --muted:#667D89; }
 
-:root[data-sonaa-theme="fanni"] { --navy:var(--sonaa-color-0b1b3a); --navy-light:var(--sonaa-color-163b70); --blue:var(--sonaa-color-2563eb); --blue-dark:var(--sonaa-color-1d4ed8); --page:var(--sonaa-color-f4f7fc); --border:var(--sonaa-color-e2e8f0); }
+:root[data-sonaa-theme="fanni"] { --navy:#173244; --navy-light:#244B5B; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --muted:#667D89; }
 
-:root[data-sonaa-theme="admin"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --blue2:var(--sonaa-color-1d4ed8); --gold:var(--sonaa-color-f59e0b); --page:var(--sonaa-color-f1f5fb); --card:var(--sonaa-color-fff); }
+:root[data-sonaa-theme="admin"] { --navy:#173244; --blue:#087F83; --blue2:#06696D; --teal:#087F83; --gold:#C9A45C; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --card:#FFFFFF; }
 
-:root[data-sonaa-theme="support"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --teal:var(--sonaa-color-0d9488); --page:var(--sonaa-color-f4f7fb); --border:var(--sonaa-color-e2e8f0); --muted:var(--sonaa-color-64748b); }
+:root[data-sonaa-theme="support"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#C9A45C; --page:#F5FAFC; --border:#DCE9ED; --muted:#667D89; --text:#173244; }
 
 :root[data-sonaa-theme="customers"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
 
@@ -421,5 +421,3 @@
 
 :root { --navy:var(--sonaa-brand-navy); --blue:var(--sonaa-brand-blue); --blue-dark:var(--sonaa-brand-blue-dark); --gold:var(--sonaa-brand-gold); --teal:var(--sonaa-brand-teal); --text:var(--sonaa-text); --ink:var(--sonaa-text); --muted:var(--sonaa-muted); --border:var(--sonaa-border); --line:var(--sonaa-border); --paper:var(--sonaa-surface); --page:var(--sonaa-page); --card:var(--sonaa-surface); }
 
-
-}
