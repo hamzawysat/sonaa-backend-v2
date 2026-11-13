@@ -2,7 +2,7 @@ name: Backend integration tests # re-run after admin runtime fix
 
 on:
   push:
-    branches: [main, 'feature/**']
+    branches: [main, 'feature/**', 'fix/**']
     paths:
       - 'src/**'
       - 'frontend/admin.html'

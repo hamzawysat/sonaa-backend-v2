@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, ClientSubscription, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }) {
+function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }) {
   const router = express.Router();
   const itemSchema = Joi.object({
     name: Joi.string().trim().min(2).max(100).required(),
@@ -104,20 +104,61 @@ function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, 
   });
   router.patch('/commerce/subscriptions/:id/status', auth('admin'), validate(Joi.object({ status: Joi.string().valid('active','paused','cancelled','expired').required(), reason: Joi.string().trim().max(500).allow('').default('') })), async (req, res, next) => {
     if (!validId(req.params.id)) return sendBadId(res);
+    let session;
     try {
-      const subscription = await ClientSubscription.findById(req.params.id);
-      if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
+      session = await mongoose.startSession();
+      session.startTransaction();
+      const subscription = await ClientSubscription.findById(req.params.id).session(session);
+      if (!subscription) { await session.abortTransaction(); return res.status(404).json({ message: 'الاشتراك غير موجود.' }); }
+
+      // Charge client-originated requests only after explicit admin approval.
+      if (req.body.status === 'active' && subscription.status === 'pending' && subscription.createdBy === 'العميل' && subscription.paymentStatus !== 'paid') {
+        const paymentKey = 'client-subscription-approval:' + String(subscription._id);
+        const priorPayment = await WalletTransaction.findOne({ client: subscription.client, idempotencyKey: paymentKey }).session(session).lean();
+        if (!priorPayment) {
+          const amount = Number(subscription.amount || 0);
+          const client = await Client.findOne({ _id: subscription.client, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } }).session(session);
+          if (!client) { await session.abortTransaction(); return res.status(409).json({ message: 'لا يمكن تفعيل الاشتراك: رصيد العميل غير كافٍ أو المحفظة غير متاحة.' }); }
+          const before = Number(client.walletBalance || 0);
+          const updatedClient = await Client.findOneAndUpdate(
+            { _id: client._id, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } },
+            { $inc: { walletBalance: -amount } }, { new: true, session, runValidators: true }
+          );
+          if (!updatedClient) { await session.abortTransaction(); return res.status(409).json({ message: 'تغير رصيد العميل أثناء التفعيل. حدّث الصفحة وحاول مرة أخرى.' }); }
+          await new WalletTransaction({
+            client: client._id, type: 'client_subscription_payment', amount: -amount,
+            balanceBefore: before, balanceAfter: Number(updatedClient.walletBalance),
+            description: 'تفعيل اشتراك ' + subscription.itemName + ' بعد موافقة الإدارة',
+            idempotencyKey: paymentKey
+          }).save({ session });
+        }
+        const startsAt = new Date();
+        subscription.startsAt = startsAt;
+        subscription.endsAt = new Date(startsAt.getTime() + Number(subscription.durationDays || 30) * 86400000);
+        subscription.paymentStatus = 'paid';
+        subscription.paymentMethod = 'محفظة العميل';
+        subscription.history.push({ amount: Number(subscription.amount || 0), startsAt, endsAt: subscription.endsAt, renewedBy: adminName(req), note: 'خصم وتفعيل بعد موافقة الإدارة', paymentKey });
+      }
+
       subscription.status = req.body.status; subscription.updatedBy = adminName(req);
       if (req.body.status === 'active' && !subscription.startsAt) subscription.startsAt = new Date();
       if (req.body.status === 'active' && !subscription.endsAt) {
-        const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
+        const item = subscription.item ? await CommerceItem.findById(subscription.item).session(session).lean() : null;
         subscription.endsAt = new Date(Date.now() + Number(item?.durationDays || 30) * 86400000);
       }
       subscription.notes = [subscription.notes, req.body.reason].filter(Boolean).join('\n').slice(0,1000);
-      await subscription.save();
+      await subscription.save({ session });
+      await session.commitTransaction();
       await writeAdminAudit(req, 'تغيير حالة اشتراك عميل', 'client-subscriptions', String(subscription._id), 'status=' + subscription.status + '; reason=' + req.body.reason);
+      if (subscription.status === 'active' && subscription.paymentStatus === 'paid') {
+        await createNotification({ recipientRole: 'client', recipientId: subscription.client, type: 'subscription_activated', title: 'تم تفعيل اشتراكك', message: 'وافقت الإدارة وتم تفعيل اشتراك ' + subscription.itemName + ' وخصم قيمته من محفظتك.', link: '/client.html?tab=subscriptions', dedupeKey: 'client-subscription-approved:' + String(subscription._id) });
+      }
       return res.json({ message: 'تم تحديث حالة الاشتراك.', subscription });
-    } catch (error) { next(error); }
+    } catch (error) {
+      if (session?.inTransaction()) await session.abortTransaction().catch(() => {});
+      if (error?.code === 11000) return res.status(409).json({ message: 'تم تسجيل خصم هذا الاشتراك بالفعل.' });
+      next(error);
+    } finally { if (session) await session.endSession(); }
   });
   return router;
 }
