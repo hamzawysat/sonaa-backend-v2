@@ -60,27 +60,85 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
     } catch (error) { next(error); }
   });
   router.post('/commerce/subscriptions', auth('admin'), validate(subscriptionSchema), async (req, res, next) => {
+    let session;
     try {
-      const client = await Client.findOne({ phone: req.body.clientPhone });
-      if (!client) return res.status(404).json({ message: 'العميل غير موجود. تأكد من رقم الهاتف.' });
-      const item = await CommerceItem.findOne({ _id: req.body.itemId, kind: 'subscription', active: true });
+      const item = await CommerceItem.findOne({ _id: req.body.itemId, kind: 'subscription', active: true }).lean();
       if (!item) return res.status(404).json({ message: 'الباقة غير موجودة أو متوقفة.' });
       const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : new Date();
       const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : new Date(startsAt.getTime() + Number(item.durationDays) * 86400000);
       if (endsAt <= startsAt) return res.status(400).json({ message: 'تاريخ انتهاء الاشتراك يجب أن يكون بعد تاريخ البداية.' });
-      const amount = req.body.amount === undefined ? Number(item.price) : Number(req.body.amount);
-      const subscription = await ClientSubscription.create({
-        client: client._id, item: item._id, itemName: item.name, amount, durationDays: Number(item.durationDays || 30),
-        status: req.body.status, paymentStatus: req.body.paymentStatus,
-        paymentMethod: req.body.paymentMethod, startsAt: req.body.status === 'active' ? startsAt : null,
-        endsAt: req.body.status === 'active' ? endsAt : null, notes: req.body.notes,
+
+      // Pending records retain the existing administrative workflow and do not charge the wallet.
+      if (req.body.status !== 'active') {
+        const client = await Client.findOne({ phone: req.body.clientPhone });
+        if (!client) return res.status(404).json({ message: 'العميل غير موجود. تأكد من رقم الهاتف.' });
+        const amount = Number(item.price);
+        const subscription = await ClientSubscription.create({
+          client: client._id, item: item._id, itemName: item.name, amount, durationDays: Number(item.durationDays || 30),
+          status: 'pending', paymentStatus: req.body.paymentStatus || 'pending', paymentMethod: req.body.paymentMethod,
+          startsAt: null, endsAt: null, notes: req.body.notes, createdBy: adminName(req), updatedBy: adminName(req), history: []
+        });
+        await writeAdminAudit(req, 'إنشاء اشتراك عميل', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; status=pending');
+        return res.status(201).json({ message: 'تم إنشاء طلب الاشتراك بانتظار التفعيل.', subscription });
+      }
+
+      // Direct activation always charges the authoritative catalog price inside one transaction.
+      const amount = Number(item.price);
+      if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: 'لا يمكن تفعيل باقة مجانية من هذا الإجراء.' });
+      session = await mongoose.startSession();
+      session.startTransaction();
+      const client = await Client.findOne({ phone: req.body.clientPhone, status: 'نشط', walletFrozen: { $ne: true } }).session(session);
+      if (!client) {
+        await session.abortTransaction();
+        const exists = await Client.exists({ phone: req.body.clientPhone });
+        return res.status(exists ? 409 : 404).json({ message: exists ? 'حساب العميل موقوف أو محفظته مجمدة.' : 'العميل غير موجود. تأكد من رقم الهاتف.' });
+      }
+      const subscriptionId = new mongoose.Types.ObjectId();
+      const before = Number(client.walletBalance || 0);
+      if (before < amount) {
+        await session.abortTransaction();
+        return res.status(409).json({ message: 'رصيد العميل غير كافٍ لتفعيل هذه الباقة.' });
+      }
+      const updatedClient = await Client.findOneAndUpdate(
+        { _id: client._id, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } },
+        { $inc: { walletBalance: -amount } },
+        { new: true, session, runValidators: true }
+      );
+      if (!updatedClient) {
+        await session.abortTransaction();
+        return res.status(409).json({ message: 'تغير رصيد العميل أثناء التفعيل. حدّث الصفحة وحاول مرة أخرى.' });
+      }
+      const paymentKey = 'admin-client-subscription:' + String(subscriptionId);
+      const subscription = new ClientSubscription({
+        _id: subscriptionId, client: client._id, item: item._id, itemName: item.name, amount,
+        durationDays: Number(item.durationDays || 30), status: 'active', paymentStatus: 'paid',
+        paymentMethod: 'محفظة العميل', startsAt, endsAt, notes: req.body.notes,
         createdBy: adminName(req), updatedBy: adminName(req),
-        history: req.body.status === 'active' ? [{ amount, startsAt, endsAt, renewedBy: adminName(req), note: 'تفعيل أولي من الإدارة' }] : []
+        history: [{ amount, startsAt, endsAt, renewedBy: adminName(req), note: 'تفعيل مباشر من الإدارة مع الخصم من المحفظة', paymentKey }]
       });
-      await writeAdminAudit(req, 'إنشاء اشتراك عميل', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; status=' + subscription.status);
-      if (subscription.status === 'active') await createNotification({ recipientRole: 'client', recipientId: client._id, type: 'subscription_activated', title: 'تم تفعيل اشتراكك', message: 'تم تفعيل اشتراك ' + item.name + '.', link: '/client.html?tab=subscriptions', dedupeKey: 'subscription-activated:' + String(subscription._id) });
-      return res.status(201).json({ message: 'تم إنشاء الاشتراك.', subscription });
-    } catch (error) { next(error); }
+      await subscription.save({ session });
+      await new WalletTransaction({
+        client: client._id, type: 'client_subscription_payment', amount: -amount,
+        balanceBefore: before, balanceAfter: Number(updatedClient.walletBalance),
+        description: 'تفعيل اشتراك ' + item.name + ' من الإدارة',
+        idempotencyKey: paymentKey
+      }).save({ session });
+      await session.commitTransaction();
+
+      await writeAdminAudit(req, 'تفعيل اشتراك عميل وخصم قيمته', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; amount=' + amount).catch(() => {});
+      await createNotification({
+        recipientRole: 'client', recipientId: client._id, type: 'subscription_activated',
+        title: 'تم تفعيل اشتراكك بنجاح',
+        message: 'تم تفعيل اشتراك ' + item.name + ' بنجاح، والخدمة فعّالة الآن.',
+        link: '/client.html?tab=subscriptions',
+        dedupeKey: 'admin-client-subscription-activated:' + String(subscription._id)
+      }).catch(() => {});
+      return res.status(201).json({ message: 'تم تفعيل الاشتراك وخصم قيمته من محفظة العميل.', subscription, walletBalance: Number(updatedClient.walletBalance) });
+    } catch (error) {
+      if (session?.inTransaction()) await session.abortTransaction().catch(() => {});
+      if (error?.code === 11000) return res.status(409).json({ message: 'تم تسجيل خصم هذا الاشتراك بالفعل.' });
+      next(error);
+    } finally { if (session) await session.endSession(); }
   });
   router.post('/commerce/subscriptions/:id/renew', auth('admin'), validate(Joi.object({ note: Joi.string().trim().max(500).allow('').default(''), paymentStatus: Joi.string().valid('paid','pending','unpaid').default('paid'), amount: Joi.number().strict().min(0).max(100000000).optional() })), async (req, res, next) => {
     if (!validId(req.params.id)) return sendBadId(res);
