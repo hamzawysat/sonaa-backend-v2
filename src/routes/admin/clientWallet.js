@@ -57,7 +57,7 @@ function createAdminClientWalletRouter({auth,validate,Joi,mongoose,Client,Client
  });
  router.post('/client-wallet/orders/:sn/refund',auth('admin'),validate(Joi.object({reason:Joi.string().trim().min(3).max(500).required()})),async(req,res,next)=>{
   const sn=String(req.params.sn||'').trim().toUpperCase();
-  if(!/^SN\\d{6}$/.test(sn))return res.status(400).json({message:'كود الطلب غير صالح.'});
+  if(!/^SN\d{6}$/.test(sn))return res.status(400).json({message:'كود الطلب غير صالح.'});
   let session;
   let outcome=null;
   try{
