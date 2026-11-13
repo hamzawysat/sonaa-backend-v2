@@ -1503,3 +1503,9 @@ html[data-sonaa-theme] body :is(footer .contact-btn,footer a.contact-btn,footer 
 }
 html[data-sonaa-theme] body :is(input,select,textarea,.field){accent-color:#087F83}
 html[data-sonaa-theme] body :is(input:focus,select:focus,textarea:focus,.field:focus){border-color:#087F83;box-shadow:0 0 0 3px rgba(8,127,131,.14)}
+
+
+/* Official social and store links in the homepage footer. */
+html[data-sonaa-theme="index"] body footer .footer-social{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px 16px;margin-top:12px}
+html[data-sonaa-theme="index"] body footer .footer-social a{display:inline-flex;align-items:center;padding:7px 12px;border:1px solid rgba(216,241,242,.24);border-radius:999px;color:#D8F1F2;text-decoration:none;font-weight:700}
+html[data-sonaa-theme="index"] body footer .footer-social a:hover{background:#087F83;color:#fff}
