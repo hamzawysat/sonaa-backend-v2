@@ -649,13 +649,13 @@ async function run() {
 
         const excessiveDebit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
           .set('Authorization', 'Bearer ' + adminToken)
-          .send({ amount: 351, reason: 'اختبار منع الرصيد السالب' });
+          .send({ amount: 351, reason: 'اختبار منع الرصيد السالب', idempotencyKey: 'wallet-debit-insufficient-test-key' });
         assert.equal(excessiveDebit.status, 409);
         assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 350);
 
         const settlement = await request(app).post('/api/admin/clients/' + clientId + '/wallet/set-balance')
           .set('Authorization', 'Bearer ' + adminToken)
-          .send({ balance: 200, reason: 'تسوية اختبار موثقة' });
+          .send({ balance: 200, reason: 'تسوية اختبار موثقة', idempotencyKey: 'wallet-settlement-test-unique-key' });
         assert.equal(settlement.status, 200, JSON.stringify(settlement.body));
         assert.equal(Number(settlement.body.balance), 200);
         assert.equal(Number(settlement.body.delta), -150);
