@@ -514,6 +514,10 @@ router.get('/commerce/product-orders', auth('fanni'), requireFanni, async (req, 
 router.post('/commerce/product-orders', auth('fanni'), requireFanni, validate(storeOrderSchema), async (req, res, next) => {
   try {
     const itemId = String(req.body.itemId || '').trim();
+    const requestKey = String(req.body.requestKey || '').trim();
+    if (!/^[a-zA-Z0-9:_-]{16,150}$/.test(requestKey)) return res.status(400).json({ message: 'معرّف طلب الشراء غير صالح.' });
+    const existingOrder = await CommerceOrder.findOne({ buyerRole: 'fanni', buyer: req.user._id, requestKey }).lean();
+    if (existingOrder) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: existingOrder, duplicate: true });
     if (!/^[a-f0-9]{24}$/i.test(itemId)) return res.status(400).json({ message: 'الصنف غير صالح.' });
     const item = await CommerceItem.findOne({ _id: itemId, kind: 'product', active: true }).lean();
     if (!item) return res.status(404).json({ message: 'الصنف غير متاح حاليًا.' });
@@ -522,7 +526,7 @@ router.post('/commerce/product-orders', auth('fanni'), requireFanni, validate(st
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100 || !Number.isFinite(total) || total > 100000000) return res.status(400).json({ message: 'الكمية أو قيمة الطلب غير صالحة.' });
     const orderNumber = 'ST' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 90 + 10);
     const order = await CommerceOrder.create({
-      orderNumber, buyerRole: 'fanni', buyer: req.user._id,
+      orderNumber, buyerRole: 'fanni', buyer: req.user._id, requestKey,
       buyerName: req.user.name || '', buyerPhone: req.user.phone || '',
       item: item._id, itemName: item.name, sku: item.sku || '',
       unitPrice: Number(item.price), quantity, total,
