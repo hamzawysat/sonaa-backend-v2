@@ -20,7 +20,7 @@ function createAdminStoreRouter({ auth, Joi, StoreProduct, StoreOrder, notifyAdm
   const statusSchema = Joi.object({
     status: Joi.string().valid('تم التواصل', 'قيد التجهيز', 'مكتمل', 'ملغي').required(),
     adminNote: Joi.string().trim().max(1000).allow('').default(''),
-    paymentMethod: Joi.string().valid('غير محدد', 'عند الاستلام', 'تحويل').default('غير محدد')
+    paymentMethod: Joi.string().valid('غير محدد', 'محفظة العميل', 'عند الاستلام', 'تحويل').default('غير محدد')
   }).unknown(false);
 
   router.get('/store/products', auth('admin'), async (req, res, next) => {
@@ -56,6 +56,12 @@ function createAdminStoreRouter({ auth, Joi, StoreProduct, StoreOrder, notifyAdm
       if (!product) return res.status(404).json({ message: 'المنتج غير موجود.' });
       await writeAdminAudit(req, 'إخفاء منتج من المتجر', 'store', String(product._id), product.name);
       return res.json({ message: 'تم إخفاء المنتج مع الحفاظ على سجل الطلبات.' });
+    } catch (error) { return next(error); }
+  });
+  router.get('/store/orders/count', auth('admin'), async (req, res, next) => {
+    try {
+      const pendingCount = await StoreOrder.countDocuments({ status: 'جديد' });
+      return res.set('Cache-Control', 'no-store').json({ pendingCount });
     } catch (error) { return next(error); }
   });
   router.get('/store/orders', auth('admin'), async (req, res, next) => {
