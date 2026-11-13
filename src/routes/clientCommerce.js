@@ -2,8 +2,61 @@
 
 const express = require('express');
 
-function createClientCommerceRouter({ clientAuth, Client, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }) {
+function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }) {
   const router = express.Router();
+
+
+  router.post('/orders/:sn/pay', clientAuth, async (req, res, next) => {
+    let session;
+    let notice = null;
+    try {
+      const sn = String(req.params.sn || '').trim().toUpperCase();
+      if (!/^SN\\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح.' });
+      if (req.client.status !== 'نشط') return res.status(403).json({ message: 'حساب العميل غير نشط.' });
+      if (req.client.walletFrozen) return res.status(403).json({ message: 'محفظتك مجمدة حاليًا.' });
+      session = await mongoose.startSession();
+      session.startTransaction();
+      const order = await Order.findOne({ sn, clientAccount: req.clientId, status: 'تم اختيار فني', assignedFanni: { $ne: null } }).session(session);
+      if (!order) { await session.abortTransaction(); return res.status(404).json({ message: 'الطلب غير موجود بحسابك أو لم يتم تعيين فني عليه بعد.' }); }
+      if (order.clientPaymentStatus === 'held' || order.clientPaymentStatus === 'settled') {
+        await session.abortTransaction();
+        return res.status(200).json({ message: order.clientPaymentStatus === 'settled' ? 'تم سداد الطلب وتسوية مستحقات الفني بالفعل.' : 'تم حجز قيمة الخدمة بالفعل من محفظتك.', paymentStatus: order.clientPaymentStatus, balance: Number(req.client.walletBalance || 0) });
+      }
+      const amount = Number(order.acceptedOfferPrice);
+      if (!Number.isFinite(amount) || amount <= 0) { await session.abortTransaction(); return res.status(409).json({ message: 'سعر الخدمة غير صالح؛ تواصل مع خدمة العملاء.' }); }
+      const client = await Client.findOne({ _id: req.clientId, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } }).session(session);
+      if (!client) { await session.abortTransaction(); return res.status(409).json({ message: 'رصيد محفظتك غير كافٍ أو المحفظة غير متاحة.', required: amount, balance: Number(req.client.walletBalance || 0) }); }
+      const before = Number(client.walletBalance || 0);
+      const updatedClient = await Client.findOneAndUpdate(
+        { _id: client._id, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } },
+        { $inc: { walletBalance: -amount } }, { new: true, session, runValidators: true }
+      );
+      if (!updatedClient) { await session.abortTransaction(); return res.status(409).json({ message: 'تغير رصيد المحفظة أثناء الدفع. حدّث الصفحة وحاول مرة أخرى.' }); }
+      order.clientPaymentStatus = 'held';
+      order.clientPaymentAmount = amount;
+      order.clientPaymentAt = new Date();
+      await order.save({ session });
+      await new WalletTransaction({
+        client: client._id, order: order._id, orderSN: order.sn,
+        type: 'client_escrow_hold', amount: -amount, balanceBefore: before,
+        balanceAfter: Number(updatedClient.walletBalance),
+        description: 'حجز قيمة الخدمة للطلب ' + order.sn + ' لحين إتمام الفني للمهمة',
+        idempotencyKey: 'client-service-hold:' + String(order._id)
+      }).save({ session });
+      await session.commitTransaction();
+      notice = { fanniId: order.assignedFanni, sn: order.sn };
+      return res.json({ message: 'تم حجز قيمة الخدمة من محفظتك بأمان. سيحصل الفني على مستحقاته بعد إتمام المهمة.', balance: Number(updatedClient.walletBalance), paymentStatus: 'held', amount });
+    } catch (error) {
+      if (session && session.inTransaction()) await session.abortTransaction().catch(() => {});
+      if (error && error.code === 11000) return res.status(409).json({ message: 'عملية دفع هذا الطلب مسجلة بالفعل.' });
+      return next(error);
+    } finally {
+      if (session) await session.endSession();
+      if (notice) {
+        try { await createNotification({ recipientRole: 'fanni', recipientId: notice.fanniId, type: 'client_service_payment_held', title: 'تم تأمين قيمة الخدمة', message: 'قام العميل بحجز قيمة الخدمة للطلب ' + notice.sn + ' من محفظته. تُضاف مستحقاتك بعد إتمام المهمة.', link: '/fanni', dedupeKey: 'client-service-payment-held:' + notice.sn }); } catch (_) {}
+      }
+    }
+  });
 
   router.get('/commerce/catalog', clientAuth, async (req, res, next) => {
     try {
