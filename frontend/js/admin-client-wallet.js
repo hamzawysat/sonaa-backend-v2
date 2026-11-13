@@ -1,4 +1,5 @@
 'use strict';
+function clientWalletOperationKey(){return (typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():('cw-'+Date.now()+'-'+Math.random().toString(36).slice(2));}
 function applyClientTopupFilter(){
  const rows=Array.isArray(state.clientTopups)?state.clientTopups:[];
  const query=String(state.search||'').trim().toLowerCase(),filter=String(state.clientWalletFilter||'الكل');
@@ -29,16 +30,16 @@ async function rejectClientTopup(id){
 async function addClientWalletBalance(id){
  if(!id)return;const raw=prompt('اكتب مبلغ الإضافة بالجنيه (عدد صحيح):','100');if(raw===null)return;
  const amount=Number(raw);if(!Number.isInteger(amount)||amount<=0)return showToast('اكتب مبلغًا صحيحًا أكبر من صفر','error');
- const reason=prompt('سبب الإضافة الإدارية للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');
+ const reason=prompt('سبب الإضافة الإدارية للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');const idempotencyKey=clientWalletOperationKey();
  if(!confirm('تأكيد إضافة '+amount+' جنيه إلى محفظة العميل؟'))return;
- try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/add-balance'],{method:'POST',body:JSON.stringify({amount,reason:reason.trim()})});showToast(data.message||'تمت إضافة الرصيد','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
+ try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/add-balance'],{method:'POST',body:JSON.stringify({amount,reason:reason.trim(),idempotencyKey})});showToast(data.message||'تمت إضافة الرصيد','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
  catch(error){showToast(error.message||'تعذرت إضافة الرصيد','error');}
 }
 
 async function deductClientWalletBalance(id){
  if(!id)return;const raw=prompt('اكتب مبلغ الخصم بالجنيه (عدد صحيح):','100');if(raw===null)return;
  const amount=Number(raw);if(!Number.isInteger(amount)||amount<=0)return showToast('اكتب مبلغًا صحيحًا أكبر من صفر','error');
- const reason=prompt('سبب الخصم الإداري للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');
+ const reason=prompt('سبب الخصم الإداري للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');const idempotencyKey=clientWalletOperationKey();
  if(!confirm('تأكيد خصم '+amount+' جنيه من محفظة العميل؟ لن يتم الخصم إذا كان الرصيد غير كافٍ.'))return;
  try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/deduct-balance'],{method:'POST',body:JSON.stringify({amount,reason:reason.trim()})});showToast(data.message||'تم خصم الرصيد','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
  catch(error){showToast(error.message||'تعذر خصم الرصيد','error');}
@@ -46,9 +47,9 @@ async function deductClientWalletBalance(id){
 async function settleClientWalletBalance(id,currentBalance){
  if(!id)return;const raw=prompt('اكتب الرصيد النهائي المطلوب بالجنيه (يمكن أن يكون صفرًا):',String(Number(currentBalance||0)));if(raw===null)return;
  const balance=Number(raw);if(!Number.isInteger(balance)||balance<0||balance>100000000)return showToast('اكتب رصيدًا نهائيًا صحيحًا من صفر إلى 100 مليون','error');
- const reason=prompt('سبب تسوية الرصيد للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');
+ const reason=prompt('سبب تسوية الرصيد للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');const idempotencyKey=clientWalletOperationKey();
  if(!confirm('تأكيد تسوية رصيد العميل إلى '+balance+' جنيه؟ سيتم تسجيل فرق التسوية في كشف الحساب.'))return;
- try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/set-balance'],{method:'POST',body:JSON.stringify({balance,reason:reason.trim()})});showToast(data.message||'تمت التسوية','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
+ try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/set-balance'],{method:'POST',body:JSON.stringify({balance,reason:reason.trim(),idempotencyKey})});showToast(data.message||'تمت التسوية','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
  catch(error){showToast(error.message||'تعذرت تسوية الرصيد','error');}
 }
 function renderClientWalletLedger(){
