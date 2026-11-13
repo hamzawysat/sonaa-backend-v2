@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification, notifyAdmins }) {
+function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, CommerceOrder, ClientSubscription, WalletTransaction, mongoose, createNotification, notifyAdmins }) {
   const router = express.Router();
 
 
@@ -64,6 +64,56 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
         .select('name description price currency durationDays features')
         .sort({ price: 1, createdAt: -1 }).limit(100).lean();
       return res.set('Cache-Control', 'no-store').json({ items });
+    } catch (error) { return next(error); }
+  });
+
+
+  // Store catalog and product orders are separate from subscription billing.
+  router.get('/commerce/products', clientAuth, async (req, res, next) => {
+    try {
+      const items = await CommerceItem.find({ kind: 'product', active: true })
+        .select('name description price currency sku features metadata')
+        .sort({ createdAt: -1 }).limit(100).lean();
+      return res.set('Cache-Control', 'no-store').json({ items });
+    } catch (error) { return next(error); }
+  });
+
+  router.get('/commerce/product-orders', clientAuth, async (req, res, next) => {
+    try {
+      const orders = await CommerceOrder.find({ buyerRole: 'client', buyer: req.clientId })
+        .sort({ createdAt: -1 }).limit(100).lean();
+      return res.set('Cache-Control', 'no-store').json({ orders });
+    } catch (error) { return next(error); }
+  });
+
+  router.post('/commerce/product-orders', clientAuth, async (req, res, next) => {
+    try {
+      if (req.client.status !== 'نشط') return res.status(403).json({ message: 'حساب العميل غير نشط.' });
+      const itemId = String(req.body?.itemId || '').trim();
+      const quantity = Number(req.body?.quantity || 1);
+      const buyerNote = String(req.body?.note || '').trim();
+      if (!mongoose.isValidObjectId(itemId)) return res.status(400).json({ message: 'الصنف غير صالح.' });
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return res.status(400).json({ message: 'الكمية يجب أن تكون من 1 إلى 100.' });
+      if (buyerNote.length > 500) return res.status(400).json({ message: 'الملاحظات طويلة أكثر من اللازم.' });
+      const item = await CommerceItem.findOne({ _id: itemId, kind: 'product', active: true }).lean();
+      if (!item) return res.status(404).json({ message: 'الصنف غير متاح حاليًا.' });
+      const total = Number(item.price) * quantity;
+      if (!Number.isFinite(total) || total < 0 || total > 100000000) return res.status(409).json({ message: 'قيمة الطلب غير صالحة.' });
+      const orderNumber = 'ST' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 90 + 10);
+      const order = await CommerceOrder.create({
+        orderNumber, buyerRole: 'client', buyer: req.clientId,
+        buyerName: req.client.name || '', buyerPhone: req.client.phone || '',
+        item: item._id, itemName: item.name, sku: item.sku || '',
+        unitPrice: Number(item.price), quantity, total, buyerNote,
+        status: 'pending', paymentMethod: 'pending',
+        statusHistory: [{ status: 'pending', note: 'طلب شراء جديد من العميل', changedBy: 'العميل' }]
+      });
+      try {
+        await notifyAdmins({ type: 'admin_store_order', title: 'طلب شراء جديد من المتجر',
+          message: 'طلب العميل ' + (order.buyerName || order.buyerPhone) + ' شراء ' + item.name + ' بإجمالي ' + total + ' جنيه. رقم الطلب ' + orderNumber + '.',
+          link: '/admin.html?tab=commerceOrders', dedupeKey: 'admin-store-order:' + String(order._id) });
+      } catch (notificationError) { console.error('Store order admin notification failed:', notificationError.message); }
+      return res.status(201).json({ message: 'تم تسجيل طلبك وإشعار الإدارة. هنتواصل معاك لتأكيد الطلب وطريقة الدفع.', order });
     } catch (error) { return next(error); }
   });
 
