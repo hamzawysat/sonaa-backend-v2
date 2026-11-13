@@ -12,6 +12,7 @@ const { getActiveServiceNames, normalizeServiceKey } = require('../services/serv
 const Region = require('../models/Region');
 const { AREA_OPTIONS, normalizeArea, getEffectiveAreaOptions } = require('../config/areas');
 const TopupRequest = require('../models/TopupRequest');
+const WalletTransaction = require('../models/WalletTransaction');
 
 const { auth } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -451,6 +452,9 @@ router.get(
         .limit(100)
         .lean();
 
+      const transactions = await WalletTransaction.find({ fanni: req.user._id }).sort({ createdAt: -1 }).limit(100).lean();
+      const safeTransactions = transactions.map(item => ({ id: String(item._id), type: item.type, amount: item.amount, balanceBefore: item.balanceBefore, balanceAfter: item.balanceAfter, description: item.description, orderSN: item.orderSN || '', createdAt: item.createdAt }));
+
       const safeRequests = requests.map(request => ({
         id: String(request._id),
         amount: request.amount,
@@ -471,6 +475,7 @@ router.get(
         requests: safeRequests,
         data: safeRequests,
         history: safeRequests,
+        transactions: safeTransactions,
         balance,
         walletBalance: balance
       });
