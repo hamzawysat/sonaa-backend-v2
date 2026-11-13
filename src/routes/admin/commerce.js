@@ -1,0 +1,116 @@
+'use strict';
+const express = require('express');
+function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, ClientSubscription, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }) {
+  const router = express.Router();
+  const itemSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100).required(),
+    description: Joi.string().trim().max(1500).allow('').default(''),
+    price: Joi.number().strict().min(0).max(100000000).required(),
+    durationDays: Joi.number().integer().min(1).max(3650).required(),
+    features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30).default([]),
+    active: Joi.boolean().default(true)
+  });
+  const subscriptionSchema = Joi.object({
+    clientPhone: Joi.string().trim().required(),
+    itemId: Joi.string().trim().required(),
+    status: Joi.string().valid('pending', 'active').default('active'),
+    paymentStatus: Joi.string().valid('unpaid', 'pending', 'paid').default('paid'),
+    paymentMethod: Joi.string().trim().max(40).allow('').default('إداري'),
+    startsAt: Joi.date().iso().optional(),
+    endsAt: Joi.date().iso().optional(),
+    amount: Joi.number().strict().min(0).max(100000000).optional(),
+    notes: Joi.string().trim().max(1000).allow('').default('')
+  });
+  router.get('/commerce/catalog', auth('admin'), async (req, res, next) => {
+    try {
+      const items = await CommerceItem.find({ kind: 'subscription' }).sort({ active: -1, createdAt: -1 }).limit(MAX_LIST_LIMIT).lean();
+      res.set('Cache-Control', 'no-store').json({ items });
+    } catch (error) { next(error); }
+  });
+  router.post('/commerce/catalog', auth('admin'), validate(itemSchema), async (req, res, next) => {
+    try {
+      const item = await CommerceItem.create({ ...req.body, kind: 'subscription', currency: 'EGP' });
+      await writeAdminAudit(req, 'إنشاء باقة اشتراك', 'commerce-catalog', String(item._id), 'name=' + item.name + '; price=' + item.price);
+      return res.status(201).json({ message: 'تم إنشاء الباقة.', item });
+    } catch (error) { next(error); }
+  });
+  router.patch('/commerce/catalog/:id', auth('admin'), validate(itemSchema.fork(['name','price','durationDays'], schema => schema.optional()).min(1)), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const item = await CommerceItem.findOneAndUpdate({ _id: req.params.id, kind: 'subscription' }, { $set: req.body }, { new: true, runValidators: true });
+      if (!item) return res.status(404).json({ message: 'الباقة غير موجودة.' });
+      await writeAdminAudit(req, 'تعديل باقة اشتراك', 'commerce-catalog', String(item._id), JSON.stringify(req.body));
+      return res.json({ message: 'تم تحديث الباقة.', item });
+    } catch (error) { next(error); }
+  });
+  router.get('/commerce/subscriptions', auth('admin'), async (req, res, next) => {
+    try {
+      const filter = {};
+      if (['pending','active','paused','cancelled','expired'].includes(String(req.query.status || ''))) filter.status = String(req.query.status);
+      const subscriptions = await ClientSubscription.find(filter).populate('client', 'name phone').sort({ createdAt: -1 }).limit(MAX_LIST_LIMIT).lean();
+      return res.set('Cache-Control', 'no-store').json({ subscriptions });
+    } catch (error) { next(error); }
+  });
+  router.post('/commerce/subscriptions', auth('admin'), validate(subscriptionSchema), async (req, res, next) => {
+    try {
+      const client = await Client.findOne({ phone: req.body.clientPhone });
+      if (!client) return res.status(404).json({ message: 'العميل غير موجود. تأكد من رقم الهاتف.' });
+      const item = await CommerceItem.findOne({ _id: req.body.itemId, kind: 'subscription', active: true });
+      if (!item) return res.status(404).json({ message: 'الباقة غير موجودة أو متوقفة.' });
+      const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : new Date();
+      const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : new Date(startsAt.getTime() + Number(item.durationDays) * 86400000);
+      if (endsAt <= startsAt) return res.status(400).json({ message: 'تاريخ انتهاء الاشتراك يجب أن يكون بعد تاريخ البداية.' });
+      const amount = req.body.amount === undefined ? Number(item.price) : Number(req.body.amount);
+      const subscription = await ClientSubscription.create({
+        client: client._id, item: item._id, itemName: item.name, amount,
+        status: req.body.status, paymentStatus: req.body.paymentStatus,
+        paymentMethod: req.body.paymentMethod, startsAt: req.body.status === 'active' ? startsAt : null,
+        endsAt: req.body.status === 'active' ? endsAt : null, notes: req.body.notes,
+        createdBy: adminName(req), updatedBy: adminName(req),
+        history: req.body.status === 'active' ? [{ amount, startsAt, endsAt, renewedBy: adminName(req), note: 'تفعيل أولي من الإدارة' }] : []
+      });
+      await writeAdminAudit(req, 'إنشاء اشتراك عميل', 'client-subscriptions', String(subscription._id), 'client=' + String(client._id) + '; item=' + item.name + '; status=' + subscription.status);
+      if (subscription.status === 'active') await createNotification({ recipientRole: 'client', recipientId: client._id, type: 'subscription_activated', title: 'تم تفعيل اشتراكك', message: 'تم تفعيل اشتراك ' + item.name + '.', link: '/client.html?tab=subscriptions', dedupeKey: 'subscription-activated:' + String(subscription._id) });
+      return res.status(201).json({ message: 'تم إنشاء الاشتراك.', subscription });
+    } catch (error) { next(error); }
+  });
+  router.post('/commerce/subscriptions/:id/renew', auth('admin'), validate(Joi.object({ note: Joi.string().trim().max(500).allow('').default(''), paymentStatus: Joi.string().valid('paid','pending','unpaid').default('paid'), amount: Joi.number().strict().min(0).max(100000000).optional() })), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const subscription = await ClientSubscription.findById(req.params.id);
+      if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
+      const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
+      const duration = Number(item?.durationDays || 30);
+      const now = new Date(), startsAt = subscription.endsAt && new Date(subscription.endsAt) > now ? new Date(subscription.endsAt) : now;
+      const endsAt = new Date(startsAt.getTime() + duration * 86400000);
+      const amount = req.body.amount === undefined ? Number(subscription.amount || item?.price || 0) : Number(req.body.amount);
+      subscription.startsAt = subscription.startsAt || startsAt;
+      subscription.endsAt = endsAt; subscription.status = 'active'; subscription.paymentStatus = req.body.paymentStatus;
+      subscription.amount = amount; subscription.updatedBy = adminName(req);
+      subscription.history.push({ amount, startsAt, endsAt, renewedBy: adminName(req), note: req.body.note });
+      await subscription.save();
+      await writeAdminAudit(req, 'تجديد اشتراك عميل', 'client-subscriptions', String(subscription._id), 'endsAt=' + endsAt.toISOString() + '; amount=' + amount);
+      await createNotification({ recipientRole: 'client', recipientId: subscription.client, type: 'subscription_renewed', title: 'تم تجديد اشتراكك', message: 'تم تجديد اشتراك ' + subscription.itemName + '.', link: '/client.html?tab=subscriptions', dedupeKey: 'subscription-renewed:' + String(subscription._id) + ':' + endsAt.getTime() });
+      return res.json({ message: 'تم تجديد الاشتراك.', subscription });
+    } catch (error) { next(error); }
+  });
+  router.patch('/commerce/subscriptions/:id/status', auth('admin'), validate(Joi.object({ status: Joi.string().valid('active','paused','cancelled','expired').required(), reason: Joi.string().trim().max(500).allow('').default('') })), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const subscription = await ClientSubscription.findById(req.params.id);
+      if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
+      subscription.status = req.body.status; subscription.updatedBy = adminName(req);
+      if (req.body.status === 'active' && !subscription.startsAt) subscription.startsAt = new Date();
+      if (req.body.status === 'active' && !subscription.endsAt) {
+        const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
+        subscription.endsAt = new Date(Date.now() + Number(item?.durationDays || 30) * 86400000);
+      }
+      subscription.notes = [subscription.notes, req.body.reason].filter(Boolean).join('\n').slice(0,1000);
+      await subscription.save();
+      await writeAdminAudit(req, 'تغيير حالة اشتراك عميل', 'client-subscriptions', String(subscription._id), 'status=' + subscription.status + '; reason=' + req.body.reason);
+      return res.json({ message: 'تم تحديث حالة الاشتراك.', subscription });
+    } catch (error) { next(error); }
+  });
+  return router;
+}
+module.exports = createAdminCommerceRouter;
