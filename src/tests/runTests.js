@@ -615,7 +615,7 @@ async function run() {
         await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 500 } });
         const debit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
           .set('Authorization', 'Bearer ' + adminToken)
-          .send({ amount: 150, reason: 'خصم اختبار موثق' });
+          .send({ amount: 150, reason: 'خصم اختبار موثق', idempotencyKey: 'wallet-debit-test-unique-key' });
         assert.equal(debit.status, 200, JSON.stringify(debit.body));
         assert.equal(Number(debit.body.balance), 350);
         const debitLedger = await WalletTransaction.findOne({ client: clientId, type: 'client_admin_deduction' }).sort({ createdAt: -1 }).lean();
@@ -623,6 +623,12 @@ async function run() {
         assert.equal(Number(debitLedger.amount), -150);
         assert.equal(Number(debitLedger.balanceBefore), 500);
         assert.equal(Number(debitLedger.balanceAfter), 350);
+        const repeatedDebit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ amount: 150, reason: 'خصم اختبار موثق', idempotencyKey: 'wallet-debit-test-unique-key' });
+        assert.equal(repeatedDebit.status, 409, 'retrying the same operation key must not debit twice');
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 350);
+
 
         const excessiveDebit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
           .set('Authorization', 'Bearer ' + adminToken)
