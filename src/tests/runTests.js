@@ -108,6 +108,20 @@ async function run() {
       assert.equal(canAccessAdmin({ role: 'fanni', adminRole: 'مشرف' }, { path: '/fanni-profile-edits/507f1f77bcf86cd799439011/approve', method: 'POST' }), false);
     });
 
+    await test('client wallet admin routes use wallet permissions on the server', async () => {
+      const { canAccessAdmin } = require('../middleware/auth');
+      const readOnlyWalletAdmin = { role: 'admin', adminRole: 'مشرف', phone: '01000000001' };
+      const walletManager = { role: 'admin', adminRole: 'مشرف أول', phone: '01000000002' };
+      const topupRead = { method: 'GET', path: '/client-wallet/topup-requests' };
+      const topupApprove = { method: 'POST', path: '/client-wallet/topup-requests/abc/approve' };
+      const manualCredit = { method: 'POST', path: '/clients/abc/wallet/add-balance' };
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupRead), true);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupApprove), false);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualCredit), false);
+      assert.equal(canAccessAdmin(walletManager, topupApprove), true);
+      assert.equal(canAccessAdmin(walletManager, manualCredit), true);
+    });
+
     await test('custom admin permissions separate reading from execution and protect permission management', async () => {
       const user = { role: 'fanni', adminRole: 'مشرف', adminPermissions: { __customOverrides: true, orders: { read: true, write: false }, settings: { read: false, write: false } } };
       assert.equal(canAccessAdmin(user, { path: '/orders', method: 'GET' }), true);
