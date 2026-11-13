@@ -72,7 +72,7 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
   router.get('/commerce/products', clientAuth, async (req, res, next) => {
     try {
       const items = await CommerceItem.find({ kind: 'product', active: true })
-        .select('name description price currency sku features metadata')
+        .select('name description price originalPrice currency sku features metadata')
         .sort({ createdAt: -1 }).limit(100).lean();
       return res.set('Cache-Control', 'no-store').json({ items });
     } catch (error) { return next(error); }
