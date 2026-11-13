@@ -652,14 +652,17 @@ async function run() {
         .set('Authorization', 'Bearer ' + malformedConToken);
       assert.equal(rejectedConToken.status, 401, 'CON marker with wrong audience must be rejected');
 
+      const areaCountBeforeLegacyTechnician = await request(app).get('/api/areas');
+      assert.equal(areaCountBeforeLegacyTechnician.status, 200);
+      const previousMaadiCount = areaCountBeforeLegacyTechnician.body.technicianCountByArea?.['المعادي'] || 0;
       const fanni = await Fanni.create({
         name: 'فني اختبار', phone: '01012345680', passwordHash: await bcrypt.hash('FanniOldPass123', 12),
         specialties: ['خدمة تاريخية غير منشورة للاختبار'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
       });
       const legacyOnlyAreas = await request(app).get('/api/areas');
       assert.equal(legacyOnlyAreas.status, 200);
-      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, 0,
-        'approved technicians with only historical services must not count as available');
+      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, previousMaadiCount,
+        'approved technicians with only historical services must not increase the available technician count');
       const oldFanniToken = jwt.sign({ id: String(fanni._id), role: 'fanni' }, process.env.JWT_SECRET, { expiresIn: '30d' });
       const fanniPasswordReset = await request(app).patch('/api/admin/fannis/' + fanni._id + '/password')
         .set('Authorization', 'Bearer ' + adminToken)
