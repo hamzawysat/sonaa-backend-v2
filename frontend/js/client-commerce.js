@@ -61,7 +61,7 @@ function setClientCommerceView(view){
 function renderClientSubscriptions(){
   const items=state.commerceItems||[],subs=state.commerceSubscriptions||[];
   const statusLabel={active:'نشط',pending:'قيد المراجعة',paused:'موقوف مؤقتًا',cancelled:'ملغي',expired:'منتهي'};
-  const activeView=state.commerceView||'current';
+  const activeView=state.commerceView||'available';
   return `<section class="mt-4 space-y-4 animate-fade">
     <div class="panel p-4"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[15px]">الاشتراكات</h3><p class="mt-1 text-[11px] text-slate-500">تابع اشتراكاتك أو استعرض الباقات المتاحة.</p></div><div class="text-left"><span class="text-[10px] text-slate-500">رصيد المحفظة</span><p class="font-black text-[16px]">${escHtml(Number(state.walletBalance||0).toLocaleString('ar-EG'))} ج</p></div></div>
     <button type="button" onclick="loadClientCommerce()" class="mt-3 w-full h-10 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-extrabold">تحديث الاشتراكات والباقات</button>
