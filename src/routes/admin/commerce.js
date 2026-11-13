@@ -10,6 +10,14 @@ function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, 
     features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30).default([]),
     active: Joi.boolean().default(true)
   });
+  const itemPatchSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100),
+    description: Joi.string().trim().max(1500).allow(''),
+    price: Joi.number().strict().min(0).max(100000000),
+    durationDays: Joi.number().integer().min(1).max(3650),
+    features: Joi.array().items(Joi.string().trim().min(1).max(180)).max(30),
+    active: Joi.boolean()
+  }).min(1);
   const subscriptionSchema = Joi.object({
     clientPhone: Joi.string().trim().required(),
     itemId: Joi.string().trim().required(),
@@ -34,7 +42,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, 
       return res.status(201).json({ message: 'تم إنشاء الباقة.', item });
     } catch (error) { next(error); }
   });
-  router.patch('/commerce/catalog/:id', auth('admin'), validate(itemSchema.fork(['name','price','durationDays'], schema => schema.optional()).min(1)), async (req, res, next) => {
+  router.patch('/commerce/catalog/:id', auth('admin'), validate(itemPatchSchema), async (req, res, next) => {
     if (!validId(req.params.id)) return sendBadId(res);
     try {
       const item = await CommerceItem.findOneAndUpdate({ _id: req.params.id, kind: 'subscription' }, { $set: req.body }, { new: true, runValidators: true });
