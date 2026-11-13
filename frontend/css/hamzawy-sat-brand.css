@@ -211,3 +211,74 @@ html[data-sonaa-theme] body #app .fanni-wallet-shortcut:active {
   height:47px!important;
   font-size:13px!important;
 }
+
+/* Unified tab palette: centralized CSS for every page and dashboard. */
+:root {
+  --sonaa-tab-idle-start: #FFFFFF;
+  --sonaa-tab-idle-end: #EAF0F8;
+  --sonaa-tab-idle-border: #D5DFED;
+  --sonaa-tab-idle-text: #344965;
+  --sonaa-tab-active-start: #C9A34F;
+  --sonaa-tab-active-end: #A9822E;
+  --sonaa-tab-active-border: #8D6C25;
+  --sonaa-tab-active-text: #171A22;
+}
+
+/* Shared default and selected states for tab controls. */
+html[data-sonaa-theme] body #app .client-section-tabs button,
+html[data-sonaa-theme] body #app .client-orders-status-tabs button,
+html[data-sonaa-theme] body #app .client-commerce-tabs button,
+html[data-sonaa-theme] body #app .account-gate .account-tab,
+html[data-sonaa-theme] body #app .fanni-dashboard-tabs button,
+html[data-sonaa-theme] body #app nav.fixed.bottom-0 button,
+html[data-sonaa-theme] body #admin-tab-content .section-nav-btn,
+html[data-sonaa-theme] body #admin-tab-content .subnav-btn,
+html[data-sonaa-theme] body #admin-tab-content .tab-btn,
+html[data-sonaa-theme] body #admin-tab-content [role="tablist"] > button {
+  background: linear-gradient(145deg,var(--sonaa-tab-idle-start),var(--sonaa-tab-idle-end)) !important;
+  background-color: var(--sonaa-tab-idle-start) !important;
+  border-color: var(--sonaa-tab-idle-border) !important;
+  color: var(--sonaa-tab-idle-text) !important;
+  -webkit-text-fill-color: var(--sonaa-tab-idle-text) !important;
+  box-shadow: 0 3px 0 #CBD7E7,0 5px 8px rgba(11,27,58,.08),inset 0 1px 0 #FFFFFF !important;
+  transition: background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease !important;
+}
+
+/* Selected tabs: consistent gold state across client, technician, and admin. */
+html[data-sonaa-theme] body #app .client-section-tabs button.tab-active,
+html[data-sonaa-theme] body #app .client-orders-status-tabs .tab-active,
+html[data-sonaa-theme] body #app .client-commerce-tabs button[aria-selected="true"],
+html[data-sonaa-theme] body #app .account-gate .account-tab.tab-active,
+html[data-sonaa-theme] body #app .fanni-dashboard-tabs button[class*="from-[#C9A34F]"],
+html[data-sonaa-theme] body #app nav.fixed.bottom-0 button[class*="from-[#C9A34F]"],
+html[data-sonaa-theme] body #admin-tab-content .section-nav-btn.active,
+html[data-sonaa-theme] body #admin-tab-content .subnav-btn.active,
+html[data-sonaa-theme] body #admin-tab-content .tab-btn.active,
+html[data-sonaa-theme] body #admin-tab-content [role="tablist"] > button[aria-selected="true"],
+html[data-sonaa-theme] body #admin-tab-content [role="tablist"] > button[class*="bg-blue-700"] {
+  background: linear-gradient(145deg,var(--sonaa-tab-active-start),var(--sonaa-tab-active-end)) !important;
+  background-color: var(--sonaa-tab-active-start) !important;
+  border-color: var(--sonaa-tab-active-border) !important;
+  color: var(--sonaa-tab-active-text) !important;
+  -webkit-text-fill-color: var(--sonaa-tab-active-text) !important;
+  box-shadow: 0 4px 0 var(--sonaa-tab-active-border),0 7px 12px rgba(169,130,46,.18),inset 0 1px 0 rgba(255,255,255,.45) !important;
+}
+
+/* Admin commerce/store status tabs are rendered as standalone button rows. */
+html[data-sonaa-theme] body #admin-tab-content > div button[class*="bg-blue-700"],
+html[data-sonaa-theme] body #admin-tab-content .premium-panel + div button[class*="bg-blue-700"] {
+  background: linear-gradient(145deg,var(--sonaa-tab-active-start),var(--sonaa-tab-active-end)) !important;
+  border-color: var(--sonaa-tab-active-border) !important;
+  color: var(--sonaa-tab-active-text) !important;
+  -webkit-text-fill-color: var(--sonaa-tab-active-text) !important;
+}
+html[data-sonaa-theme] body #app .client-section-tabs button:active,
+html[data-sonaa-theme] body #app .client-orders-status-tabs button:active,
+html[data-sonaa-theme] body #app .client-commerce-tabs button:active,
+html[data-sonaa-theme] body #app .fanni-dashboard-tabs button:active,
+html[data-sonaa-theme] body #app nav.fixed.bottom-0 button:active,
+html[data-sonaa-theme] body #admin-tab-content .section-nav-btn:active,
+html[data-sonaa-theme] body #admin-tab-content .subnav-btn:active,
+html[data-sonaa-theme] body #admin-tab-content .tab-btn:active {
+  transform: translateY(2px);
+}
