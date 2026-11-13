@@ -226,7 +226,7 @@ function createAdminPlatformRouter({
       const q = String(req.query.search || '').trim().slice(0, 100);
       const literal = q.replace(/[^a-zA-Z0-9\u0600-\u06FF ]/g, '').replace(/\s+/g, ' ');
       const rx = literal.length >= 2 ? new RegExp(literal, 'i') : null;
-      const registered = await Client.find(rx ? { $or: [{ name: rx }, { phone: rx }] } : {}).select('name phone status adminNote createdAt').sort({ createdAt: -1 }).limit(200).lean();
+      const registered = await Client.find(rx ? { $or: [{ name: rx }, { phone: rx }] } : {}).select('name phone status adminNote walletBalance walletFrozen createdAt').sort({ createdAt: -1 }).limit(200).lean();
       const orders = await Order.find(rx ? { $or: [{ clientName: rx }, { clientPhone: rx }, { sn: rx }] } : {}).select('clientName clientPhone sn createdAt').sort({ createdAt: -1 }).limit(500).lean();
       // Merge orders and registered accounts by normalized Egyptian phone.
       // Legacy orders may store the same number as +20 / 0020 / with spaces.
@@ -248,7 +248,7 @@ function createAdminPlatformRouter({
         const key = phoneKey(client.phone);
         if (!key) continue;
         const item = byPhone.get(key) || { name: client.name, phone: client.phone, orderCount: 0, lastOrder: '' };
-        Object.assign(item, { id: String(client._id), name: client.name, phone: client.phone, status: client.status, adminNote: client.adminNote || '', registered: true });
+        Object.assign(item, { id: String(client._id), name: client.name, phone: client.phone, status: client.status, adminNote: client.adminNote || '', walletBalance: Number(client.walletBalance || 0), walletFrozen: Boolean(client.walletFrozen), registered: true });
         byPhone.set(key, item);
       }
       const clients = Array.from(byPhone.values()).sort((a,b) => (b.orderCount || 0) - (a.orderCount || 0)).slice(0, 200);
