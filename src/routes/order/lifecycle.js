@@ -403,6 +403,7 @@ router.post('/:sn/complete', auth(), async (req, res, next) => {
     await session.commitTransaction();
 
     await autoPromoteFanni(req.userId, 'إكمال المهمة ' + order.sn);
+    if (settlement) await createNotification({ recipientRole: 'fanni', recipientId: req.userId, type: 'technician_settlement', title: 'تم تحويل مستحقاتك', message: 'تم إضافة ' + settlement.amount + ' جنيه إلى محفظتك مقابل تنفيذ الطلب ' + order.sn + '.', link: '/fanni', dedupeKey: 'technician-settlement-notice:' + String(order._id) });
     if (order.clientAccount) {
       await createNotification({
         recipientRole: 'client', recipientId: order.clientAccount,
