@@ -21,7 +21,7 @@ const { notifyAdmins, createNotification } = require('../utils/notifications');
 
 const router = express.Router();
 
-router.use(createClientCommerceRouter({ clientAuth, Client, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }));
+router.use(createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }));
 
 const registerSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50).required(),
