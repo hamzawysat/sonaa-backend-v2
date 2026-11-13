@@ -359,7 +359,7 @@ router.post('/:sn/complete', auth(), async (req, res, next) => {
     if (req.user.role !== 'fanni') return res.status(403).json({ message: 'إكمال المهمة متاح للفني المعيّن فقط' });
     if (!(await hasAcceptedGuidelines(req.userId))) return res.status(428).json({ code: 'TECHNICIAN_GUIDELINES_REQUIRED', message: 'يجب الموافقة على ميثاق التعامل المهني أولًا.' });
     const sn = String(req.params.sn || '').toUpperCase();
-    if (!/^SN\\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح' });
+    if (!/^SN\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح' });
 
     session = await mongoose.startSession();
     session.startTransaction();
