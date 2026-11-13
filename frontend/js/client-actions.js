@@ -328,13 +328,25 @@ async function sendComplaint(){
   }catch(error){showToast(error.message||'تعذر إرسال الشكوى حاليًا.');}finally{state.complaintLoading=false;render();}
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  loadServices();loadPublicContent();initializeClientAccount();render();
-  // The editor preview bypasses the shared layout loader's splash timer.
-  // Release the static customer splash after the first preview render.
-  if(window.IS_EDITOR_PREVIEW){
-    const previewSplash=document.getElementById('clientLoadingOverlay');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>previewSplash?.classList.add('is-hidden')));
-  }
+  const clientSplash=document.getElementById('clientLoadingOverlay');
+  let clientStartupFinished=false;
+  const hideClientSplash=()=>{
+    if(clientStartupFinished)return;
+    clientStartupFinished=true;
+    clientSplash?.classList.add('is-hidden');
+    if(clientSplash){clientSplash.setAttribute('aria-hidden','true');clientSplash.setAttribute('inert','');}
+  };
+  const startupFallback=window.setTimeout(hideClientSplash,12000);
+  const startupTasks=[
+    Promise.resolve().then(()=>loadServices()),
+    Promise.resolve().then(()=>loadPublicContent()),
+    Promise.resolve().then(()=>initializeClientAccount())
+  ];
+  render();
+  Promise.allSettled(startupTasks).then(()=>{
+    window.clearTimeout(startupFallback);
+    requestAnimationFrame(()=>requestAnimationFrame(hideClientSplash));
+  });
   document.addEventListener('click',handleOutsideServiceClick);
   let clientLivePollInFlight=false,clientNotificationPollInFlight=false;
   setInterval(async function(){

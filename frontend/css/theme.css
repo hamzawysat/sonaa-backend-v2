@@ -415,65 +415,11 @@
 
 :root[data-sonaa-theme="support"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --teal:var(--sonaa-color-0d9488); --page:var(--sonaa-color-f4f7fb); --border:var(--sonaa-color-e2e8f0); --muted:var(--sonaa-color-64748b); }
 
-:root[data-sonaa-theme="customers"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --gold:var(--sonaa-color-f5b928); --ink:var(--sonaa-color-172744); --muted:var(--sonaa-color-64748b); --line:var(--sonaa-color-e5ebf3); --paper:var(--sonaa-color-f5f8fd); }
+:root[data-sonaa-theme="customers"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
 
-:root[data-sonaa-theme="technicians"] { --navy:var(--sonaa-color-0b1b3a); --blue:var(--sonaa-color-2563eb); --gold:var(--sonaa-color-f5b928); --ink:var(--sonaa-color-172744); --muted:var(--sonaa-color-64748b); --line:var(--sonaa-color-e5ebf3); --paper:var(--sonaa-color-f5f8fd); }
+:root[data-sonaa-theme="technicians"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
 
 :root { --navy:var(--sonaa-brand-navy); --blue:var(--sonaa-brand-blue); --blue-dark:var(--sonaa-brand-blue-dark); --gold:var(--sonaa-brand-gold); --teal:var(--sonaa-brand-teal); --text:var(--sonaa-text); --ink:var(--sonaa-text); --muted:var(--sonaa-muted); --border:var(--sonaa-border); --line:var(--sonaa-border); --paper:var(--sonaa-surface); --page:var(--sonaa-page); --card:var(--sonaa-surface); }
 
 
-/* Hamzawy Sat black-and-gold brand palette — shared by every web page. */
-:root[data-sonaa-theme] {
-  --navy:#171a22; --navy2:#242832; --navy-light:#242832;
-  --blue:#c9a34f; --blue-dark:#a9822e; --blue2:#a9822e; --teal:#b88d3a;
-  --ink:#242832; --text:#242832; --page:#f8f6f0; --paper:#f8f6f0;
-  --line:#e8e0cf; --border:#e8e0cf; --gold:#c9a34f;
-}
-/* Keep legacy Tailwind arbitrary-color brand classes in sync with the shared palette. */
-:where([class*="bg-[#0b1b3a]"]) { background-color:#171a22!important; }
-:where([class*="text-[#0b1b3a]"]) { color:#171a22!important; }
-:where([class*="from-[#0b1b3a]"]) {
-  --tw-gradient-from:#171a22!important;
-  --tw-gradient-to:rgb(23 26 34 / 0)!important;
-  --tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)!important;
-}
-:where([class*="to-[#c9a34f]"]) { --tw-gradient-to:#c9a34f!important; }
-:where([class*="from-[#242832]"]) {
-  --tw-gradient-from:#242832!important;
-  --tw-gradient-to:rgb(36 40 50 / 0)!important;
-  --tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)!important;
-}
-
-
-/* Shared animated shimmer for the Hamzawy Sat brand name beside its logo in web headers. */
-.sonaa-brand-shimmer{
-  display:inline-block;
-  color:currentColor;
-  background-image:linear-gradient(108deg,currentColor 0%,currentColor 38%,rgba(217,185,108,.62) 46%,#fff 50%,#f5e5bd 54%,currentColor 63%,currentColor 100%);
-  background-size:240% 100%;
-  background-position:100% 50%;
-  background-clip:text;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:sonaa-brand-shimmer 2.1s ease-in-out .35s infinite alternate;
-}
-@keyframes sonaa-brand-shimmer{
-  from{background-position:100% 50%}
-  to{background-position:0% 50%}
-}
-@media(prefers-reduced-motion:reduce){
-  .sonaa-brand-shimmer{animation:none;background-position:50% 50%}
-}
-
-/* Keep dashboard brand lettering solid and legible beneath the animated gold highlight. */
-#app .app-header h1 .sonaa-brand-shimmer,
-#app .fanni-app-header h1 .sonaa-brand-shimmer{
-  color:#242832!important;
-  background-image:linear-gradient(108deg,#242832 0%,#242832 38%,rgba(201,163,79,.72) 46%,#fff 50%,#f5e5bd 54%,#242832 63%,#242832 100%);
-  background-size:240% 100%;
-  background-position:100% 50%;
-  background-clip:text;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:none;
 }
