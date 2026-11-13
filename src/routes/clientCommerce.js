@@ -111,7 +111,7 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
       try {
         await notifyAdmins({ type: 'admin_store_order', title: 'طلب شراء جديد من المتجر',
           message: 'طلب العميل ' + (order.buyerName || order.buyerPhone) + ' شراء ' + item.name + ' بإجمالي ' + total + ' جنيه. رقم الطلب ' + orderNumber + '.',
-          link: '/admin.html?tab=commerceOrders', dedupeKey: 'admin-store-order:' + String(order._id) });
+          link: '/admin?tab=commerceOrders', dedupeKey: 'admin-store-order:' + String(order._id) });
       } catch (notificationError) { console.error('Store order admin notification failed:', notificationError.message); }
       return res.status(201).json({ message: 'تم تسجيل طلبك وإشعار الإدارة. هنتواصل معاك لتأكيد الطلب وطريقة الدفع.', order });
     } catch (error) { return next(error); }
