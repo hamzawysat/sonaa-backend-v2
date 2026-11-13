@@ -440,7 +440,7 @@ router.use(createAdminClientsRouter({ auth, Joi, Client, normalizePhone, adminNa
 const ADMIN_LAYOUT_SECTIONS = {
   dashboard: ['dashboard', 'stats'],
   clients: ['clients', 'orders', 'clientWallet'],
-  commerce: ['commercePlans', 'commerceSubscriptions'],
+  commerce: ['commercePlans', 'commerceSubscriptions', 'commerceProducts', 'commerceOrders'],
   technicians: ['fannis', 'pending', 'profileEdits', 'disabled', 'levels', 'offers', 'wallets', 'topups'],
   'service-management': ['services', 'regions'],
   'customer-operations': ['complaints', 'support', 'notifications', 'content'],
