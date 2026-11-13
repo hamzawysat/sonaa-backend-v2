@@ -1344,30 +1344,49 @@ async function run() {
 
       const CommerceItem = require('../models/CommerceItem');
       const ClientSubscription = require('../models/ClientSubscription');
+      const Client = require('../models/Client');
       const plan = await CommerceItem.create({
         kind: 'subscription', name: 'باقة اختبار العميل', price: 50,
         durationDays: 30, active: true, features: ['تجربة الدفع']
       });
       const purchaseKey = 'test-client-subscription-purchase-0001';
+      const balanceBeforeRequest = Number((await Client.findById(clientId).lean()).walletBalance);
       const purchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
         .set('Authorization', 'Bearer ' + clientToken)
         .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });
       assert.equal(purchase.status, 201, JSON.stringify(purchase.body));
-      assert.equal(purchase.body.balance, 450);
-      assert.equal(purchase.body.subscription.status, 'active');
-      assert.equal(purchase.body.subscription.paymentStatus, 'paid');
+      assert.equal(purchase.body.balance, balanceBeforeRequest, 'requesting a subscription must not debit the wallet');
+      assert.equal(purchase.body.subscription.status, 'pending');
+      assert.equal(purchase.body.subscription.paymentStatus, 'pending');
       assert.equal(purchase.body.subscription.durationDays, 30);
       const subscriptionId = String(purchase.body.subscription._id);
-      const purchaseLedger = await WalletTransaction.findOne({ client: clientId, idempotencyKey: purchaseKey }).lean();
-      assert.ok(purchaseLedger);
-      assert.equal(purchaseLedger.amount, -50);
+      assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: purchaseKey }), 0);
+
+      const duplicatePurchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });
+      assert.equal(duplicatePurchase.status, 200);
+      assert.equal(duplicatePurchase.body.duplicate, true);
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), balanceBeforeRequest);
+
+      const approval = await request(app).patch('/api/admin/commerce/subscriptions/' + subscriptionId + '/status')
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send({ status: 'active', reason: 'موافقة اختبار' });
+      assert.equal(approval.status, 200, JSON.stringify(approval.body));
+      assert.equal(approval.body.subscription.status, 'active');
+      assert.equal(approval.body.subscription.paymentStatus, 'paid');
+      const afterApproval = Number((await Client.findById(clientId).lean()).walletBalance);
+      assert.equal(afterApproval, balanceBeforeRequest - 50, 'approval must debit exactly once');
+      const approvalLedger = await WalletTransaction.findOne({ client: clientId, idempotencyKey: 'client-subscription-approval:' + subscriptionId }).lean();
+      assert.ok(approvalLedger);
+      assert.equal(approvalLedger.amount, -50);
 
       const renewalKey = 'test-client-subscription-renew-0001';
       const renewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
         .set('Authorization', 'Bearer ' + clientToken)
         .send({ idempotencyKey: renewalKey });
       assert.equal(renewal.status, 200, JSON.stringify(renewal.body));
-      assert.equal(renewal.body.balance, 400);
+      assert.equal(renewal.body.balance, afterApproval - 50);
       const renewed = await ClientSubscription.findById(subscriptionId).lean();
       assert.equal(renewed.history.length, 2);
       const duplicateRenewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
@@ -1376,7 +1395,7 @@ async function run() {
       assert.equal(duplicateRenewal.status, 200);
       assert.equal(duplicateRenewal.body.duplicate, true);
       assert.equal((await ClientSubscription.findById(subscriptionId).lean()).history.length, 2);
-      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 400);
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), afterApproval - 50);
     });
 
     await test('order chat rejects revoked technician sessions after password changes', async () => {
