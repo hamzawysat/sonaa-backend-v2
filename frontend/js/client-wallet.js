@@ -1,6 +1,6 @@
 'use strict';
 function walletMethodLabel(method){return ({vodafone_cash:'فودافون كاش',orange_cash:'أورنج كاش',etisalat_cash:'اتصالات كاش',we_cash:'WE Pay'})[method]||'تحويل محفظة';}
-function walletTransactionLabel(type){return ({client_topup:'شحن محفظة',client_admin_adjustment:'إضافة رصيد من الإدارة',client_service_payment:'دفع خدمة',client_subscription_payment:'شراء أو تجديد اشتراك',client_refund:'استرداد مبلغ',client_escrow_hold:'حجز مبلغ لطلب',client_escrow_release:'تحرير مبلغ',technician_settlement:'تسوية مستحقات'})[type]||'حركة مالية';}
+function walletTransactionLabel(type){return ({client_topup:'شحن محفظة',client_admin_adjustment:'إضافة رصيد من الإدارة',client_admin_deduction:'خصم رصيد من الإدارة',client_admin_settlement:'تسوية رصيد من الإدارة',client_service_payment:'دفع خدمة',client_subscription_payment:'شراء أو تجديد اشتراك',client_refund:'استرداد مبلغ',client_escrow_hold:'حجز مبلغ لطلب',client_escrow_release:'تحرير مبلغ',technician_settlement:'تسوية مستحقات'})[type]||'حركة مالية';}
 async function loadClientWallet(){
  if(!state.accountToken||!state.account||state.walletLoading)return;
  state.walletLoading=true;state.walletError='';render();
