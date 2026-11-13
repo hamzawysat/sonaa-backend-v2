@@ -109,6 +109,7 @@ function renderCurrentTab(){
     case 'offers': return renderOffers();
     case 'pricing': return renderPricing();
     case 'wallets': return renderWallets();
+    case 'clientWallet': return renderClientWallet();
     case 'topups': return renderTopups();
     case 'complaints': return renderComplaints();
     case 'services': return renderServices();
