@@ -71,6 +71,10 @@ function publicOrder(order, options = {}) {
   delete data.commissionAmount;
   delete data.commissionCharged;
   delete data.commissionChargedAt;
+  delete data.clientPaymentStatus;
+  delete data.clientPaymentAmount;
+  delete data.clientPaymentAt;
+  delete data.technicianSettledAt;
   if (includeAssignedFanniPhone && data.status === 'تم اختيار فني' && assignedFanniId) {
     const acceptedOffer = Array.isArray(data.offers)
       ? data.offers.find(offer =>
