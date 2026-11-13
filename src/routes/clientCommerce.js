@@ -90,6 +90,10 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
     try {
       if (req.client.status !== 'نشط') return res.status(403).json({ message: 'حساب العميل غير نشط.' });
       const itemId = String(req.body?.itemId || '').trim();
+      const requestKey = String(req.body?.requestKey || '').trim();
+      if (!/^[a-zA-Z0-9:_-]{16,150}$/.test(requestKey)) return res.status(400).json({ message: 'معرّف طلب الشراء غير صالح.' });
+      const existingOrder = await CommerceOrder.findOne({ buyerRole: 'client', buyer: req.clientId, requestKey }).lean();
+      if (existingOrder) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: existingOrder, duplicate: true });
       const quantity = Number(req.body?.quantity || 1);
       const buyerNote = String(req.body?.note || '').trim();
       if (!mongoose.isValidObjectId(itemId)) return res.status(400).json({ message: 'الصنف غير صالح.' });
@@ -101,7 +105,7 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
       if (!Number.isFinite(total) || total < 0 || total > 100000000) return res.status(409).json({ message: 'قيمة الطلب غير صالحة.' });
       const orderNumber = 'ST' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 90 + 10);
       const order = await CommerceOrder.create({
-        orderNumber, buyerRole: 'client', buyer: req.clientId,
+        orderNumber, buyerRole: 'client', buyer: req.clientId, requestKey,
         buyerName: req.client.name || '', buyerPhone: req.client.phone || '',
         item: item._id, itemName: item.name, sku: item.sku || '',
         unitPrice: Number(item.price), quantity, total, buyerNote,
