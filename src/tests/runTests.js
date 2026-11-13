@@ -115,11 +115,17 @@ async function run() {
       const topupRead = { method: 'GET', path: '/client-wallet/topup-requests' };
       const topupApprove = { method: 'POST', path: '/client-wallet/topup-requests/abc/approve' };
       const manualCredit = { method: 'POST', path: '/clients/abc/wallet/add-balance' };
+      const manualDebit = { method: 'POST', path: '/clients/abc/wallet/deduct-balance' };
+      const manualSettlement = { method: 'POST', path: '/clients/abc/wallet/set-balance' };
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupRead), true);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupApprove), false);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualCredit), false);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualDebit), false);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualSettlement), false);
       assert.equal(canAccessAdmin(walletManager, topupApprove), true);
       assert.equal(canAccessAdmin(walletManager, manualCredit), true);
+      assert.equal(canAccessAdmin(walletManager, manualDebit), true);
+      assert.equal(canAccessAdmin(walletManager, manualSettlement), true);
     });
 
     await test('custom admin permissions separate reading from execution and protect permission management', async () => {
@@ -600,6 +606,47 @@ async function run() {
         const finalClient = await Client.findById(clientId).lean();
         assert.equal(Number(finalClient.walletBalance), Number(after.walletBalance));
         assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: 'client-topup:' + String(pending._id) }), 1);
+      });
+
+
+      await test('admin can deduct client wallet without allowing a negative balance and settle the exact final balance', async () => {
+        const Client = require('../models/Client');
+        const WalletTransaction = require('../models/WalletTransaction');
+        await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 500 } });
+        const debit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ amount: 150, reason: 'خصم اختبار موثق' });
+        assert.equal(debit.status, 200, JSON.stringify(debit.body));
+        assert.equal(Number(debit.body.balance), 350);
+        const debitLedger = await WalletTransaction.findOne({ client: clientId, type: 'client_admin_deduction' }).sort({ createdAt: -1 }).lean();
+        assert.ok(debitLedger);
+        assert.equal(Number(debitLedger.amount), -150);
+        assert.equal(Number(debitLedger.balanceBefore), 500);
+        assert.equal(Number(debitLedger.balanceAfter), 350);
+
+        const excessiveDebit = await request(app).post('/api/admin/clients/' + clientId + '/wallet/deduct-balance')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ amount: 351, reason: 'اختبار منع الرصيد السالب' });
+        assert.equal(excessiveDebit.status, 409);
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 350);
+
+        const settlement = await request(app).post('/api/admin/clients/' + clientId + '/wallet/set-balance')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ balance: 200, reason: 'تسوية اختبار موثقة' });
+        assert.equal(settlement.status, 200, JSON.stringify(settlement.body));
+        assert.equal(Number(settlement.body.balance), 200);
+        assert.equal(Number(settlement.body.delta), -150);
+        const settlementLedger = await WalletTransaction.findOne({ client: clientId, type: 'client_admin_settlement' }).sort({ createdAt: -1 }).lean();
+        assert.ok(settlementLedger);
+        assert.equal(Number(settlementLedger.amount), -150);
+        assert.equal(Number(settlementLedger.balanceBefore), 350);
+        assert.equal(Number(settlementLedger.balanceAfter), 200);
+
+        const invalidNegativeSettlement = await request(app).post('/api/admin/clients/' + clientId + '/wallet/set-balance')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ balance: -1, reason: 'اختبار رفض الرصيد السالب' });
+        assert.equal(invalidNegativeSettlement.status, 400);
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 200);
       });
 
       await test('admin refunds held service payment to client wallet exactly once', async () => {
