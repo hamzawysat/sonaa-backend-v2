@@ -17,8 +17,17 @@ async function createAdminClientSubscription(clientPhone){
     const index=Number(selected)-1,item=items[index];
     if(!Number.isInteger(index)||!item)return showToast('اختيار الباقة غير صحيح','error');
     if(!confirm('تأكيد تفعيل باقة '+item.name+' بسعر '+Number(item.price).toLocaleString('ar-EG')+' جنيه؟ سيتم خصم المبلغ من محفظة العميل فورًا.'))return;
-    const result=await tryApi(['/api/admin/commerce/subscriptions'],{method:'POST',body:JSON.stringify({clientPhone:phone,itemId:item._id,status:'active'})});
-    showToast(result.message||'تم تفعيل الاشتراك وخصم قيمته من محفظة العميل','success');
+    const daysRaw=prompt('مدة الاشتراك بالأيام (من 1 إلى 3650):',String(item.durationDays||30));
+    if(daysRaw===null)return;
+    const durationDays=Number(daysRaw);
+    if(!Number.isInteger(durationDays)||durationDays<1||durationDays>3650)return showToast('المدة يجب أن تكون من يوم إلى 3650 يومًا','error');
+    const amountRaw=prompt('المبلغ المطلوب خصمه من محفظة العميل بالجنيه (اكتب 0 للتفعيل بدون خصم):',String(item.price||0));
+    if(amountRaw===null)return;
+    const amount=Number(amountRaw);
+    if(!Number.isFinite(amount)||amount<0||amount>100000000)return showToast('مبلغ الخصم غير صحيح','error');
+    if(!confirm('تأكيد تفعيل '+item.name+' لمدة '+durationDays+' يومًا مع خصم '+amount.toLocaleString('ar-EG')+' جنيه؟'+(amount===0?' لن يتم خصم أي مبلغ.':' سيتم الخصم من محفظة العميل.')))return;
+    const result=await tryApi(['/api/admin/commerce/subscriptions'],{method:'POST',body:JSON.stringify({clientPhone:phone,itemId:item._id,status:'active',durationDays,amount})});
+    showToast(result.message||'تم تفعيل الاشتراك حسب المدة والمبلغ المحددين','success');
     if(typeof loadClients==='function')await loadClients();
     if(state.tab==='commerceSubscriptions')await loadClientSubscriptions();
   }catch(error){showToast(error.message||'تعذر تفعيل اشتراك العميل','error');}

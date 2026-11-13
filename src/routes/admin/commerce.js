@@ -27,6 +27,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
     startsAt: Joi.date().iso().optional(),
     endsAt: Joi.date().iso().optional(),
     amount: Joi.number().strict().min(0).max(100000000).optional(),
+    durationDays: Joi.number().integer().min(1).max(3650).optional(),
     notes: Joi.string().trim().max(1000).allow('').default('')
   });
   router.get('/commerce/catalog', auth('admin'), async (req, res, next) => {
@@ -65,7 +66,9 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       const item = await CommerceItem.findOne({ _id: req.body.itemId, kind: 'subscription', active: true }).lean();
       if (!item) return res.status(404).json({ message: 'الباقة غير موجودة أو متوقفة.' });
       const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : new Date();
-      const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : new Date(startsAt.getTime() + Number(item.durationDays) * 86400000);
+      const durationDays = Number(req.body.durationDays ?? item.durationDays ?? 30);
+      const amount = Number(req.body.amount ?? item.price);
+      const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : new Date(startsAt.getTime() + durationDays * 86400000);
       if (endsAt <= startsAt) return res.status(400).json({ message: 'تاريخ انتهاء الاشتراك يجب أن يكون بعد تاريخ البداية.' });
 
       // Pending records retain the existing administrative workflow and do not charge the wallet.
@@ -83,11 +86,12 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       }
 
       // Direct activation always charges the authoritative catalog price inside one transaction.
-      const amount = Number(item.price);
-      if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: 'لا يمكن تفعيل باقة مجانية من هذا الإجراء.' });
+      if (!Number.isFinite(amount) || amount < 0 || !Number.isInteger(durationDays) || durationDays < 1 || durationDays > 3650) return res.status(400).json({ message: 'قيمة الخصم أو مدة الاشتراك غير صحيحة.' });
       session = await mongoose.startSession();
       session.startTransaction();
-      const client = await Client.findOne({ phone: req.body.clientPhone, status: 'نشط', walletFrozen: { $ne: true } }).session(session);
+      const clientFilter = { phone: req.body.clientPhone, status: 'نشط' };
+      if (amount > 0) clientFilter.walletFrozen = { $ne: true };
+      const client = await Client.findOne(clientFilter).session(session);
       if (!client) {
         await session.abortTransaction();
         const exists = await Client.exists({ phone: req.body.clientPhone });
@@ -95,15 +99,15 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       }
       const subscriptionId = new mongoose.Types.ObjectId();
       const before = Number(client.walletBalance || 0);
-      if (before < amount) {
+      if (amount > 0 && before < amount) {
         await session.abortTransaction();
         return res.status(409).json({ message: 'رصيد العميل غير كافٍ لتفعيل هذه الباقة.' });
       }
-      const updatedClient = await Client.findOneAndUpdate(
+      const updatedClient = amount > 0 ? await Client.findOneAndUpdate(
         { _id: client._id, status: 'نشط', walletFrozen: { $ne: true }, walletBalance: { $gte: amount } },
         { $inc: { walletBalance: -amount } },
         { new: true, session, runValidators: true }
-      );
+      ) : client;
       if (!updatedClient) {
         await session.abortTransaction();
         return res.status(409).json({ message: 'تغير رصيد العميل أثناء التفعيل. حدّث الصفحة وحاول مرة أخرى.' });
@@ -111,13 +115,13 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       const paymentKey = 'admin-client-subscription:' + String(subscriptionId);
       const subscription = new ClientSubscription({
         _id: subscriptionId, client: client._id, item: item._id, itemName: item.name, amount,
-        durationDays: Number(item.durationDays || 30), status: 'active', paymentStatus: 'paid',
-        paymentMethod: 'محفظة العميل', startsAt, endsAt, notes: req.body.notes,
+        durationDays, status: 'active', paymentStatus: 'paid',
+        paymentMethod: amount > 0 ? 'محفظة العميل' : 'إداري بدون خصم', startsAt, endsAt, notes: req.body.notes,
         createdBy: adminName(req), updatedBy: adminName(req),
-        history: [{ amount, startsAt, endsAt, renewedBy: adminName(req), note: 'تفعيل مباشر من الإدارة مع الخصم من المحفظة', paymentKey }]
+        history: [{ amount, startsAt, endsAt, renewedBy: adminName(req), note: amount > 0 ? 'تفعيل يدوي من الإدارة مع الخصم من المحفظة' : 'تفعيل يدوي من الإدارة بدون خصم', paymentKey: amount > 0 ? paymentKey : '' }]
       });
       await subscription.save({ session });
-      await new WalletTransaction({
+      if (amount > 0) await new WalletTransaction({
         client: client._id, type: 'client_subscription_payment', amount: -amount,
         balanceBefore: before, balanceAfter: Number(updatedClient.walletBalance),
         description: 'تفعيل اشتراك ' + item.name + ' من الإدارة',
@@ -133,7 +137,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
         link: '/client.html?tab=subscriptions',
         dedupeKey: 'admin-client-subscription-activated:' + String(subscription._id)
       }).catch(() => {});
-      return res.status(201).json({ message: 'تم تفعيل الاشتراك وخصم قيمته من محفظة العميل.', subscription, walletBalance: Number(updatedClient.walletBalance) });
+      return res.status(201).json({ message: amount > 0 ? 'تم تفعيل الاشتراك وخصم المبلغ المحدد من محفظة العميل.' : 'تم تفعيل الاشتراك بدون خصم من محفظة العميل.', subscription, walletBalance: Number(updatedClient.walletBalance) });
     } catch (error) {
       if (session?.inTransaction()) await session.abortTransaction().catch(() => {});
       if (error?.code === 11000) return res.status(409).json({ message: 'تم تسجيل خصم هذا الاشتراك بالفعل.' });
@@ -155,10 +159,10 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       const subscription = await ClientSubscription.findById(req.params.id);
       if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
       const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
-      const duration = Number(subscription.durationDays || item?.durationDays || 30);
+      const duration = Number(item?.durationDays || subscription.durationDays || 30);
       const now = new Date(), startsAt = subscription.endsAt && new Date(subscription.endsAt) > now ? new Date(subscription.endsAt) : now;
       const endsAt = new Date(startsAt.getTime() + duration * 86400000);
-      const amount = req.body.amount === undefined ? Number(subscription.amount || item?.price || 0) : Number(req.body.amount);
+      const amount = req.body.amount === undefined ? Number(item?.price ?? subscription.amount ?? 0) : Number(req.body.amount);
       subscription.startsAt = subscription.startsAt || startsAt;
       subscription.endsAt = endsAt; subscription.status = 'active'; subscription.paymentStatus = req.body.paymentStatus;
       subscription.amount = amount; subscription.updatedBy = adminName(req);
