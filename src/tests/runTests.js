@@ -654,7 +654,7 @@ async function run() {
 
       const fanni = await Fanni.create({
         name: 'فني اختبار', phone: '01012345680', passwordHash: await bcrypt.hash('FanniOldPass123', 12),
-        specialties: ['صيانة تكييف'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
+        specialties: ['خدمة تاريخية غير منشورة للاختبار'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
       });
       const legacyOnlyAreas = await request(app).get('/api/areas');
       assert.equal(legacyOnlyAreas.status, 200);
