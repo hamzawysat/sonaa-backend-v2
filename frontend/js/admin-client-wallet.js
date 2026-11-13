@@ -41,7 +41,7 @@ async function deductClientWalletBalance(id){
  const amount=Number(raw);if(!Number.isInteger(amount)||amount<=0)return showToast('اكتب مبلغًا صحيحًا أكبر من صفر','error');
  const reason=prompt('سبب الخصم الإداري للتوثيق:','تسوية إدارية');if(reason===null)return;if(reason.trim().length<2)return showToast('اكتب سببًا واضحًا','error');const idempotencyKey=clientWalletOperationKey();
  if(!confirm('تأكيد خصم '+amount+' جنيه من محفظة العميل؟ لن يتم الخصم إذا كان الرصيد غير كافٍ.'))return;
- try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/deduct-balance'],{method:'POST',body:JSON.stringify({amount,reason:reason.trim()})});showToast(data.message||'تم خصم الرصيد','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
+ try{const data=await tryApi(['/api/admin/clients/'+encodeURIComponent(id)+'/wallet/deduct-balance'],{method:'POST',body:JSON.stringify({amount,reason:reason.trim(),idempotencyKey})});showToast(data.message||'تم خصم الرصيد','success');if(state.tab==='clients')await loadClients(state.clientSearch||'');else await loadClientTopups();}
  catch(error){showToast(error.message||'تعذر خصم الرصيد','error');}
 }
 async function settleClientWalletBalance(id,currentBalance){
