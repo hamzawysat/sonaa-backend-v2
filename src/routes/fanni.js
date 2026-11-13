@@ -539,7 +539,13 @@ router.post('/commerce/product-orders', auth('fanni'), requireFanni, validate(st
         link: '/admin?tab=commerceOrders', dedupeKey: 'admin-store-order:' + String(order._id) });
     } catch (notificationError) { console.error('Store order admin notification failed:', notificationError.message); }
     return res.status(201).json({ message: 'تم تسجيل طلبك وإشعار الإدارة. هنتواصل معاك لتأكيد الطلب وطريقة الدفع.', order });
-  } catch (error) { return next(error); }
+  } catch (error) {
+    if (error?.code === 11000) {
+      const existing = await CommerceOrder.findOne({ buyerRole: 'fanni', buyer: req.user._id, requestKey: String(req.body?.requestKey || '').trim() }).lean();
+      if (existing) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: existing, duplicate: true });
+    }
+    return next(error);
+  }
 });
 
 module.exports = router;
