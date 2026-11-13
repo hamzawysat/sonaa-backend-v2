@@ -709,7 +709,7 @@ async function run() {
         const persisted = await Fanni.findById(fanni._id).lean();
         assert.equal(persisted.pendingProfileChange.phone, '01012345680');
         assert.deepEqual(persisted.pendingProfileChange.areas, ['مدينة نصر']);
-        assert.deepEqual(persisted.pendingProfileChange.specialties, ['صيانة تكييف', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
+        assert.deepEqual(persisted.pendingProfileChange.specialties, ['خدمة تاريخية غير منشورة للاختبار', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
         const queue = await request(app).get('/api/admin/fanni-profile-edits')
           .set('Authorization', 'Bearer ' + adminToken);
         assert.equal(queue.status, 200, JSON.stringify(queue.body));
