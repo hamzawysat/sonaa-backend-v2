@@ -11,12 +11,17 @@ const Order = require('../models/Order');
 const Rating = require('../models/Rating');
 const WalletTransaction = require('../models/WalletTransaction');
 const ClientTopupRequest = require('../models/ClientTopupRequest');
+const CommerceItem = require('../models/CommerceItem');
+const ClientSubscription = require('../models/ClientSubscription');
+const createClientCommerceRouter = require('./clientCommerce');
 const { clientAuth } = require('../middleware/clientAuth');
 const { normalizePhone } = require('../utils/phone');
 
-const { notifyAdmins } = require('../utils/notifications');
+const { notifyAdmins, createNotification } = require('../utils/notifications');
 
 const router = express.Router();
+
+router.use(createClientCommerceRouter({ clientAuth, Client, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }));
 
 const registerSchema = Joi.object({
   name: Joi.string().trim().min(2).max(50).required(),
