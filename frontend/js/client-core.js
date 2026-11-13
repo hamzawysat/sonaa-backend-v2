@@ -297,7 +297,7 @@ let state={
   complaintSn:'',complaintName:'',complaintText:'',complaintLoading:false,
   complaintTrackSn:'',complaintTrackName:'',complaintTrackLoading:false,complaintTrackError:'',complaintTrackResults:null,
   showService:false,openCategory:'',searchService:'',
-  servicesLoading:true,servicesError:'',servicesLoaded:false,publicContent:{siteName:'حمزاوي سات',maintenance:false,maintenanceMessage:'',announcement:'',faqs:[]},
+  servicesLoading:true,servicesError:'',servicesLoaded:false,areasLoading:true,areasError:'',areasLoaded:false,publicContent:{siteName:'حمزاوي سات',maintenance:false,maintenanceMessage:'',announcement:'',faqs:[]},
   
 };
 const CLIENT_TAB_DEFINITIONS=[{id:'new',label:'طلب جديد'},{id:'orders',label:'طلباتي'},{id:'complaint',label:'شكوى'}];
