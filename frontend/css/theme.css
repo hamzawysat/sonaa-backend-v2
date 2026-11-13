@@ -1,0 +1,451 @@
+:root {
+  --hs-teal: #087f83;
+  --hs-teal-dark: #06696d;
+  --hs-navy: #173244;
+  --hs-sky: #f2f9fb;
+  --hs-white: #ffffff;
+  --hs-border: #dce7eb;
+  --hs-muted: #687b84;
+  --hs-gold: #c9a45c;
+  --hs-radius-card: 20px;
+  --hs-radius-pill: 999px;
+  --hs-shadow-card: 0 5px 18px rgba(23, 50, 68, .08);
+}
+
+html[data-sonaa-theme] {
+  color-scheme: light;
+  background: var(--hs-sky);
+}
+
+html[data-sonaa-theme] body {
+  margin: 0;
+  color: var(--hs-navy);
+  background: var(--hs-sky);
+  font-family: "Cairo", sans-serif;
+}
+
+html[data-sonaa-theme] h1,
+html[data-sonaa-theme] h2,
+html[data-sonaa-theme] h3,
+html[data-sonaa-theme] .sonaa-brand-shimmer {
+  color: var(--hs-navy);
+  -webkit-text-fill-color: var(--hs-navy);
+  background: none;
+  background-image: none;
+  text-shadow: none;
+}
+
+html[data-sonaa-theme] p,
+html[data-sonaa-theme] label {
+  line-height: 1.75;
+}
+
+html[data-sonaa-theme] .shell {
+  width: min(100% - 32px, 1080px);
+  margin-inline: auto;
+}
+
+html[data-sonaa-theme] .topbar,
+html[data-sonaa-theme] .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--hs-white);
+  border-bottom: 1px solid var(--hs-border);
+  box-shadow: 0 2px 10px rgba(23, 50, 68, .05);
+  backdrop-filter: none;
+}
+
+html[data-sonaa-theme] .topbar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 8px;
+}
+
+html[data-sonaa-theme] .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--hs-navy);
+  text-decoration: none;
+}
+
+html[data-sonaa-theme] .brand-mark {
+  background: var(--hs-white);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .brand-mark img,
+html[data-sonaa-theme] .account-brand img {
+  object-fit: contain;
+}
+
+html[data-sonaa-theme] .topbar-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+html[data-sonaa-theme] .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, .45fr);
+  align-items: center;
+  gap: 24px;
+  margin-block: 34px 30px;
+  padding: clamp(22px, 4vw, 38px);
+  background: var(--hs-white);
+  border: 1px solid var(--hs-border);
+  border-radius: 24px;
+  box-shadow: var(--hs-shadow-card);
+}
+
+html[data-sonaa-theme] .hero h1 {
+  margin: 12px 0;
+  font-size: clamp(25px, 4vw, 38px);
+  line-height: 1.4;
+  font-weight: 900;
+}
+
+html[data-sonaa-theme] .hero-copy {
+  max-width: 650px;
+  color: var(--hs-muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+html[data-sonaa-theme] .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hs-teal-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+html[data-sonaa-theme] .hero-badge {
+  background: var(--hs-white);
+  border: 1px solid var(--hs-border);
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .services-title {
+  padding: 14px 18px;
+  color: var(--hs-navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+html[data-sonaa-theme] .services-list {
+  padding: 0 18px 14px;
+  color: var(--hs-muted);
+  line-height: 2;
+}
+
+html[data-sonaa-theme] .choose {
+  margin-block: 34px 28px;
+}
+
+html[data-sonaa-theme] .section-head {
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+html[data-sonaa-theme] .section-head h2 {
+  margin: 0;
+  color: var(--hs-navy);
+  font-size: clamp(21px, 3vw, 28px);
+  font-weight: 900;
+}
+
+html[data-sonaa-theme] .section-head p {
+  margin-top: 6px;
+  color: var(--hs-muted);
+  font-size: 12px;
+}
+
+html[data-sonaa-theme] .cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+html[data-sonaa-theme] .entry,
+html[data-sonaa-theme] .panel,
+html[data-sonaa-theme] .account-panel,
+html[data-sonaa-theme] .fanni-login-panel,
+html[data-sonaa-theme] .account-gate .panel {
+  min-width: 0;
+  background: var(--hs-white);
+  border: 1px solid var(--hs-border);
+  border-radius: var(--hs-radius-card);
+  box-shadow: var(--hs-shadow-card);
+}
+
+html[data-sonaa-theme] .entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 128px;
+  padding: 20px;
+  color: var(--hs-navy);
+  text-decoration: none;
+}
+
+html[data-sonaa-theme] .entry-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  color: var(--hs-teal);
+  background: #eaf6f6;
+  border-radius: 16px;
+}
+
+html[data-sonaa-theme] .entry-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+html[data-sonaa-theme] .entry-action {
+  display: flex;
+  align-items: center;
+}
+
+html[data-sonaa-theme] .trust-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px auto 42px;
+  color: var(--hs-muted);
+  font-size: 11px;
+}
+
+html[data-sonaa-theme] footer {
+  margin-top: 44px;
+  padding: 28px 0 32px;
+  color: #ffffff;
+  background: var(--hs-navy);
+  text-align: center;
+}
+
+html[data-sonaa-theme] footer .shell {
+  display: grid;
+  gap: 18px;
+}
+
+html[data-sonaa-theme] .footer-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+html[data-sonaa-theme] .footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  color: #ffffff;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: var(--hs-radius-pill);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 1;
+}
+
+html[data-sonaa-theme] .footer-social a:hover {
+  background: rgba(255,255,255,.18);
+}
+
+html[data-sonaa-theme] .account-gate {
+  min-height: 100vh;
+  padding: 28px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hs-sky);
+}
+
+html[data-sonaa-theme] .account-gate > div,
+html[data-sonaa-theme] .fanni-login-gate > div {
+  width: 100%;
+  max-width: 440px;
+}
+
+html[data-sonaa-theme] .account-brand {
+  width: 68px;
+  height: 68px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hs-white);
+  border: 1px solid var(--hs-border);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .account-brand img {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+}
+
+html[data-sonaa-theme] .account-gate h1,
+html[data-sonaa-theme] .fanni-login-gate h1 {
+  color: var(--hs-navy);
+  font-weight: 900;
+}
+
+html[data-sonaa-theme] .account-slogan {
+  color: var(--hs-muted);
+}
+
+html[data-sonaa-theme] .account-panel,
+html[data-sonaa-theme] .fanni-login-panel {
+  width: 100%;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--hs-white);
+  box-shadow: var(--hs-shadow-card);
+}
+
+html[data-sonaa-theme] .field,
+html[data-sonaa-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+html[data-sonaa-theme] select,
+html[data-sonaa-theme] textarea {
+  width: 100%;
+  min-height: 44px;
+  color: var(--hs-navy);
+  background: #ffffff;
+  border: 1px solid #d5e0e5;
+  border-radius: 12px;
+  box-shadow: none;
+  outline-color: var(--hs-teal);
+}
+
+html[data-sonaa-theme] .field::placeholder,
+html[data-sonaa-theme] input::placeholder,
+html[data-sonaa-theme] textarea::placeholder {
+  color: #84949b;
+  opacity: 1;
+}
+
+html[data-sonaa-theme] .field:focus,
+html[data-sonaa-theme] input:focus,
+html[data-sonaa-theme] select:focus,
+html[data-sonaa-theme] textarea:focus {
+  border-color: var(--hs-teal);
+  box-shadow: 0 0 0 3px rgba(8,127,131,.12);
+}
+
+html[data-sonaa-theme] .field-label,
+html[data-sonaa-theme] .account-panel label,
+html[data-sonaa-theme] .fanni-login-panel label {
+  color: var(--hs-navy);
+  font-weight: 800;
+}
+
+html[data-sonaa-theme] .account-top-nav,
+html[data-sonaa-theme] .account-tabs {
+  gap: 8px;
+}
+
+html[data-sonaa-theme] .support-float,
+html[data-sonaa-theme] .global-refresh-float {
+  background: var(--hs-teal);
+  color: #ffffff;
+  border: 1px solid var(--hs-teal);
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(23,50,68,.12);
+}
+
+html[data-sonaa-theme] .client-section-tabs {
+  background: #ffffff;
+  border: 1px solid var(--hs-border);
+  box-shadow: none;
+}
+
+html[data-sonaa-theme] .client-section-tabs .tab-active {
+  color: #ffffff;
+  background: var(--hs-teal);
+  border-radius: var(--hs-radius-pill);
+}
+
+html[data-sonaa-theme] .client-section-tabs .tab-idle {
+  color: var(--hs-navy);
+  background: #ffffff;
+}
+
+html[data-sonaa-theme] .service-picker-dialog,
+html[data-sonaa-theme] .category-details {
+  background: #ffffff;
+  border-color: var(--hs-border);
+  border-radius: 16px;
+  box-shadow: var(--hs-shadow-card);
+}
+
+html[data-sonaa-theme] .category-tile,
+html[data-sonaa-theme] .service-choice,
+html[data-sonaa-theme] .service-chip {
+  background: #ffffff;
+  border: 1px solid var(--hs-border);
+  border-radius: 14px;
+}
+
+html[data-sonaa-theme] .category-tile.active,
+html[data-sonaa-theme] .service-choice.selected,
+html[data-sonaa-theme] .service-chip.selected {
+  border-color: var(--hs-teal);
+  background: #edf8f8;
+}
+
+@media (max-width: 640px) {
+  html[data-sonaa-theme] .topbar {
+    gap: 8px;
+    min-height: 68px;
+  }
+  html[data-sonaa-theme] .hero {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-block: 20px 24px;
+    padding: 20px;
+  }
+  html[data-sonaa-theme] .hero-badge {
+    width: 100%;
+  }
+  html[data-sonaa-theme] .cards {
+    gap: 12px;
+  }
+  html[data-sonaa-theme] .entry {
+    min-height: 112px;
+    padding: 14px;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+  html[data-sonaa-theme] .footer-social {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  html[data-sonaa-theme] .cards {
+    grid-template-columns: 1fr;
+  }
+}
