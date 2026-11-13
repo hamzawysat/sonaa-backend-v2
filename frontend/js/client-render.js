@@ -402,7 +402,7 @@ ${state.tracked.acceptedOfferId && String(state.tracked.acceptedOfferId)===offer
   </main>
   <nav class="fixed bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-xl safe-bottom">
     <div class="mx-auto max-w-[640px] px-1 h-[72px] grid grid-cols-4 gap-0.5">
-      ${[{id:'new',icon:'＋',label:'طلب'},{id:'track',icon:'◉',label:'تتبع'},{id:'wallet',icon:'💳',label:'محفظة'},{id:'complaint',icon:'⚠',label:'شكوى'}].map(t=>`
+      ${[{id:'new',icon:'＋',label:'طلب'},{id:'track',icon:'◉',label:'تتبع'},{id:'wallet',icon:'💳',label:'محفظة'},{id:'subscriptions',icon:'📄',label:'الاشتراكات'},{id:'store',icon:'🛍️',label:'المتجر'},{id:'complaint',icon:'⚠',label:'شكوى'}].map(t=>`
         <button type="button" onclick="setTab('${t.id}')" class="rounded-xl flex flex-col items-center justify-center gap-1 ${state.tab===t.id?'bg-[#F8F6F0] text-blue-800':'text-slate-500'}">
           <span class="text-[17px] font-black">${t.icon}</span>
           <span class="text-[10px] font-extrabold">${t.label}</span>
