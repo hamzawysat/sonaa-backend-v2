@@ -13,8 +13,8 @@ async function submitStorePurchase(role,id){
   let paymentMethod;
   const product=(state.storeProducts||[]).find(item=>String(item._id)===String(id));
   const isSubscription=product?.type==='subscription';
-  if(role==='client'&&!isSubscription){
-    const balance=Number(state.walletBalance||0);
+  if(!isSubscription){
+    const balance=role==='client'?Number(state.walletBalance||0):Number(getUser()?.walletBalance||getUser()?.balance||0);
     const choice=prompt('اختار طريقة الدفع:\n1 - الدفع من محفظتي (الرصيد الحالي: '+balance.toLocaleString('ar-EG')+' جنيه)\n2 - الدفع عند الاستلام','1');
     if(choice===null)return;
     if(!['1','2'].includes(String(choice).trim()))return showToast('اختار 1 للمحفظة أو 2 للدفع عند الاستلام.','error');
@@ -22,13 +22,13 @@ async function submitStorePurchase(role,id){
   }
   const idempotencyKey=storeRequestKey();
   async function send(method){
-    const r=await fetch('/api/store/'+role+'/orders',{method:'POST',headers:storeHeaders(role),body:JSON.stringify({productId:id,quantity,note,...(role==='client'?{paymentMethod:method,idempotencyKey}:{})})});
+    const r=await fetch('/api/store/'+role+'/orders',{method:'POST',headers:storeHeaders(role),body:JSON.stringify({productId:id,quantity,note,...(!isSubscription?{paymentMethod:method,idempotencyKey}:{idempotencyKey})})});
     const d=await r.json().catch(()=>({}));
     return {r,d};
   }
   try{
     let result=await send(paymentMethod);
-    if(!result.r.ok&&role==='client'&&paymentMethod==='wallet'&&result.r.status===409&&result.d.canUseCashOnDelivery===true){
+    if(!result.r.ok&&paymentMethod==='wallet'&&result.r.status===409&&result.d.canUseCashOnDelivery===true){
       const useCod=confirm((result.d.message||'رصيد المحفظة غير كافٍ.')+'\n\nهل تريد إكمال الطلب والدفع عند الاستلام؟');
       if(!useCod)return;
       paymentMethod='cash_on_delivery';
@@ -38,7 +38,10 @@ async function submitStorePurchase(role,id){
     if(role==='client'){
       if(result.d.balance!==undefined)state.walletBalance=Number(result.d.balance);
       showToast(result.d.message||'تم إرسال طلب الشراء');
-    }else toast(result.d.message||'تم إرسال طلب الشراء');
+    }else{
+      if(result.d.balance!==undefined&&typeof setAuth==='function')setAuth(getToken(),{...(getUser()||{}),walletBalance:Number(result.d.balance)});
+      toast(result.d.message||'تم إرسال طلب الشراء');
+    }
     await loadStoreForRole(role);
     if(role==='client'&&typeof loadClientWallet==='function')await loadClientWallet();
   }catch(e){if(role==='client')showToast(e.message,'error');else toast(e.message,'error');}
