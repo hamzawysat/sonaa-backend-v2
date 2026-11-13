@@ -55,6 +55,50 @@ function createAdminClientWalletRouter({auth,validate,Joi,mongoose,Client,Client
    return res.json({message:'تمت إضافة الرصيد وتسجيل الحركة المالية.',balance:outcome.balance});
   }catch(e){next(e);}finally{if(session)await session.endSession();}
  });
+
+ router.post('/clients/:id/wallet/deduct-balance',auth('admin'),validate(Joi.object({amount:Joi.number().strict().integer().positive().max(100000000).required(),reason:Joi.string().trim().min(2).max(500).required()})),async(req,res,next)=>{
+  if(!validId(req.params.id))return sendBadId(res);
+  let session;
+  try{
+   session=await mongoose.startSession();let outcome=null;
+   await session.withTransaction(async()=>{
+    const amount=Number(req.body.amount);
+    const client=await Client.findOneAndUpdate({_id:req.params.id,walletBalance:{$gte:amount}},{$inc:{walletBalance:-amount}},{new:true,session,runValidators:true});
+    if(!client){const exists=await Client.exists({_id:req.params.id}).session(session);outcome={kind:exists?'insufficient':'missing'};return;}
+    const balanceAfter=Number(client.walletBalance),balanceBefore=balanceAfter+amount;
+    await new WalletTransaction({client:client._id,type:'client_admin_deduction',amount:-amount,balanceBefore,balanceAfter,description:('خصم إداري: '+String(req.body.reason)).slice(0,500),idempotencyKey:'client-admin-debit:'+String(client._id)+':'+crypto.randomUUID()}).save({session});
+    outcome={client,balance:balanceAfter,amount};
+   });
+   if(outcome?.kind==='missing')return res.status(404).json({message:'العميل غير موجود.'});
+   if(outcome?.kind==='insufficient')return res.status(409).json({message:'الرصيد الحالي غير كافٍ لإتمام الخصم. لم يتغير الرصيد.'});
+   await writeAdminAudit(req,'خصم رصيد من محفظة عميل','client-wallet',String(outcome.client._id),'amount='+outcome.amount+'; balance='+outcome.balance+'; reason='+String(req.body.reason));
+   try{await createNotification({recipientRole:'client',recipientId:outcome.client._id,type:'client_wallet_debit',title:'تم خصم مبلغ من محفظتك',message:'تم خصم '+outcome.amount+' جنيه من محفظتك بواسطة الإدارة. الرصيد الحالي '+outcome.balance+' جنيه.',link:'/client.html?tab=wallet',dedupeKey:'client-wallet-admin-debit:'+String(outcome.client._id)+':'+String(Date.now())});}catch(_){}
+   return res.json({message:'تم خصم الرصيد وتسجيل الحركة المالية.',balance:outcome.balance,amount:outcome.amount});
+  }catch(e){next(e);}finally{if(session)await session.endSession();}
+ });
+ router.post('/clients/:id/wallet/set-balance',auth('admin'),validate(Joi.object({balance:Joi.number().strict().integer().min(0).max(100000000).required(),reason:Joi.string().trim().min(2).max(500).required()})),async(req,res,next)=>{
+  if(!validId(req.params.id))return sendBadId(res);
+  let session;
+  try{
+   session=await mongoose.startSession();let outcome=null;
+   await session.withTransaction(async()=>{
+    const before=await Client.findById(req.params.id).session(session);
+    if(!before){outcome={kind:'missing'};return;}
+    const balanceBefore=Number(before.walletBalance||0),balanceAfter=Number(req.body.balance),delta=balanceAfter-balanceBefore;
+    if(delta===0){outcome={kind:'unchanged',clientId:before._id,balance:balanceAfter};return;}
+    const client=await Client.findOneAndUpdate({_id:before._id,walletBalance:balanceBefore},{$set:{walletBalance:balanceAfter}},{new:true,session,runValidators:true});
+    if(!client){outcome={kind:'conflict'};return;}
+    await new WalletTransaction({client:client._id,type:'client_admin_settlement',amount:delta,balanceBefore,balanceAfter,description:('تسوية إدارية: '+String(req.body.reason)).slice(0,500),idempotencyKey:'client-admin-settlement:'+String(client._id)+':'+crypto.randomUUID()}).save({session});
+    outcome={kind:'updated',client,balance:balanceAfter,delta};
+   });
+   if(outcome?.kind==='missing')return res.status(404).json({message:'العميل غير موجود.'});
+   if(outcome?.kind==='conflict')return res.status(409).json({message:'تغير الرصيد أثناء التسوية. حدّث البيانات ثم أعد المحاولة.'});
+   if(outcome?.kind==='unchanged')return res.json({message:'الرصيد مطابق للقيمة المحددة؛ لم تكن هناك حاجة لتغيير.',balance:outcome.balance,changed:false});
+   await writeAdminAudit(req,'تسوية رصيد محفظة عميل','client-wallet',String(outcome.client._id),'balanceBefore='+(outcome.balance-outcome.delta)+'; balanceAfter='+outcome.balance+'; delta='+outcome.delta+'; reason='+String(req.body.reason));
+   try{await createNotification({recipientRole:'client',recipientId:outcome.client._id,type:'client_wallet_settlement',title:'تمت تسوية محفظتك',message:'تم تحديث رصيد محفظتك إداريًا. الرصيد الحالي '+outcome.balance+' جنيه.',link:'/client.html?tab=wallet',dedupeKey:'client-wallet-settlement:'+String(outcome.client._id)+':'+String(Date.now())});}catch(_){}
+   return res.json({message:'تمت تسوية الرصيد وتسجيل فرق التسوية في كشف الحساب.',balance:outcome.balance,delta:outcome.delta,changed:true});
+  }catch(e){next(e);}finally{if(session)await session.endSession();}
+ });
  router.post('/client-wallet/orders/:sn/refund',auth('admin'),validate(Joi.object({reason:Joi.string().trim().min(3).max(500).required()})),async(req,res,next)=>{
   const sn=String(req.params.sn||'').trim().toUpperCase();
   if(!/^SN\d{6}$/.test(sn))return res.status(400).json({message:'كود الطلب غير صالح.'});
