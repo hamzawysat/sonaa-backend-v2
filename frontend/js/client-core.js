@@ -293,7 +293,7 @@ const API={
 };
 const forceClientRegistration=(new URLSearchParams(window.location.search).get('tab')||'').replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').trim().toLowerCase()==='register';
 let state={
-  walletBalance:0,walletFrozen:false,walletTransactions:[],walletTopupRequests:[],walletTransferNumbers:[],walletLoading:false,walletSubmitting:false,walletFromPhone:'',walletAmount:'',walletMethod:'vodafone_cash',walletReference:'',walletError:'',walletSuccess:'',
+  walletBalance:0,walletFrozen:false,walletTransactions:[],walletTopupRequests:[],walletTransferNumbers:[],walletLoading:false,walletSubmitting:false,walletFromPhone:'',walletAmount:'',walletMethod:'vodafone_cash',walletReference:'',walletIdempotencyKey:'',walletError:'',walletSuccess:'',
   account:null,accountInitializing:false,accountToken:(()=>{if(window.IS_EDITOR_PREVIEW)return '';try{return localStorage.getItem('sonaa_client_account_token')||'';}catch{return '';}})(),accountAuthMode:forceClientRegistration?'register':'login',accountLoading:false,accountError:'',myOrders:[],accountOrdersLoading:false,accountOrdersTab:'current',notifications:[],notificationsUnread:0,notificationsOpen:false,
   tab:'orders',service:'',clientName:'',area:'',areaSearch:'',address:'',phone:'',budget:'',desc:'',voiceBlob:null,voiceUrl:'',voiceRecordingData:'',voiceRecorder:null,voiceChunks:[],voiceRecording:false,loading:false,sn:null,
   trackInput:'',tracked:null,trackError:'',trackLoading:false,acceptingOffer:'',

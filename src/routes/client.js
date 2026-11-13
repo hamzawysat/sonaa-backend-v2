@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const mongoose = require('mongoose');
-const crypto = require('crypto');
 
 const Client = require('../models/Client');
 const Order = require('../models/Order');
@@ -313,7 +312,8 @@ const clientWalletTopupSchema=Joi.object({
  fromPhone:Joi.string().trim().required(),
  amount:Joi.number().strict().integer().min(10).max(10000).required(),
  method:Joi.string().valid('vodafone_cash','orange_cash','etisalat_cash','we_cash').required(),
- reference:Joi.string().trim().max(50).allow('').optional()
+ reference:Joi.string().trim().max(50).allow('').optional(),
+ idempotencyKey:Joi.string().trim().min(16).max(100).required()
 }).unknown(false);
 
 router.get('/wallet',clientAuth,async(req,res,next)=>{
@@ -331,21 +331,34 @@ router.get('/wallet',clientAuth,async(req,res,next)=>{
 });
 
 router.post('/wallet/topup',clientAuth,async(req,res,next)=>{
+ let idempotencyKey='';
  try{
   const {error,value}=clientWalletTopupSchema.validate(req.body||{},{abortEarly:false});
   if(error)return res.status(400).json({message:'راجع مبلغ الشحن ورقم التحويل وطريقة الدفع.'});
+  idempotencyKey=String(value.idempotencyKey||'').trim();
   if(req.client.status!=='نشط')return res.status(403).json({message:'حساب العميل غير نشط.'});
   if(req.client.walletFrozen)return res.status(403).json({message:'المحفظة مجمدة حاليًا. تواصل مع خدمة العملاء.'});
   const senderNumber=normalizePhone(value.fromPhone);
   if(!senderNumber||!/^01[0-9]{9}$/.test(senderNumber))return res.status(400).json({message:'رقم الهاتف المحوّل منه غير صحيح.'});
+  const existing=await ClientTopupRequest.findOne({client:req.clientId,idempotencyKey}).lean();
+  if(existing){
+   if(Number(existing.amount)!==Number(value.amount)||existing.method!==value.method||existing.senderNumber!==senderNumber)return res.status(409).json({message:'مفتاح العملية مستخدم لطلب شحن ببيانات مختلفة.'});
+   return res.status(200).json({message:'طلب الشحن مسجل بالفعل.',request:{id:String(existing._id),amount:existing.amount,senderNumber:existing.senderNumber,method:existing.method,referenceNumber:existing.referenceNumber,status:existing.status,createdAt:existing.createdAt},balance:Number(req.client.walletBalance||0)});
+  }
   const request=await ClientTopupRequest.create({
    client:req.clientId,clientName:req.client.name,clientPhone:req.client.phone,amount:Number(value.amount),
    senderNumber,method:value.method,referenceNumber:String(value.reference||'').trim().slice(0,50),
-   status:'قيد المراجعة',isCredited:false,idempotencyKey:crypto.randomUUID()
+   status:'قيد المراجعة',isCredited:false,idempotencyKey
   });
   await notifyAdmins({type:'admin_client_topup',title:'طلب شحن محفظة عميل',message:'أرسل العميل '+req.client.name+' طلب شحن بقيمة '+request.amount+' جنيه ويحتاج مراجعة الإدارة.',link:'/admin?tab=clientWallet',dedupeKey:'admin-client-topup:'+String(request._id)});
   return res.status(201).json({message:'تم إرسال طلب الشحن للمراجعة. سيُضاف الرصيد بعد اعتماد التحويل.',request:{id:String(request._id),amount:request.amount,senderNumber:request.senderNumber,method:request.method,referenceNumber:request.referenceNumber,status:request.status,createdAt:request.createdAt},balance:Number(req.client.walletBalance||0)});
- }catch(error){if(error&&error.code===11000)return res.status(409).json({message:'تعذر تسجيل طلب الشحن المكرر. حدّث سجل المحفظة.'});return next(error);}
+ }catch(error){
+  if(error&&error.code===11000&&idempotencyKey){
+   const existing=await ClientTopupRequest.findOne({client:req.clientId,idempotencyKey}).lean();
+   if(existing)return res.status(200).json({message:'طلب الشحن مسجل بالفعل.',request:{id:String(existing._id),amount:existing.amount,senderNumber:existing.senderNumber,method:existing.method,referenceNumber:existing.referenceNumber,status:existing.status,createdAt:existing.createdAt},balance:Number(req.client.walletBalance||0)});
+  }
+  return next(error);
+ }
 });
 
 module.exports = router;

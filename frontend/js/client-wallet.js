@@ -21,8 +21,9 @@ async function submitClientWalletTopup(){
  if(state.walletFrozen){state.walletError='المحفظة مجمدة حاليًا. تواصل مع خدمة العملاء.';render();return;}
  state.walletSubmitting=true;state.walletError='';state.walletSuccess='';render();
  try{
-  const result=await API.createClientWalletTopup({fromPhone:phone,amount,method:state.walletMethod,reference});
-  state.walletSuccess=result.message||'تم إرسال طلب الشحن للمراجعة.';state.walletFromPhone='';state.walletAmount='';state.walletReference='';
+  if(!state.walletIdempotencyKey)state.walletIdempotencyKey=(window.crypto&&typeof window.crypto.randomUUID==='function')?window.crypto.randomUUID():'client-wallet-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  const result=await API.createClientWalletTopup({fromPhone:phone,amount,method:state.walletMethod,reference,idempotencyKey:state.walletIdempotencyKey});
+  state.walletIdempotencyKey='';state.walletSuccess=result.message||'تم إرسال طلب الشحن للمراجعة.';state.walletFromPhone='';state.walletAmount='';state.walletReference='';
   await loadClientWallet();showToast(state.walletSuccess,'success');
  }catch(error){state.walletError=error.message||'تعذر إرسال طلب الشحن.';showToast(state.walletError);}
  finally{state.walletSubmitting=false;render();}

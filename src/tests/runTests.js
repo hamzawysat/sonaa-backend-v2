@@ -457,9 +457,14 @@ async function run() {
 
       const submitted = await request(app).post('/api/client/wallet/topup')
         .set('Authorization', 'Bearer ' + clientToken)
-        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST' });
+        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST', idempotencyKey: 'client-wallet-test-key-001' });
       assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
       assert.equal(submitted.body.request.status, 'قيد المراجعة');
+      const duplicateSubmit = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST', idempotencyKey: 'client-wallet-test-key-001' });
+      assert.equal(duplicateSubmit.status, 200);
+      assert.equal(duplicateSubmit.body.request.id, submitted.body.request.id, 'retries with the same idempotency key must reuse the original request');
       const stored = await ClientTopupRequest.findById(submitted.body.request.id).lean();
       assert.ok(stored);
       assert.equal(stored.isCredited, false);
