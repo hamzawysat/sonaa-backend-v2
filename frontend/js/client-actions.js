@@ -1,6 +1,6 @@
 'use strict';
 
-function setTab(tab){state.tab=tab;render();}
+function setTab(tab){state.tab=tab;render();if(tab==='wallet'&&state.accountToken&&typeof loadClientWallet==='function')loadClientWallet();}
 function toggleService(){
   if(state.servicesLoading){if(state.servicesError)loadServices();return;}
   if(state.servicesError){loadServices();return;}
