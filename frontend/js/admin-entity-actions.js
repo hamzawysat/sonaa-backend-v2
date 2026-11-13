@@ -42,7 +42,7 @@ async function enableFanni(id){if(!confirm('هل تريد استعادة هذا 
 async function deleteFanni(id,name){id=String(id||'').trim(); if(!id){showToast('معرّف الفني غير موجود','error');return;} if(state.deletingItems.includes('fanni:'+id))return; const fanni=state.fannis.find(item=>String(item._id||'')===id); if(!fanni){showToast('لم يتم العثور على الفني','error');return;} const balance=Number(fanni.balance??fanni.walletBalance??0); const displayName=String(name||fanni.name||'الفني'); const warning=`تأكيد حذف حساب الفني: ${displayName}\nرقم الحساب: ${id}\nرصيد المحفظة: ${balance} جنيه\nهل تريد المتابعة؟`; if(!confirm(warning))return; state.deletingItems.push('fanni:'+id); render(); try{const result=await tryApi([`/api/admin/fannis/${encodeURIComponent(id)}`],{method:'DELETE'}); showToast(result.message||'تم تنفيذ الحذف'); await loadAll();}catch(e){showToast(e.message||'تعذر حذف الفني','error');}finally{state.deletingItems=state.deletingItems.filter(item=>item!=='fanni:'+id); render();}}
 async function refundClientService(sn){
   sn=String(sn||'').trim().toUpperCase();
-  if(!/^SN\\d{6}$/.test(sn)){showToast('كود الطلب غير صحيح','error');return;}
+  if(!/^SN\d{6}$/.test(sn)){showToast('كود الطلب غير صحيح','error');return;}
   const order=(state.orders||[]).find(item=>String(item.sn||'').toUpperCase()===sn);
   if(!order||order.clientPaymentStatus!=='held'){showToast('لا يوجد مبلغ محجوز قابل للاسترداد لهذا الطلب','error');return;}
   state.orderRefunding=state.orderRefunding||{};
