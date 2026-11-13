@@ -1350,6 +1350,16 @@ async function run() {
       });
       const purchaseKey = 'test-client-subscription-purchase-0001';
       const balanceBeforeRequest = Number((await Client.findById(clientId).lean()).walletBalance);
+      const insufficientKey = 'test-client-subscription-insufficient-0001';
+      await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 0 } });
+      const insufficientPurchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ itemId: String(plan._id), idempotencyKey: insufficientKey });
+      assert.equal(insufficientPurchase.status, 409);
+      assert.match(insufficientPurchase.body.message, /رصيد محفظتك غير كافٍ/);
+      assert.equal(await ClientSubscription.countDocuments({ client: clientId, requestKey: insufficientKey }), 0, 'insufficient balance must not create a pending subscription');
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 0, 'insufficient balance check must not alter wallet');
+      await Client.updateOne({ _id: clientId }, { $set: { walletBalance: balanceBeforeRequest } });
       const purchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
         .set('Authorization', 'Bearer ' + clientToken)
         .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });

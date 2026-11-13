@@ -124,8 +124,21 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
         startsAt = subscription.endsAt && new Date(subscription.endsAt) > new Date() ? new Date(subscription.endsAt) : new Date();
         endsAt = new Date(startsAt.getTime() + durationDays * 86400000);
       }
-      if (!Number.isFinite(amount) || amount < 0 || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt) {
+      if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt) {
         await session.abortTransaction(); return res.status(409).json({ message: 'تعذر حساب قيمة أو مدة الاشتراك. تواصل مع خدمة العملاء.' });
+      }
+
+      // Require sufficient available balance when the request is submitted, but do not debit until admin approval.
+      if (mode === 'purchase') {
+        const availableBalance = Number(client.walletBalance || 0);
+        if (availableBalance < amount) {
+          await session.abortTransaction();
+          return res.status(409).json({
+            message: 'رصيد محفظتك غير كافٍ لطلب هذا الاشتراك. اشحن المحفظة أولًا ثم حاول مرة أخرى.',
+            required: amount,
+            balance: availableBalance
+          });
+        }
       }
 
       // A new subscription is only a request. Wallet debit happens after explicit admin approval.
