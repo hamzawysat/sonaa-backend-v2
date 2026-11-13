@@ -52,6 +52,7 @@ async function renewClientSubscription(subscriptionId){
   finally{state.commerceSubmitting='';render();}
 }
 
+// Customer subscriptions use a single panel with two switchable inner views.
 function setClientCommerceView(view){
   state.commerceView=view==='available'?'available':'current';
   render();
