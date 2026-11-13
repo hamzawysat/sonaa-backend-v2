@@ -45,7 +45,8 @@ const PERMISSION_SECTIONS = {
   regions: [/^\/regions(\/|$)/],
   offers: [/^\/offers(\/|$)/],
   notifications: [/^\/notifications(\/|$)/],
-  clientsData: [/^\/client-accounts(\/|$)/]
+  clientsData: [/^\/client-accounts(\/|$)/],
+  commerce: [/^\/commerce(\/|$)/]
 };
 
 function isRootAdmin(user) {
