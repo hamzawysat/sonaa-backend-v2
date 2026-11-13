@@ -29,10 +29,12 @@ router.get('/products', async (req, res, next) => {
 
 async function submitOrder(req, res, next, role) {
   let session = null;
+  let requestValue = null;
   let reservedProductId = null;
   let reservedQuantity = 0;
   try {
     const { error, value } = orderSchema.validate(req.body || {}, { abortEarly: false });
+    requestValue = value;
     if (error) return res.status(400).json({ message: 'راجع بيانات طلب الشراء وطريقة الدفع.' });
     if (role === 'fanni' && req.user?.role !== 'fanni') return res.status(403).json({ message: 'الشراء متاح لحسابات الفنيين فقط.' });
     const buyer = role === 'client' ? req.client : req.user;
@@ -163,8 +165,8 @@ async function submitOrder(req, res, next, role) {
     if (!session && reservedProductId && reservedQuantity) {
       await StoreProduct.updateOne({ _id: reservedProductId }, { $inc: { stock: reservedQuantity } }).catch(() => {});
     }
-    if (error?.code === 11000 && role === 'client' && value?.idempotencyKey) {
-      const duplicate = await StoreOrder.findOne({ buyerRole: 'client', buyerId: req.client?._id, requestKey: value.idempotencyKey }).lean().catch(() => null);
+    if (error?.code === 11000 && role === 'client' && requestValue?.idempotencyKey) {
+      const duplicate = await StoreOrder.findOne({ buyerRole: 'client', buyerId: req.client?._id, requestKey: requestValue.idempotencyKey }).lean().catch(() => null);
       if (duplicate) return res.status(200).json({ message: 'طلب الشراء مسجل بالفعل.', order: { id: String(duplicate._id), productName: duplicate.productName, quantity: duplicate.quantity, total: duplicate.total, status: duplicate.status, paymentMethod: duplicate.paymentMethod, paymentStatus: duplicate.paymentStatus, createdAt: duplicate.createdAt }, duplicate: true });
     }
     return next(error);
