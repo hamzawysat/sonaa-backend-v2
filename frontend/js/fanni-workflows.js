@@ -127,7 +127,8 @@ async function loadWalletHistory(){
  try{
   const data=await API.walletHistory();
 
-  state.walletHistory=extractList(data,['history','requests','transactions','items']);
+  state.walletHistory=extractList(data,['history','requests','items']);
+  state.walletTransactions=Array.isArray(data.transactions)?data.transactions:[];
 
   state.walletBalance=data.balance
    ??data.walletBalance
