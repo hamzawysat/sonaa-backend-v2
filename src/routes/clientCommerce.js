@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification }) {
+function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, ClientSubscription, WalletTransaction, mongoose, createNotification, notifyAdmins }) {
   const router = express.Router();
 
 
@@ -88,6 +88,9 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
       if (req.client.status !== 'نشط') return res.status(403).json({ message: 'حساب العميل غير نشط.' });
       if (req.client.walletFrozen) return res.status(403).json({ message: 'المحفظة مجمدة حاليًا. تواصل مع خدمة العملاء.' });
 
+      const pendingRequest = mode === 'purchase' ? await ClientSubscription.findOne({ client: req.clientId, requestKey: idempotencyKey }).lean() : null;
+      if (pendingRequest) return res.status(200).json({ message: 'طلب الاشتراك مسجل بالفعل وبانتظار مراجعة الإدارة.', balance: Number(req.client.walletBalance || 0), subscription: pendingRequest, duplicate: true });
+
       const existingTransaction = await WalletTransaction.findOne({ client: req.clientId, idempotencyKey }).lean();
       if (existingTransaction) {
         const existingSubscription = existingTransaction.order
@@ -123,6 +126,23 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
       }
       if (!Number.isFinite(amount) || amount < 0 || !Number.isFinite(endsAt.getTime()) || endsAt <= startsAt) {
         await session.abortTransaction(); return res.status(409).json({ message: 'تعذر حساب قيمة أو مدة الاشتراك. تواصل مع خدمة العملاء.' });
+      }
+
+      // A new subscription is only a request. Wallet debit happens after explicit admin approval.
+      if (mode === 'purchase') {
+        subscription = new ClientSubscription({
+          client: client._id, item: item._id, itemName: item.name, amount,
+          durationDays: Number(item.durationDays || 30), status: 'pending', paymentStatus: 'pending',
+          paymentMethod: 'محفظة العميل', requestKey: idempotencyKey,
+          startsAt: null, endsAt: null, createdBy: 'العميل', updatedBy: 'العميل', history: []
+        });
+        await subscription.save({ session });
+        await session.commitTransaction();
+        notification = { clientId: client._id, subscriptionId: subscription._id, itemName: subscription.itemName, request: true };
+        return res.status(201).json({
+          message: 'تم إرسال طلب الاشتراك للإدارة بنجاح. لن يتم خصم أي رصيد إلا بعد الموافقة والتفعيل.',
+          balance: Number(client.walletBalance || 0), subscription
+        });
       }
 
       const before = Number(client.walletBalance || 0);
@@ -172,13 +192,22 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
       if (session) await session.endSession();
       if (notification) {
         try {
-          await createNotification({
-            recipientRole: 'client', recipientId: notification.clientId,
-            type: 'subscription_activated', title: 'تم تفعيل اشتراكك',
-            message: 'تم تفعيل اشتراك ' + notification.itemName + ' بعد الدفع من محفظتك.',
-            link: '/client.html?tab=subscriptions',
-            dedupeKey: 'client-subscription-paid:' + String(notification.subscriptionId)
-          });
+          if (notification.request) {
+            await notifyAdmins({
+              type: 'admin_subscription_request', title: 'طلب اشتراك جديد',
+              message: 'طلب العميل اشتراك ' + notification.itemName + '. راجع الطلب وفعّله بعد التأكد من الرصيد.',
+              link: '/admin.html?tab=commerceSubscriptions',
+              dedupeKey: 'admin-subscription-request:' + String(notification.subscriptionId)
+            });
+          } else {
+            await createNotification({
+              recipientRole: 'client', recipientId: notification.clientId,
+              type: 'subscription_activated', title: 'تم تفعيل اشتراكك',
+              message: 'تم تفعيل اشتراك ' + notification.itemName + ' بعد الدفع من محفظتك.',
+              link: '/client.html?tab=subscriptions',
+              dedupeKey: 'client-subscription-paid:' + String(notification.subscriptionId)
+            });
+          }
         } catch (_) {}
       }
     }
