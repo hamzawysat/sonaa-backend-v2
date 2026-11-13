@@ -342,7 +342,7 @@ router.use(createAdminWalletRouter({
 }));
 
 router.use(createAdminClientWalletRouter({
-  auth, validate, Joi, mongoose, Client, ClientTopupRequest, WalletTransaction,
+  auth, validate, Joi, mongoose, Client, ClientTopupRequest, WalletTransaction, Order,
   adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT
 }));
 
