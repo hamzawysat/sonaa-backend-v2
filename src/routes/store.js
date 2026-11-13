@@ -41,9 +41,6 @@ async function submitOrder(req, res, next, role) {
     if (!buyer || !buyer._id) return res.status(401).json({ message: 'سجّل الدخول لإرسال طلب الشراء.' });
 
     if (role === 'client') {
-      if (!['wallet', 'cash_on_delivery'].includes(value.paymentMethod)) {
-        return res.status(400).json({ message: 'اختار طريقة الدفع: من المحفظة أو عند الاستلام.' });
-      }
       if (!value.idempotencyKey) return res.status(400).json({ message: 'حدّث الصفحة وحاول إرسال الطلب مرة أخرى.' });
       const duplicate = await StoreOrder.findOne({ buyerRole: 'client', buyerId: buyer._id, requestKey: value.idempotencyKey }).lean();
       if (duplicate) {
@@ -63,6 +60,11 @@ async function submitOrder(req, res, next, role) {
     if (!product) {
       if (session?.inTransaction()) await session.abortTransaction();
       return res.status(404).json({ message: 'المنتج غير متاح حاليًا.' });
+    }
+    const isSubscription = product.type === 'subscription';
+    if (role === 'client' && !isSubscription && !['wallet', 'cash_on_delivery'].includes(value.paymentMethod)) {
+      if (session?.inTransaction()) await session.abortTransaction();
+      return res.status(400).json({ message: 'اختار طريقة الدفع: من المحفظة أو عند الاستلام.' });
     }
 
     if (product.stock !== null) {
@@ -85,7 +87,7 @@ async function submitOrder(req, res, next, role) {
     let updatedClient = null;
     let balanceBefore = 0;
 
-    if (role === 'client') {
+    if (role === 'client' && !isSubscription) {
       if (value.paymentMethod === 'cash_on_delivery') {
         paymentMethod = 'عند الاستلام';
       } else {
@@ -151,7 +153,7 @@ async function submitOrder(req, res, next, role) {
 
     return res.status(201).json({
       message: role === 'client'
-        ? (paymentMethod === 'محفظة العميل' ? 'تم تأكيد طلبك والدفع من محفظتك بنجاح. الإدارة هتتواصل معاك لتجهيز الطلب.' : 'تم إرسال طلبك بنجاح. الدفع هيكون عند الاستلام، والإدارة هتتواصل معاك لتأكيد التفاصيل.')
+        ? (isSubscription ? 'تم إرسال طلب الاشتراك أو التجديد للإدارة. هنتواصل معاك لتأكيد التفاصيل وطريقة الدفع.' : paymentMethod === 'محفظة العميل' ? 'تم تأكيد طلبك والدفع من محفظتك بنجاح. الإدارة هتتواصل معاك لتجهيز الطلب.' : 'تم إرسال طلبك بنجاح. الدفع هيكون عند الاستلام، والإدارة هتتواصل معاك لتأكيد التفاصيل.')
         : 'تم إرسال طلب الشراء للإدارة. هنتواصل معاك لتأكيد الطلب وطريقة الدفع.',
       balance: updatedClient ? Number(updatedClient.walletBalance) : undefined,
       order: {
