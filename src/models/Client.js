@@ -23,6 +23,10 @@ const clientSchema = new mongoose.Schema({
     select: false
   },
   tokenVersion: { type: Number, default: 0, min: 0 },
+  walletBalance: { type: Number, default: 0, min: 0 },
+  walletFrozen: { type: Boolean, default: false, index: true },
+  walletFrozenAt: { type: Date, default: null },
+  walletFrozenReason: { type: String, trim: true, maxlength: 500, default: '' },
   status: {
     type: String,
     enum: ['نشط', 'معلق'],

@@ -79,6 +79,8 @@ const createAdminComplaintsRouter = require('./admin/complaints');
 const createAdminUsersRouter = require('./admin/users');
 const createAdminClientsRouter = require('./admin/clients');
 const createAdminWalletRouter = require('./admin/wallet');
+const createAdminClientWalletRouter = require('./admin/clientWallet');
+const ClientTopupRequest = require('../models/ClientTopupRequest');
 const createAdminFanniManagementRouter = require('./admin/fanniManagement');
 
 const ADMIN_TOKEN_EXPIRY = '1d';
@@ -334,6 +336,11 @@ router.use(createAdminWalletRouter({
   mongoose, Fanni, TopupRequest, Order, WalletTransaction,
   adminName, decision, publicFanni, publicTopup, writeAdminAudit,
   createNotification, MAX_LIST_LIMIT
+}));
+
+router.use(createAdminClientWalletRouter({
+  auth, validate, Joi, mongoose, Client, ClientTopupRequest, WalletTransaction,
+  adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT
 }));
 
 router.delete('/clients/:phone/account', auth('admin'), async (req, res, next) => {

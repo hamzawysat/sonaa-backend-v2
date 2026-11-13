@@ -5,10 +5,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const Client = require('../models/Client');
 const Order = require('../models/Order');
 const Rating = require('../models/Rating');
+const WalletTransaction = require('../models/WalletTransaction');
+const ClientTopupRequest = require('../models/ClientTopupRequest');
 const { clientAuth } = require('../middleware/clientAuth');
 const { normalizePhone } = require('../utils/phone');
 
@@ -304,6 +307,45 @@ router.get('/orders', clientAuth, async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
+});
+
+const clientWalletTopupSchema=Joi.object({
+ fromPhone:Joi.string().trim().required(),
+ amount:Joi.number().strict().integer().min(10).max(10000).required(),
+ method:Joi.string().valid('vodafone_cash','orange_cash','etisalat_cash','we_cash').required(),
+ reference:Joi.string().trim().max(50).allow('').optional()
+}).unknown(false);
+
+router.get('/wallet',clientAuth,async(req,res,next)=>{
+ try{
+  const [transactions,topups]=await Promise.all([
+   WalletTransaction.find({client:req.clientId}).sort({createdAt:-1}).limit(100).lean(),
+   ClientTopupRequest.find({client:req.clientId}).select('amount senderNumber method referenceNumber status isCredited reviewReason reviewedAt createdAt updatedAt').sort({createdAt:-1}).limit(50).lean()
+  ]);
+  return res.set('Cache-Control','no-store').json({
+   balance:Number(req.client.walletBalance||0),walletBalance:Number(req.client.walletBalance||0),frozen:Boolean(req.client.walletFrozen),
+   transactions:transactions.map(x=>({id:String(x._id),type:x.type,amount:x.amount,balanceBefore:x.balanceBefore,balanceAfter:x.balanceAfter,description:x.description,orderSN:x.orderSN||'',createdAt:x.createdAt})),
+   topupRequests:topups.map(x=>({id:String(x._id),amount:x.amount,senderNumber:x.senderNumber,method:x.method,referenceNumber:x.referenceNumber||'',status:x.status,isCredited:Boolean(x.isCredited),reviewReason:x.reviewReason||'',reviewedAt:x.reviewedAt||null,createdAt:x.createdAt,updatedAt:x.updatedAt}))
+  });
+ }catch(error){return next(error);}
+});
+
+router.post('/wallet/topup',clientAuth,async(req,res,next)=>{
+ try{
+  const {error,value}=clientWalletTopupSchema.validate(req.body||{},{abortEarly:false});
+  if(error)return res.status(400).json({message:'راجع مبلغ الشحن ورقم التحويل وطريقة الدفع.'});
+  if(req.client.status!=='نشط')return res.status(403).json({message:'حساب العميل غير نشط.'});
+  if(req.client.walletFrozen)return res.status(403).json({message:'المحفظة مجمدة حاليًا. تواصل مع خدمة العملاء.'});
+  const senderNumber=normalizePhone(value.fromPhone);
+  if(!senderNumber||!/^01[0-9]{9}$/.test(senderNumber))return res.status(400).json({message:'رقم الهاتف المحوّل منه غير صحيح.'});
+  const request=await ClientTopupRequest.create({
+   client:req.clientId,clientName:req.client.name,clientPhone:req.client.phone,amount:Number(value.amount),
+   senderNumber,method:value.method,referenceNumber:String(value.reference||'').trim().slice(0,50),
+   status:'قيد المراجعة',isCredited:false,idempotencyKey:crypto.randomUUID()
+  });
+  await notifyAdmins({type:'admin_client_topup',title:'طلب شحن محفظة عميل',message:'أرسل العميل '+req.client.name+' طلب شحن بقيمة '+request.amount+' جنيه ويحتاج مراجعة الإدارة.',link:'/admin?tab=clientWallet',dedupeKey:'admin-client-topup:'+String(request._id)});
+  return res.status(201).json({message:'تم إرسال طلب الشحن للمراجعة. سيُضاف الرصيد بعد اعتماد التحويل.',request:{id:String(request._id),amount:request.amount,senderNumber:request.senderNumber,method:request.method,referenceNumber:request.referenceNumber,status:request.status,createdAt:request.createdAt},balance:Number(req.client.walletBalance||0)});
+ }catch(error){if(error&&error.code===11000)return res.status(409).json({message:'تعذر تسجيل طلب الشحن المكرر. حدّث سجل المحفظة.'});return next(error);}
 });
 
 module.exports = router;
