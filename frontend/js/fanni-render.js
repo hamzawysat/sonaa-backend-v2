@@ -342,8 +342,8 @@ function renderContent(){
  </main>
 
  <nav class="fixed bottom-0 inset-x-0 z-30 border-t bg-white/95 backdrop-blur-xl safe-bottom">
-   <div class="mx-auto max-w-[680px] px-1 h-[70px] grid grid-cols-4 gap-0.5">
-    ${authenticated?[['available','📋','الطلبات'],['myOffers','💼','عروضي'],['wallet','💳','المحفظة']].map(t=>`<button onclick="setTab('${t[0]}')" class="rounded-xl flex flex-col items-center justify-center gap-1 ${state.tab===t[0]?'bg-[#F8F6F0] text-[#5A4520] 800':'text-slate-500'}"><span>${t[1]}</span><span class="text-[9px] font-extrabold">${t[2]}</span></button>`).join(''):`<button onclick="setTab('login')">🔑<span class="block text-[10px]">دخول</span></button><button onclick="setTab('register')">📝<span class="block text-[10px]">تسجيل</span></button><button onclick="goClient()">👥<span class="block text-[10px]">عميل</span></button><button onclick="setTab('register')">🧑‍🔧<span class="block text-[10px]">فني</span></button>`}
+   <div class="mx-auto max-w-[680px] px-1 h-[70px] grid grid-cols-5 gap-0.5">
+    ${authenticated?TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','طلبات متاحه'],myOffers:['💼','طلبات جاريه'],completed:['🏁','المهام المكتملة'],wallet:['💳','محفظتي'],store:['🛍️','المتجر']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl flex flex-col items-center justify-center gap-1 ${state.tab===t.id?'bg-[#F8F6F0] text-[#5A4520] 800':'text-slate-500'}"><span class="text-base leading-none">${info[0]}</span><span class="text-[9px] font-extrabold text-center">${info[1]}</span></button>`}).join(''):`<button onclick="setTab('login')">🔑<span class="block text-[10px]">دخول</span></button><button onclick="setTab('register')">📝<span class="block text-[10px]">تسجيل</span></button><button onclick="goClient()">👥<span class="block text-[10px]">عميل</span></button><button onclick="setTab('register')">🧑‍🔧<span class="block text-[10px]">فني</span></button>`}
        
    </div>
   </nav>
