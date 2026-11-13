@@ -81,6 +81,9 @@ const createAdminClientsRouter = require('./admin/clients');
 const createAdminWalletRouter = require('./admin/wallet');
 const createAdminClientWalletRouter = require('./admin/clientWallet');
 const ClientTopupRequest = require('../models/ClientTopupRequest');
+const CommerceItem = require('../models/CommerceItem');
+const ClientSubscription = require('../models/ClientSubscription');
+const createAdminCommerceRouter = require('./admin/commerce');
 const createAdminFanniManagementRouter = require('./admin/fanniManagement');
 
 const ADMIN_TOKEN_EXPIRY = '1d';
@@ -343,6 +346,8 @@ router.use(createAdminClientWalletRouter({
   adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT
 }));
 
+router.use(createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, ClientSubscription, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
+
 router.delete('/clients/:phone/account', auth('admin'), async (req, res, next) => {
   try {
     const phone = normalizePhone(String(req.params.phone || '').trim());
@@ -433,7 +438,8 @@ router.use(createAdminClientsRouter({ auth, Joi, Client, normalizePhone, adminNa
 
 const ADMIN_LAYOUT_SECTIONS = {
   dashboard: ['dashboard', 'stats'],
-  clients: ['clients', 'orders'],
+  clients: ['clients', 'orders', 'clientWallet'],
+  commerce: ['commercePlans', 'commerceSubscriptions'],
   technicians: ['fannis', 'pending', 'profileEdits', 'disabled', 'levels', 'offers', 'wallets', 'topups'],
   'service-management': ['services', 'regions'],
   'customer-operations': ['complaints', 'support', 'notifications', 'content'],
