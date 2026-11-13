@@ -20,12 +20,13 @@ const clientSubscriptionSchema = new mongoose.Schema({
   endsAt: { type: Date, default: null, index: true },
   paymentStatus: { type: String, enum: ['unpaid', 'pending', 'paid', 'refunded'], default: 'pending', index: true },
   paymentMethod: { type: String, trim: true, maxlength: 40, default: '' },
-  requestKey: { type: String, trim: true, maxlength: 150, default: '', index: true },
+  requestKey: { type: String, trim: true, maxlength: 150, default: undefined },
   notes: { type: String, trim: true, maxlength: 1000, default: '' },
   history: { type: [renewalSchema], default: [] },
   createdBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' },
   updatedBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' }
 }, { timestamps: true });
+clientSubscriptionSchema.index({ client: 1, requestKey: 1 }, { unique: true, sparse: true });
 clientSubscriptionSchema.index({ client: 1, status: 1, endsAt: -1 });
 clientSubscriptionSchema.index({ status: 1, endsAt: 1 });
 module.exports = mongoose.models.ClientSubscription || mongoose.model('ClientSubscription', clientSubscriptionSchema);
