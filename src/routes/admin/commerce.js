@@ -140,6 +140,15 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       next(error);
     } finally { if (session) await session.endSession(); }
   });
+  router.patch('/commerce/subscriptions/:id/details', auth('admin'), validate(Joi.object({ details: Joi.string().trim().max(2000).allow('').required() })), async (req, res, next) => {
+    if (!validId(req.params.id)) return sendBadId(res);
+    try {
+      const subscription = await ClientSubscription.findByIdAndUpdate(req.params.id, { $set: { subscriptionDetails: req.body.details, updatedBy: adminName(req) } }, { new: true, runValidators: true });
+      if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
+      await writeAdminAudit(req, 'تعديل تفاصيل اشتراك عميل', 'client-subscriptions', String(subscription._id), 'تحديث تفاصيل الاشتراك');
+      return res.json({ message: 'تم حفظ تفاصيل الاشتراك.', subscription });
+    } catch (error) { next(error); }
+  });
   router.post('/commerce/subscriptions/:id/renew', auth('admin'), validate(Joi.object({ note: Joi.string().trim().max(500).allow('').default(''), paymentStatus: Joi.string().valid('paid','pending','unpaid').default('paid'), amount: Joi.number().strict().min(0).max(100000000).optional() })), async (req, res, next) => {
     if (!validId(req.params.id)) return sendBadId(res);
     try {
