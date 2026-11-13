@@ -602,6 +602,37 @@ async function run() {
         assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: 'client-topup:' + String(pending._id) }), 1);
       });
 
+      await test('admin refunds held service payment to client wallet exactly once', async () => {
+        const Client = require('../models/Client');
+        const Order = require('../models/Order');
+        const WalletTransaction = require('../models/WalletTransaction');
+        const client = await Client.findByIdAndUpdate(clientId, { $set: { walletBalance: 10 } }, { new: true });
+        const order = await Order.create({
+          sn: 'SN998877', clientAccount: clientId, service: 'اختبار استرداد', area: 'المعادي',
+          clientName: client.name, clientPhone: client.phone, status: 'تم اختيار فني',
+          assignedFanni: admin._id, assignedFanniName: admin.name, acceptedOfferPrice: 250,
+          clientPaymentStatus: 'held', clientPaymentAmount: 250, clientPaymentAt: new Date()
+        });
+        const refund = await request(app).post('/api/admin/client-wallet/orders/' + order.sn + '/refund')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ reason: 'إلغاء الخدمة بناءً على مراجعة الإدارة' });
+        assert.equal(refund.status, 200, JSON.stringify(refund.body));
+        assert.equal(refund.body.amount, 250);
+        assert.equal(refund.body.balance, 260);
+        const refundedOrder = await Order.findById(order._id).lean();
+        assert.equal(refundedOrder.status, 'ملغي');
+        assert.equal(refundedOrder.clientPaymentStatus, 'refunded');
+        const ledger = await WalletTransaction.findOne({ order: order._id, type: 'client_refund' }).lean();
+        assert.ok(ledger);
+        assert.equal(ledger.amount, 250);
+        assert.equal(ledger.balanceAfter, 260);
+        const duplicate = await request(app).post('/api/admin/client-wallet/orders/' + order.sn + '/refund')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ reason: 'محاولة استرداد مكرر' });
+        assert.equal(duplicate.status, 409);
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 260);
+        assert.equal(await WalletTransaction.countDocuments({ order: order._id, type: 'client_refund' }), 1);
+      });
 
       const adminPasswordChange = await request(app).post('/api/password-recovery/change/admin')
         .set('Authorization', 'Bearer ' + adminToken)
