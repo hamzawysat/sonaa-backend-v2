@@ -22,6 +22,7 @@ const clientSubscriptionSchema = new mongoose.Schema({
   paymentMethod: { type: String, trim: true, maxlength: 40, default: '' },
   requestKey: { type: String, trim: true, maxlength: 150, default: undefined },
   notes: { type: String, trim: true, maxlength: 1000, default: '' },
+  subscriptionDetails: { type: String, trim: true, maxlength: 2000, default: '' },
   history: { type: [renewalSchema], default: [] },
   createdBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' },
   updatedBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' }
