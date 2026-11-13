@@ -70,7 +70,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, 
       if (endsAt <= startsAt) return res.status(400).json({ message: 'تاريخ انتهاء الاشتراك يجب أن يكون بعد تاريخ البداية.' });
       const amount = req.body.amount === undefined ? Number(item.price) : Number(req.body.amount);
       const subscription = await ClientSubscription.create({
-        client: client._id, item: item._id, itemName: item.name, amount,
+        client: client._id, item: item._id, itemName: item.name, amount, durationDays: Number(item.durationDays || 30),
         status: req.body.status, paymentStatus: req.body.paymentStatus,
         paymentMethod: req.body.paymentMethod, startsAt: req.body.status === 'active' ? startsAt : null,
         endsAt: req.body.status === 'active' ? endsAt : null, notes: req.body.notes,
@@ -88,7 +88,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, 
       const subscription = await ClientSubscription.findById(req.params.id);
       if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
       const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
-      const duration = Number(item?.durationDays || 30);
+      const duration = Number(subscription.durationDays || item?.durationDays || 30);
       const now = new Date(), startsAt = subscription.endsAt && new Date(subscription.endsAt) > now ? new Date(subscription.endsAt) : now;
       const endsAt = new Date(startsAt.getTime() + duration * 86400000);
       const amount = req.body.amount === undefined ? Number(subscription.amount || item?.price || 0) : Number(req.body.amount);
