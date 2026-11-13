@@ -147,7 +147,7 @@ function render(){
               <label for="areaInput" class="text-[12px] font-extrabold mb-1.5 block">المنطقة أو الحي *</label>
               <input id="areaSearchInput" type="search" value="${escAttr(state.areaSearch||'')}" oninput="onAreaSearch(this.value)" placeholder="🔎 ابحث باسم المنطقة أو الحي..." class="field h-[48px] px-4 text-[13px] font-bold mb-2" autocomplete="off" aria-controls="areaSearchResults" aria-expanded="${!!String(state.areaSearch||'').trim()}">
               ${state.area?'<div class="mb-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[12px] font-extrabold text-emerald-800"><span class="block">المنطقة المختارة: '+escHtml(state.area)+'</span>'+(state.service?'<span class="mt-1 block">عدد الفنيين اللي بيقدموا الخدمة دي في المنطقة: '+(selectedServiceAreaCount??0)+'</span>':'')+'</div>':''}
-              ${String(state.areaSearch||'').trim()?'<div id="areaSearchResults" class="max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox">'+(AREA_OPTIONS.filter(area=>normalizeAreaSearchText(area).includes(normalizeAreaSearchText(String(state.areaSearch).trim()))).slice(0,60).map(area=>'<button type="button" role="option" aria-selected="'+(state.area===area?'true':'false')+'" onclick="onAreaInput(\''+escAttr(area).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')" class="block w-full border-b border-slate-100 px-4 py-3 text-right text-[13px] font-bold text-slate-800 last:border-0 hover:bg-[#F8F6F0]">'+escHtml(area)+'</button>').join('')||'<p class="px-4 py-3 text-[12px] text-slate-500">مفيش منطقة مطابقة للبحث. جرّب اسمًا تانيًا.</p>')+'</div>':''}
+              ${String(state.areaSearch||'').trim()?'<div id="areaSearchResults" class="max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox">'+(AREA_OPTIONS.filter(area=>normalizeAreaSearchText(area).includes(normalizeAreaSearchText(String(state.areaSearch).trim()))).slice(0,60).map(area=>'<button type="button" role="option" aria-selected="'+(state.area===area?'true':'false')+'" onclick="onAreaInput(\''+escAttr(area).replace(/\\/g,'\\').replace(/'/g,"\\'")+'\')" class="block w-full border-b border-slate-100 px-4 py-3 text-right text-[13px] font-bold text-slate-800 last:border-0 hover:bg-[#F8F6F0]">'+escHtml(area)+'</button>').join('')||'<p class="px-4 py-3 text-[12px] text-slate-500">مفيش منطقة مطابقة للبحث. جرّب اسمًا تانيًا.</p>')+'</div>':''}
               <p class="mt-1 text-[10px] text-slate-500">${AREA_OPTIONS.length?'اكتب جزءًا من اسم المنطقة، وهتظهر المناطق المطابقة تحت خانة البحث مباشرة.':'قائمة المناطق غير متاحة حاليًا؛ حدّث الصفحة وحاول مرة أخرى.'}</p>
               
             </div>
@@ -265,6 +265,9 @@ function render(){
             <p class="font-extrabold text-[13px] text-emerald-800">${state.tracked.status==='تم الانتهاء'?'تم إنهاء المهمة':'تم قبول العرض وتعيين الفني لطلبك'}</p>
             ${state.tracked.acceptedOfferPrice!=null?`<p class="mt-2 text-[12px] text-emerald-800">سعر التنفيذ المتفق عليه: <strong>${escHtml(String(state.tracked.acceptedOfferPrice))} جنيه</strong></p>`:''}
             ${state.tracked.status==='تم اختيار فني' && state.tracked.assignedFanniName?`<p class="mt-2 text-[12px] text-emerald-800">اسم الفني: <strong>${escHtml(state.tracked.assignedFanniName)}</strong></p>`:''}
+            ${state.tracked.status==='تم اختيار فني' && state.accountToken && !['held','settled'].includes(state.tracked.clientPaymentStatus)?'<button type="button" onclick="payForClientOrder(\''+escAttr(state.tracked.sn)+'\')" class="mt-3 w-full rounded-xl bg-emerald-700 p-3 text-[12px] font-extrabold text-white">ادفع قيمة الخدمة من محفظتك</button>':''}
+            ${state.tracked.clientPaymentStatus==='held'?'<p class="mt-2 rounded-lg bg-blue-50 p-2 text-[11px] font-bold text-blue-800">تم حجز قيمة الخدمة من محفظتك، وسيتم تحويلها للفني بعد إتمام المهمة.</p>':''}
+            ${state.tracked.clientPaymentStatus==='settled'?'<p class="mt-2 rounded-lg bg-emerald-100 p-2 text-[11px] font-bold text-emerald-800">تم سداد قيمة الخدمة وتحويل مستحقات الفني.</p>':''}
             ${state.tracked.status==='تم اختيار فني' && state.tracked.assignedFanniPhone?`
               <p class="mt-2 text-[12px] text-emerald-800">رقم تليفون الفني:</p>
               <a href="tel:${escAttr(String(state.tracked.assignedFanniPhone).replace(/[^0-9+]/g,''))}" class="mt-2 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white font-extrabold p-3" dir="ltr">
@@ -309,6 +312,8 @@ ${state.tracked.acceptedOfferId && String(state.tracked.acceptedOfferId)===offer
         ${Array.isArray(state.tracked.ratings)&&state.tracked.ratings.length ? '<div class="mt-4 rounded-xl border border-slate-200 p-4"><h4 class="font-extrabold text-[13px]">التقييمات المتبادلة</h4>'+state.tracked.ratings.map(r=>'<div class="mt-3 border-t border-slate-100 pt-3"><p class="text-[12px] font-extrabold">'+(r.reviewerRole==='client'?'تقييم العميل للفني':'تقييم الفني للعميل')+' — '+('★'.repeat(Math.max(0,Math.min(5,Number(r.stars)||0))))+' '+(Number(r.stars)||0)+'/5</p>'+(r.comment?'<p class="mt-1 text-[12px] leading-5 text-slate-600">'+escHtml(r.comment)+'</p>':'')+'</div>').join('')+'</div>' : ''}
       </div>`:''}
     </div>`:''}
+    ${state.tab==='wallet'?renderClientWallet():''}
+     ${state.tab==='subscriptions'?renderClientSubscriptions():''}
     ${state.tab==='complaint'?`
     <div class="mt-4 animate-fade">
       <div class="panel p-4 sm:p-5">
@@ -396,7 +401,7 @@ ${state.tracked.acceptedOfferId && String(state.tracked.acceptedOfferId)===offer
   </main>
   <nav class="fixed bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-xl safe-bottom">
     <div class="mx-auto max-w-[640px] px-1 h-[72px] grid grid-cols-4 gap-0.5">
-      ${[{id:'new',icon:'＋',label:'طلب'},{id:'track',icon:'◉',label:'تتبع'},{id:'complaint',icon:'⚠',label:'شكوى'}].map(t=>`
+      ${[{id:'new',icon:'＋',label:'طلب'},{id:'track',icon:'◉',label:'تتبع'},{id:'wallet',icon:'💳',label:'محفظة'},{id:'complaint',icon:'⚠',label:'شكوى'}].map(t=>`
         <button type="button" onclick="setTab('${t.id}')" class="rounded-xl flex flex-col items-center justify-center gap-1 ${state.tab===t.id?'bg-[#F8F6F0] text-blue-800':'text-slate-500'}">
           <span class="text-[17px] font-black">${t.icon}</span>
           <span class="text-[10px] font-extrabold">${t.label}</span>

@@ -352,88 +352,77 @@ router.post('/:sn/cancel', async (req, res, next) => {
   }
 });
 
+
 router.post('/:sn/complete', auth(), async (req, res, next) => {
+  let session;
   try {
-    if (req.user.role !== 'fanni') {
-      return res.status(403).json({
-        message: 'إكمال المهمة متاح للفني المعيّن فقط'
-      });
-    }
+    if (req.user.role !== 'fanni') return res.status(403).json({ message: 'إكمال المهمة متاح للفني المعيّن فقط' });
     if (!(await hasAcceptedGuidelines(req.userId))) return res.status(428).json({ code: 'TECHNICIAN_GUIDELINES_REQUIRED', message: 'يجب الموافقة على ميثاق التعامل المهني أولًا.' });
-
     const sn = String(req.params.sn || '').toUpperCase();
+    if (!/^SN\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح' });
 
-    if (!/^SN\d{6}$/.test(sn)) {
-      return res.status(400).json({
-        message: 'كود الطلب غير صحيح'
-      });
-    }
-
-    const order = await Order.findOneAndUpdate(
-      {
-        sn,
-        status: 'تم اختيار فني',
-        assignedFanni: req.userId
-      },
-      {
-        $set: { status: 'تم الانتهاء' }
-      },
-      {
-        new: true,
-        runValidators: true
-      }
-    );
-
+    session = await mongoose.startSession();
+    session.startTransaction();
+    const order = await Order.findOne({ sn, status: 'تم اختيار فني', assignedFanni: req.userId }).session(session);
     if (!order) {
-      const existing = await Order.findOne({ sn }).select(
-        'sn status assignedFanni'
-      );
-
-      if (!existing) {
-        return res.status(404).json({
-          message: 'الطلب غير موجود'
-        });
-      }
-
-      if (String(existing.assignedFanni || '') !== String(req.userId)) {
-        return res.status(403).json({
-          message: 'هذا الطلب غير مسند إليك'
-        });
-      }
-
-      return res.status(409).json({
-        message:
-          existing.status === 'تم الانتهاء'
-            ? 'المهمة مكتملة بالفعل'
-            : 'حالة الطلب لا تسمح بإكمال المهمة'
-      });
+      await session.abortTransaction();
+      const existing = await Order.findOne({ sn }).select('sn status assignedFanni').lean();
+      if (!existing) return res.status(404).json({ message: 'الطلب غير موجود' });
+      if (String(existing.assignedFanni || '') !== String(req.userId)) return res.status(403).json({ message: 'هذا الطلب غير مسند إليك' });
+      return res.status(409).json({ message: existing.status === 'تم الانتهاء' ? 'المهمة مكتملة بالفعل' : 'حالة الطلب لا تسمح بإكمال المهمة' });
     }
 
-    // لا يتم احتساب المهمة إلا بعد انتقال الطلب بنجاح إلى حالة مكتملة.
-    await Fanni.updateOne(
-      { _id: req.userId, role: 'fanni' },
-      { $inc: { 'stats.completedJobs': 1 } }
-    );
-    await autoPromoteFanni(req.userId, 'إكمال المهمة ' + order.sn);
-    await createNotification({
-      recipientRole: 'client',
-      recipientId: order.clientAccount,
-      type: 'order_completed',
-      title: 'الفني أنهى المهمة',
-      message: 'تم تسجيل اكتمال الطلب ' + order.sn + '. افتح الطلب لتقييم الفني.',
-      link: '/?tab=orders',
-      dedupeKey: 'order-completed:' + String(order._id)
-    });
+    const fanni = await Fanni.findOne({ _id: req.userId, role: 'fanni' }).session(session);
+    if (!fanni) { await session.abortTransaction(); return res.status(404).json({ message: 'حساب الفني غير موجود.' }); }
+    let settlement = null;
+    if (order.clientPaymentStatus === 'held') {
+      const amount = Number(order.clientPaymentAmount || 0);
+      if (!Number.isFinite(amount) || amount <= 0) { await session.abortTransaction(); return res.status(409).json({ message: 'قيمة المبلغ المحجوز غير سليمة؛ لم يتم إنهاء الطلب أو صرف أي رصيد.' }); }
+      const before = Number(fanni.walletBalance || 0);
+      const updatedFanni = await Fanni.findOneAndUpdate(
+        { _id: fanni._id, role: 'fanni' },
+        { $inc: { walletBalance: amount, 'stats.completedJobs': 1 } },
+        { new: true, session, runValidators: true }
+      );
+      if (!updatedFanni) { await session.abortTransaction(); return res.status(409).json({ message: 'تعذر تحديث محفظة الفني؛ لم يتم إنهاء الطلب.' }); }
+      await new WalletTransaction({
+        fanni: fanni._id, order: order._id, orderSN: order.sn,
+        type: 'technician_settlement', amount,
+        balanceBefore: before, balanceAfter: Number(updatedFanni.walletBalance),
+        description: 'صرف مستحقات تنفيذ الطلب ' + order.sn + ' بعد تأكيد إتمام المهمة',
+        idempotencyKey: 'technician-settlement:' + String(order._id)
+      }).save({ session });
+      order.clientPaymentStatus = 'settled';
+      order.technicianSettledAt = new Date();
+      settlement = { amount, balance: Number(updatedFanni.walletBalance) };
+    } else {
+      await Fanni.updateOne({ _id: fanni._id, role: 'fanni' }, { $inc: { 'stats.completedJobs': 1 } }, { session });
+    }
+    order.status = 'تم الانتهاء';
+    await order.save({ session });
+    await session.commitTransaction();
 
+    await autoPromoteFanni(req.userId, 'إكمال المهمة ' + order.sn);
+    if (settlement) await createNotification({ recipientRole: 'fanni', recipientId: req.userId, type: 'technician_settlement', title: 'تم تحويل مستحقاتك', message: 'تم إضافة ' + settlement.amount + ' جنيه إلى محفظتك مقابل تنفيذ الطلب ' + order.sn + '.', link: '/fanni', dedupeKey: 'technician-settlement-notice:' + String(order._id) });
+    if (order.clientAccount) {
+      await createNotification({
+        recipientRole: 'client', recipientId: order.clientAccount,
+        type: 'order_completed', title: 'الفني أنهى المهمة',
+        message: settlement ? 'تم إنهاء الطلب ' + order.sn + ' وتحويل مستحقات الفني. يمكنك الآن تقييم الخدمة.' : 'تم تسجيل اكتمال الطلب ' + order.sn + '. افتح الطلب لتقييم الفني.',
+        link: '/client.html?tab=orders', dedupeKey: 'order-completed:' + String(order._id)
+      });
+    }
     return res.json({
-      message: 'تم إكمال المهمة بنجاح',
-      order: {
-        sn: order.sn,
-        status: order.status
-      }
+      message: settlement ? 'تم إكمال المهمة وتحويل مستحقاتك إلى محفظتك بنجاح.' : 'تم إكمال المهمة بنجاح',
+      order: { sn: order.sn, status: order.status, clientPaymentStatus: order.clientPaymentStatus },
+      settlement
     });
   } catch (err) {
+    if (session && session.inTransaction()) await session.abortTransaction().catch(() => {});
+    if (err && err.code === 11000) return res.status(409).json({ message: 'تم تسجيل تسوية هذا الطلب بالفعل؛ لم يتم تكرار صرف المستحقات.' });
     next(err);
+  } finally {
+    if (session) await session.endSession();
   }
 });
 

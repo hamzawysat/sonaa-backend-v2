@@ -108,6 +108,20 @@ async function run() {
       assert.equal(canAccessAdmin({ role: 'fanni', adminRole: 'مشرف' }, { path: '/fanni-profile-edits/507f1f77bcf86cd799439011/approve', method: 'POST' }), false);
     });
 
+    await test('client wallet admin routes use wallet permissions on the server', async () => {
+      const { canAccessAdmin } = require('../middleware/auth');
+      const readOnlyWalletAdmin = { role: 'admin', adminRole: 'مشرف', phone: '01000000001' };
+      const walletManager = { role: 'admin', adminRole: 'مشرف أول', phone: '01000000002' };
+      const topupRead = { method: 'GET', path: '/client-wallet/topup-requests' };
+      const topupApprove = { method: 'POST', path: '/client-wallet/topup-requests/abc/approve' };
+      const manualCredit = { method: 'POST', path: '/clients/abc/wallet/add-balance' };
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupRead), true);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupApprove), false);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualCredit), false);
+      assert.equal(canAccessAdmin(walletManager, topupApprove), true);
+      assert.equal(canAccessAdmin(walletManager, manualCredit), true);
+    });
+
     await test('custom admin permissions separate reading from execution and protect permission management', async () => {
       const user = { role: 'fanni', adminRole: 'مشرف', adminPermissions: { __customOverrides: true, orders: { read: true, write: false }, settings: { read: false, write: false } } };
       assert.equal(canAccessAdmin(user, { path: '/orders', method: 'GET' }), true);
@@ -437,6 +451,47 @@ async function run() {
       assert.ok(history.body.requests.some(item => item.id === String(storedRequest._id)));
     });
 
+    await test('client wallet top-up requests remain pending until verified by admin', async () => {
+      const Client = require('../models/Client');
+      const ClientTopupRequest = require('../models/ClientTopupRequest');
+      const client = await Client.findById(clientId);
+      assert.ok(client);
+      const beforeBalance = Number(client.walletBalance || 0);
+
+      const wallet = await request(app).get('/api/client/wallet')
+        .set('Authorization', 'Bearer ' + clientToken);
+      assert.equal(wallet.status, 200);
+      assert.equal(wallet.body.balance, beforeBalance);
+      assert.deepEqual(wallet.body.transactions, []);
+
+      const invalid = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: 'not-a-phone', amount: 100, method: 'vodafone_cash' });
+      assert.equal(invalid.status, 400);
+
+      const submitted = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST', idempotencyKey: 'client-wallet-test-key-001' });
+      assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
+      assert.equal(submitted.body.request.status, 'قيد المراجعة');
+      const duplicateSubmit = await request(app).post('/api/client/wallet/topup')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ fromPhone: '01012345682', amount: 125, method: 'vodafone_cash', reference: 'CLIENT-WALLET-TEST', idempotencyKey: 'client-wallet-test-key-001' });
+      assert.equal(duplicateSubmit.status, 200);
+      assert.equal(duplicateSubmit.body.request.id, submitted.body.request.id, 'retries with the same idempotency key must reuse the original request');
+      const stored = await ClientTopupRequest.findById(submitted.body.request.id).lean();
+      assert.ok(stored);
+      assert.equal(stored.isCredited, false);
+      assert.equal(stored.status, 'قيد المراجعة');
+      const after = await Client.findById(clientId).lean();
+      assert.equal(Number(after.walletBalance || 0), beforeBalance, 'a pending top-up must never change the client balance');
+
+      const history = await request(app).get('/api/client/wallet')
+        .set('Authorization', 'Bearer ' + clientToken);
+      assert.equal(history.status, 200);
+      assert.ok(history.body.topupRequests.some(item => item.id === String(stored._id)));
+    });
+
     await test('client notifications support unread counts, single-read, read-all, and role isolation', async () => {
       const Notification = require('../models/Notification');
       const own = await Notification.create({
@@ -513,6 +568,72 @@ async function run() {
       });
       adminToken = jwt.sign({ id: String(admin._id), role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
+      await test('admin approves a client top-up once and writes a client wallet ledger entry', async () => {
+        const Client = require('../models/Client');
+        const ClientTopupRequest = require('../models/ClientTopupRequest');
+        const WalletTransaction = require('../models/WalletTransaction');
+        const pending = await ClientTopupRequest.findOne({ client: clientId, status: 'قيد المراجعة', isCredited: false });
+        assert.ok(pending, 'client top-up fixture must be pending');
+        const before = await Client.findById(clientId).lean();
+        const beforeBalance = Number(before.walletBalance || 0);
+
+        const queue = await request(app).get('/api/admin/client-wallet/topup-requests')
+          .set('Authorization', 'Bearer ' + adminToken);
+        assert.equal(queue.status, 200);
+        assert.ok(queue.body.requests.some(item => String(item._id) === String(pending._id)));
+
+        const approved = await request(app).post('/api/admin/client-wallet/topup-requests/' + pending._id + '/approve')
+          .set('Authorization', 'Bearer ' + adminToken).send({});
+        assert.equal(approved.status, 200, JSON.stringify(approved.body));
+        assert.equal(approved.body.balance, beforeBalance + Number(pending.amount));
+
+        const after = await Client.findById(clientId).lean();
+        assert.equal(Number(after.walletBalance), beforeBalance + Number(pending.amount));
+        const ledger = await WalletTransaction.findOne({ client: clientId, type: 'client_topup', idempotencyKey: 'client-topup:' + String(pending._id) }).lean();
+        assert.ok(ledger);
+        assert.equal(Number(ledger.amount), Number(pending.amount));
+        assert.equal(Number(ledger.balanceAfter), Number(after.walletBalance));
+
+        const duplicate = await request(app).post('/api/admin/client-wallet/topup-requests/' + pending._id + '/approve')
+          .set('Authorization', 'Bearer ' + adminToken).send({});
+        assert.equal(duplicate.status, 409, 'a second approval must not credit the same request twice');
+        const finalClient = await Client.findById(clientId).lean();
+        assert.equal(Number(finalClient.walletBalance), Number(after.walletBalance));
+        assert.equal(await WalletTransaction.countDocuments({ client: clientId, idempotencyKey: 'client-topup:' + String(pending._id) }), 1);
+      });
+
+      await test('admin refunds held service payment to client wallet exactly once', async () => {
+        const Client = require('../models/Client');
+        const Order = require('../models/Order');
+        const WalletTransaction = require('../models/WalletTransaction');
+        const client = await Client.findByIdAndUpdate(clientId, { $set: { walletBalance: 10 } }, { new: true });
+        const order = await Order.create({
+          sn: 'SN998877', clientAccount: clientId, service: 'اختبار استرداد', area: 'المعادي',
+          clientName: client.name, clientPhone: client.phone, status: 'تم اختيار فني',
+          assignedFanni: admin._id, assignedFanniName: admin.name, acceptedOfferPrice: 250,
+          clientPaymentStatus: 'held', clientPaymentAmount: 250, clientPaymentAt: new Date()
+        });
+        const refund = await request(app).post('/api/admin/client-wallet/orders/' + order.sn + '/refund')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ reason: 'إلغاء الخدمة بناءً على مراجعة الإدارة' });
+        assert.equal(refund.status, 200, JSON.stringify(refund.body));
+        assert.equal(refund.body.amount, 250);
+        assert.equal(refund.body.balance, 260);
+        const refundedOrder = await Order.findById(order._id).lean();
+        assert.equal(refundedOrder.status, 'ملغي');
+        assert.equal(refundedOrder.clientPaymentStatus, 'refunded');
+        const ledger = await WalletTransaction.findOne({ order: order._id, type: 'client_refund' }).lean();
+        assert.ok(ledger);
+        assert.equal(ledger.amount, 250);
+        assert.equal(ledger.balanceAfter, 260);
+        const duplicate = await request(app).post('/api/admin/client-wallet/orders/' + order.sn + '/refund')
+          .set('Authorization', 'Bearer ' + adminToken)
+          .send({ reason: 'محاولة استرداد مكرر' });
+        assert.equal(duplicate.status, 409);
+        assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 260);
+        assert.equal(await WalletTransaction.countDocuments({ order: order._id, type: 'client_refund' }), 1);
+      });
+
       const adminPasswordChange = await request(app).post('/api/password-recovery/change/admin')
         .set('Authorization', 'Bearer ' + adminToken)
         .send({ currentPassword: 'AdminTestPass123', newPassword: 'AdminChangedPass123', confirmPassword: 'AdminChangedPass123' });
@@ -562,14 +683,17 @@ async function run() {
         .set('Authorization', 'Bearer ' + malformedConToken);
       assert.equal(rejectedConToken.status, 401, 'CON marker with wrong audience must be rejected');
 
+      const areaCountBeforeLegacyTechnician = await request(app).get('/api/areas');
+      assert.equal(areaCountBeforeLegacyTechnician.status, 200);
+      const previousMaadiCount = areaCountBeforeLegacyTechnician.body.technicianCountByArea?.['المعادي'] || 0;
       const fanni = await Fanni.create({
         name: 'فني اختبار', phone: '01012345680', passwordHash: await bcrypt.hash('FanniOldPass123', 12),
-        specialties: ['صيانة تكييف'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
+        specialties: ['خدمة تاريخية غير منشورة للاختبار'], areas: ['المعادي'], status: 'معتمد', role: 'fanni'
       });
       const legacyOnlyAreas = await request(app).get('/api/areas');
       assert.equal(legacyOnlyAreas.status, 200);
-      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, 0,
-        'approved technicians with only historical services must not count as available');
+      assert.equal(legacyOnlyAreas.body.technicianCountByArea?.['المعادي'] || 0, previousMaadiCount,
+        'approved technicians with only historical services must not increase the available technician count');
       const oldFanniToken = jwt.sign({ id: String(fanni._id), role: 'fanni' }, process.env.JWT_SECRET, { expiresIn: '30d' });
       const fanniPasswordReset = await request(app).patch('/api/admin/fannis/' + fanni._id + '/password')
         .set('Authorization', 'Bearer ' + adminToken)
@@ -586,7 +710,7 @@ async function run() {
       const adminFanniProfile = await request(app).get('/api/admin/fannis/' + fanni._id + '/profile').set('Authorization', 'Bearer ' + adminToken);
       assert.equal(adminFanniProfile.status, 200);
       assert.deepEqual(adminFanniProfile.body.fanni.specialties, [], 'admin profile editor must receive only active services');
-      assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['صيانة تكييف'], 'historical specialties must remain preserved in the database');
+      assert.deepEqual((await Fanni.findById(fanni._id).lean()).specialties, ['خدمة تاريخية غير منشورة للاختبار'], 'historical specialties must remain preserved in the database');
 
       await test('admin technician trust and visibility controls save their decision history', async () => {
         const response = await request(app).patch('/api/admin/fannis/' + fanni._id + '/profile-controls')
@@ -616,7 +740,7 @@ async function run() {
         const persisted = await Fanni.findById(fanni._id).lean();
         assert.equal(persisted.pendingProfileChange.phone, '01012345680');
         assert.deepEqual(persisted.pendingProfileChange.areas, ['مدينة نصر']);
-        assert.deepEqual(persisted.pendingProfileChange.specialties, ['صيانة تكييف', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
+        assert.deepEqual(persisted.pendingProfileChange.specialties, ['خدمة تاريخية غير منشورة للاختبار', 'صيانة دش'], 'legacy specialties must remain stored while the new service is requested');
         const queue = await request(app).get('/api/admin/fanni-profile-edits')
           .set('Authorization', 'Bearer ' + adminToken);
         assert.equal(queue.status, 200, JSON.stringify(queue.body));
@@ -1116,6 +1240,73 @@ async function run() {
         .set('Authorization', 'Bearer ' + clientToken);
       assert.ok(finalChat.body.messages.some(message => message.text === 'تم تحديد موعد الزيارة.'));
       assert.ok(finalChat.body.messages.some(message => message.text === 'شكرًا، في انتظارك.'));
+
+      const Client = require('../models/Client');
+      await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 1000 } });
+      const servicePayment = await request(app).post('/api/client/orders/' + order.sn + '/pay')
+        .set('Authorization', 'Bearer ' + clientToken).send({});
+      assert.equal(servicePayment.status, 200, JSON.stringify(servicePayment.body));
+      assert.equal(servicePayment.body.balance, 500);
+      assert.equal(servicePayment.body.paymentStatus, 'held');
+      const heldOrder = await Order.findById(order._id).lean();
+      assert.equal(heldOrder.clientPaymentStatus, 'held');
+      assert.equal(heldOrder.clientPaymentAmount, 500);
+      const holdLedger = await WalletTransaction.findOne({ order: order._id, type: 'client_escrow_hold' }).lean();
+      assert.ok(holdLedger);
+      assert.equal(holdLedger.amount, -500);
+
+      const completed = await request(app).post('/api/orders/' + order.sn + '/complete')
+        .set('Authorization', 'Bearer ' + fanniToken).send({});
+      assert.equal(completed.status, 200, JSON.stringify(completed.body));
+      assert.equal(completed.body.settlement.amount, 500);
+      assert.equal(completed.body.settlement.balance, 1450);
+      const settledOrder = await Order.findById(order._id).lean();
+      assert.equal(settledOrder.status, 'تم الانتهاء');
+      assert.equal(settledOrder.clientPaymentStatus, 'settled');
+      assert.ok(settledOrder.technicianSettledAt);
+      const settlementLedger = await WalletTransaction.findOne({ order: order._id, type: 'technician_settlement' }).lean();
+      assert.ok(settlementLedger);
+      assert.equal(settlementLedger.amount, 500);
+      const duplicateCompletion = await request(app).post('/api/orders/' + order.sn + '/complete')
+        .set('Authorization', 'Bearer ' + fanniToken).send({});
+      assert.equal(duplicateCompletion.status, 409, 'completed orders must not credit the technician twice');
+      assert.equal((await Fanni.findById(fanni._id).lean()).walletBalance, 1450);
+
+      const CommerceItem = require('../models/CommerceItem');
+      const ClientSubscription = require('../models/ClientSubscription');
+      const plan = await CommerceItem.create({
+        kind: 'subscription', name: 'باقة اختبار العميل', price: 50,
+        durationDays: 30, active: true, features: ['تجربة الدفع']
+      });
+      const purchaseKey = 'test-client-subscription-purchase-0001';
+      const purchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });
+      assert.equal(purchase.status, 201, JSON.stringify(purchase.body));
+      assert.equal(purchase.body.balance, 450);
+      assert.equal(purchase.body.subscription.status, 'active');
+      assert.equal(purchase.body.subscription.paymentStatus, 'paid');
+      assert.equal(purchase.body.subscription.durationDays, 30);
+      const subscriptionId = String(purchase.body.subscription._id);
+      const purchaseLedger = await WalletTransaction.findOne({ client: clientId, idempotencyKey: purchaseKey }).lean();
+      assert.ok(purchaseLedger);
+      assert.equal(purchaseLedger.amount, -50);
+
+      const renewalKey = 'test-client-subscription-renew-0001';
+      const renewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ idempotencyKey: renewalKey });
+      assert.equal(renewal.status, 200, JSON.stringify(renewal.body));
+      assert.equal(renewal.body.balance, 400);
+      const renewed = await ClientSubscription.findById(subscriptionId).lean();
+      assert.equal(renewed.history.length, 2);
+      const duplicateRenewal = await request(app).post('/api/client/commerce/subscriptions/' + subscriptionId + '/renew')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ idempotencyKey: renewalKey });
+      assert.equal(duplicateRenewal.status, 200);
+      assert.equal(duplicateRenewal.body.duplicate, true);
+      assert.equal((await ClientSubscription.findById(subscriptionId).lean()).history.length, 2);
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), 400);
     });
 
     await test('order chat rejects revoked technician sessions after password changes', async () => {

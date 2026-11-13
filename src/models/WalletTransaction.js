@@ -7,9 +7,11 @@ const walletTransactionSchema = new mongoose.Schema({
   fanni: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Fanni',
-    required: true,
+    default: null,
     index: true
   },
+
+  client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', default: null, index: true },
 
   order: {
     type: mongoose.Schema.Types.ObjectId,
@@ -27,7 +29,7 @@ const walletTransactionSchema = new mongoose.Schema({
 
   type: {
     type: String,
-    enum: ['commission', 'topup', 'admin_adjustment', 'refund'],
+    enum: ['commission', 'topup', 'admin_adjustment', 'refund', 'client_topup', 'client_admin_adjustment', 'client_service_payment', 'client_subscription_payment', 'client_refund', 'client_escrow_hold', 'client_escrow_release', 'technician_settlement'],
     required: true,
     index: true
   },
@@ -83,9 +85,10 @@ walletTransactionSchema.index({
   createdAt: -1
 });
 
-walletTransactionSchema.index({
-  order: 1,
-  type: 1
+walletTransactionSchema.index({ order: 1, type: 1 });
+walletTransactionSchema.index({ client: 1, createdAt: -1 });
+walletTransactionSchema.pre('validate', function () {
+  if (Boolean(this.fanni) === Boolean(this.client)) this.invalidate('client', 'يجب تحديد مالك واحد للحركة المالية');
 });
 
 module.exports = mongoose.model(

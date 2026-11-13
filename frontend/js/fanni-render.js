@@ -274,6 +274,13 @@ function renderContent(){
       </div>`).join('')}
      </div>
     </div>
+    <div class="panel p-4">
+     <h4 class="text-[13px] font-extrabold">سجل الحركات المالية</h4>
+     <p class="text-[10px] text-slate-500 mt-1">كل الإضافات والخصومات ومستحقات الطلبات التي تم تحويلها لمحفظتك.</p>
+     <div class="mt-3 space-y-2">
+      ${(state.walletTransactions||[]).length?(state.walletTransactions||[]).map(x=>'<div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><div class="flex justify-between gap-2"><b class="text-[11px]">'+esc(x.type==='technician_settlement'?'مستحقات تنفيذ طلب':x.type==='commission'?'عمولة المنصة':x.type==='topup'?'شحن محفظة':x.type==='admin_adjustment'?'تسوية إدارية':x.type==='refund'?'استرداد':'حركة مالية')+'</b><strong class="'+(Number(x.amount)>=0?'text-emerald-700':'text-red-700')+'">'+(Number(x.amount)>0?'+':'')+esc(String(x.amount))+' ج</strong></div><p class="mt-1 text-[10px] text-slate-600">'+esc(x.description||'')+'</p><p class="mt-1 text-[9px] text-slate-400">'+(x.createdAt?esc(new Date(x.createdAt).toLocaleString('ar-EG')):'')+'</p></div>').join(''):'<div class="rounded-xl bg-slate-50 p-5 text-center text-[11px] text-slate-500">لا توجد حركات مالية مسجلة حتى الآن.</div>'}
+     </div>
+    </div>
    </section>`:''}
 
   ${state.tab==='profile'?`

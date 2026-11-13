@@ -318,7 +318,7 @@ let state={
  offerError:'',offerSubmitting:false,
  walletFromPhone:'',walletAmount:'',walletRef:'',walletMethod:'vodafone_cash',
  walletPhone1:'',walletPhone2:'',
- walletLoading:false,walletHistory:[],walletBalance:0,
+ walletLoading:false,walletHistory:[],walletTransactions:[],walletBalance:0,
  error:'',success:'',pendingMsg:''
 };
 
@@ -389,7 +389,7 @@ function performFanniLogout(){
  currentUser=null;
  Object.assign(state,{
   tab:'login',orders:[],filteredOrders:[],myOffers:[],
-  walletHistory:[],walletBalance:0,error:'',success:'',
+  walletHistory:[],walletTransactions:[],walletBalance:0,error:'',success:'',
   pendingMsg:'',offerModal:null,loading:false
  });
  render();

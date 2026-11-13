@@ -13,6 +13,7 @@ process.env.PORT = process.env.PORT || '4173';
 
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const request = require('supertest');
+const { ALL_SERVICES } = require('../src/config/professions');
 
 (async () => {
   const mongo = await MongoMemoryReplSet.create({
@@ -36,7 +37,7 @@ const request = require('supertest');
     name: 'فني اختبار المتصفح',
     phone: '01012345671',
     password: 'FanniSmokePass123',
-    specialties: ['صيانة تكييف'],
+    specialties: [ALL_SERVICES[0]],
     areas: ['المعادي']
   });
   if (technician.status !== 201) throw new Error('Unable to seed browser-test technician: HTTP ' + technician.status);

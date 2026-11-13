@@ -6,11 +6,11 @@ const { normalizePhone } = require('../utils/phone');
 
 const ADMIN_ROLES = ['مشرف', 'مشرف أول', 'مدير', 'قراءة فقط'];
 
-const ADMIN_PERMISSION_KEYS = ['dashboard','fannis','orders','publishOrders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','settings','content','support','regions','offers','notifications','clientsData'];
+const ADMIN_PERMISSION_KEYS = ['dashboard','fannis','orders','publishOrders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','settings','content','support','regions','offers','notifications','clientsData','commerce'];
 const ROLE_WRITE_SECTIONS = {
   'قراءة فقط': [],
   'مشرف': ['orders','complaints','support','offers'],
-  'مشرف أول': ['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData'],
+  'مشرف أول': ['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData','commerce'],
   'مدير': ADMIN_PERMISSION_KEYS
 };
 function defaultAdminPermissions(role) {
@@ -28,7 +28,7 @@ function defaultAdminPermissions(role) {
 
 const PERMISSION_SECTIONS = {
   dashboard: [/^\/me$/, /^\/counts$/, /^\/mobile-panel$/, /^\/reports?(\/|$)/, /^\/stats?(\/|$)/],
-  wallet: [/^\/wallet(\/|$)/, /^\/fannis\/[^/]+\/(set-balance|add-balance)$/],
+  wallet: [/^\/wallet(\/|$)/, /^\/client-wallet(\/|$)/, /^\/clients\/[^/]+\/wallet\/add-balance$/, /^\/fannis\/[^/]+\/(set-balance|add-balance)$/],
   fannis: [/^\/fannis(\/|$)/, /^\/fanni-profile-edits(\/|$)/],
   publishOrders: [/^\/admin\/[^/]+\/publish$/],
   voiceReview: [/^\/[^/]+\/voice$/, /^\/admin\/[^/]+\/voice-reviewed$/],
@@ -45,7 +45,8 @@ const PERMISSION_SECTIONS = {
   regions: [/^\/regions(\/|$)/],
   offers: [/^\/offers(\/|$)/],
   notifications: [/^\/notifications(\/|$)/],
-  clientsData: [/^\/client-accounts(\/|$)/]
+  clientsData: [/^\/client-accounts(\/|$)/],
+  commerce: [/^\/commerce(\/|$)/]
 };
 
 function isRootAdmin(user) {

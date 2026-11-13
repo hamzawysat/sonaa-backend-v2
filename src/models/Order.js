@@ -211,6 +211,11 @@ min: 0,
 default: null
 },
 
+clientPaymentStatus: { type: String, enum: ['unpaid', 'held', 'settled', 'refunded'], default: 'unpaid', index: true },
+clientPaymentAmount: { type: Number, min: 0, default: 0 },
+clientPaymentAt: { type: Date, default: null },
+technicianSettledAt: { type: Date, default: null },
+
 // نسبة عمولة المنصة.
 commissionRate: {
 type: Number,
