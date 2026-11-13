@@ -20,9 +20,10 @@ async function buyFanniStoreProduct(itemId){
   const quantity=Number(prompt('اكتب الكمية المطلوبة:','1'));
   if(!Number.isInteger(quantity)||quantity<1||quantity>100)return toast('الكمية يجب أن تكون من 1 إلى 100.','error');
   const note=prompt('أي تفاصيل إضافية للطلب؟ (اختياري)','')||'';
+  const requestKey=(window.crypto&&typeof window.crypto.randomUUID==='function')?window.crypto.randomUUID():'store-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   if(!confirm('تأكيد طلب '+quantity+' من '+item.name+' بإجمالي '+(Number(item.price)*quantity)+' جنيه؟ لن يتم خصم أي مبلغ الآن.'))return;
   state.storeSubmitting=true;render();
-  try{const result=await apiPost('/api/fanni/commerce/product-orders',{itemId:String(itemId),quantity,note});toast(result.message||'تم تسجيل الطلب وإشعار الإدارة.');await loadFanniStore();}
+  try{const result=await apiPost('/api/fanni/commerce/product-orders',{itemId:String(itemId),quantity,note,requestKey});toast(result.message||'تم تسجيل الطلب وإشعار الإدارة.');await loadFanniStore();}
   catch(error){toast(error.message||'تعذر تسجيل الطلب.','error');}
   finally{state.storeSubmitting=false;render();}
 }
