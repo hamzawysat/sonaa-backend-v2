@@ -11,7 +11,9 @@ async function submitStorePurchase(role,id){
   if(!Number.isInteger(quantity)||quantity<1||quantity>1000){if(role==='client')showToast('الكمية غير صحيحة','error');else toast('الكمية غير صحيحة','error');return;}
   const note=prompt('أي تفاصيل أو ملاحظات للإدارة؟','')||'';
   let paymentMethod;
-  if(role==='client'){
+  const product=(state.storeProducts||[]).find(item=>String(item._id)===String(id));
+  const isSubscription=product?.type==='subscription';
+  if(role==='client'&&!isSubscription){
     const balance=Number(state.walletBalance||0);
     const choice=prompt('اختار طريقة الدفع:\n1 - الدفع من محفظتي (الرصيد الحالي: '+balance.toLocaleString('ar-EG')+' جنيه)\n2 - الدفع عند الاستلام','1');
     if(choice===null)return;
