@@ -346,7 +346,7 @@ router.use(createAdminClientWalletRouter({
   adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT
 }));
 
-router.use(createAdminCommerceRouter({ auth, validate, Joi, Client, CommerceItem, ClientSubscription, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
+router.use(createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, CommerceItem, ClientSubscription, WalletTransaction, adminName, writeAdminAudit, createNotification, validId, sendBadId, MAX_LIST_LIMIT }));
 
 router.delete('/clients/:phone/account', auth('admin'), async (req, res, next) => {
   try {
