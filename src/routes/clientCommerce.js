@@ -11,7 +11,7 @@ function createClientCommerceRouter({ clientAuth, Client, Order, CommerceItem, C
     let notice = null;
     try {
       const sn = String(req.params.sn || '').trim().toUpperCase();
-      if (!/^SN\\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح.' });
+      if (!/^SN\d{6}$/.test(sn)) return res.status(400).json({ message: 'كود الطلب غير صحيح.' });
       if (req.client.status !== 'نشط') return res.status(403).json({ message: 'حساب العميل غير نشط.' });
       if (req.client.walletFrozen) return res.status(403).json({ message: 'محفظتك مجمدة حاليًا.' });
       session = await mongoose.startSession();
