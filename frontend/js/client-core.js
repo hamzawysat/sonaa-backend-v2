@@ -309,7 +309,7 @@ let state={
   servicesLoading:true,servicesError:'',servicesLoaded:false,publicContent:{siteName:'حمزاوي سات',maintenance:false,maintenanceMessage:'',announcement:'',faqs:[]},
   
 };
-const CLIENT_TAB_DEFINITIONS=[{id:'new',label:'طلب جديد'},{id:'orders',label:'طلباتي'},{id:'wallet',label:'محفظتي'},{id:'subscriptions',label:'اشتراكاتي'},{id:'complaint',label:'شكوى'}];
+const CLIENT_TAB_DEFINITIONS=[{id:'new',label:'طلب جديد'},{id:'orders',label:'طلباتي'},{id:'wallet',label:'محفظتي'},{id:'subscriptions',label:'الاشتراكات'},{id:'complaint',label:'شكوى'}];
 if(window.IS_EDITOR_PREVIEW){
   const previewTab=window.PREVIEW_REQUESTED_TAB||'login';
   if(previewTab==='register'){
