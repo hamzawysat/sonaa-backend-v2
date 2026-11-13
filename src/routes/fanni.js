@@ -490,6 +490,7 @@ router.get(
 
 const storeOrderSchema = Joi.object({
   itemId: Joi.string().trim().required(),
+  requestKey: Joi.string().trim().pattern(/^[a-zA-Z0-9:_-]{16,150}$/).required(),
   quantity: Joi.number().integer().min(1).max(100).default(1),
   note: Joi.string().trim().max(500).allow('').default('')
 }).unknown(false);
