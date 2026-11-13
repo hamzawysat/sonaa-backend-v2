@@ -64,6 +64,8 @@ function safeOrder(order, clientRating = null, ratingsByFanni = new Map(), compl
     assignedFanniPhone: data.status === 'تم اختيار فني' && acceptedOffer ? (acceptedOffer.fanniPhone || '') : '',
     acceptedOfferId: data.acceptedOfferId || null,
     acceptedOfferPrice: data.acceptedOfferPrice ?? null,
+    clientPaymentStatus: data.clientPaymentStatus || 'unpaid',
+    clientPaymentAmount: Number(data.clientPaymentAmount || 0),
     offers: (() => {
       const seenTechnicians = new Set();
       const uniqueOffers = (Array.isArray(data.offers) ? data.offers : []).filter(offer => {
