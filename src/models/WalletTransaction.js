@@ -29,7 +29,7 @@ const walletTransactionSchema = new mongoose.Schema({
 
   type: {
     type: String,
-    enum: ['commission', 'topup', 'admin_adjustment', 'refund', 'client_topup', 'client_admin_adjustment', 'client_service_payment', 'client_subscription_payment', 'client_refund', 'client_escrow_hold', 'client_escrow_release', 'technician_settlement'],
+    enum: ['commission', 'topup', 'admin_adjustment', 'refund', 'client_topup', 'client_admin_adjustment', 'client_admin_deduction', 'client_admin_settlement', 'client_service_payment', 'client_subscription_payment', 'client_refund', 'client_escrow_hold', 'client_escrow_release', 'technician_settlement'],
     required: true,
     index: true
   },
