@@ -26,7 +26,7 @@ const clientSubscriptionSchema = new mongoose.Schema({
   createdBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' },
   updatedBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' }
 }, { timestamps: true });
-clientSubscriptionSchema.index({ client: 1, requestKey: 1 }, { unique: true, sparse: true });
+clientSubscriptionSchema.index({ client: 1, requestKey: 1 }, { unique: true, partialFilterExpression: { requestKey: { $type: 'string' } } });
 clientSubscriptionSchema.index({ client: 1, status: 1, endsAt: -1 });
 clientSubscriptionSchema.index({ status: 1, endsAt: 1 });
 module.exports = mongoose.models.ClientSubscription || mongoose.model('ClientSubscription', clientSubscriptionSchema);
