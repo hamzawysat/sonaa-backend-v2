@@ -1,6 +1,6 @@
 'use strict';
 
-function setTab(tab){state.tab=tab;render();if(tab==='wallet'&&state.accountToken&&typeof loadClientWallet==='function')loadClientWallet();}
+function setTab(tab){state.tab=tab;render();if(tab==='wallet'&&state.accountToken&&typeof loadClientWallet==='function')loadClientWallet();if(tab==='subscriptions'&&state.accountToken&&typeof loadClientCommerce==='function')loadClientCommerce();}
 function toggleService(){
   if(state.servicesLoading){if(state.servicesError)loadServices();return;}
   if(state.servicesError){loadServices();return;}
