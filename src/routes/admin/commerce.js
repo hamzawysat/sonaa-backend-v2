@@ -162,7 +162,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       const duration = Number(item?.durationDays || subscription.durationDays || 30);
       const now = new Date(), startsAt = subscription.endsAt && new Date(subscription.endsAt) > now ? new Date(subscription.endsAt) : now;
       const endsAt = new Date(startsAt.getTime() + duration * 86400000);
-      const amount = req.body.amount === undefined ? Number(subscription.amount || item?.price || 0) : Number(req.body.amount);
+      const amount = req.body.amount === undefined ? Number(item?.price ?? subscription.amount ?? 0) : Number(req.body.amount);
       subscription.startsAt = subscription.startsAt || startsAt;
       subscription.endsAt = endsAt; subscription.status = 'active'; subscription.paymentStatus = req.body.paymentStatus;
       subscription.amount = amount; subscription.updatedBy = adminName(req);
