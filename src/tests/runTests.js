@@ -1344,7 +1344,6 @@ async function run() {
 
       const CommerceItem = require('../models/CommerceItem');
       const ClientSubscription = require('../models/ClientSubscription');
-      const Client = require('../models/Client');
       const plan = await CommerceItem.create({
         kind: 'subscription', name: 'باقة اختبار العميل', price: 50,
         durationDays: 30, active: true, features: ['تجربة الدفع']
