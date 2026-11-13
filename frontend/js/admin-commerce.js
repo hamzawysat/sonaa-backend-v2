@@ -46,5 +46,49 @@ async function editClientSubscriptionDetails(id){
 async function renewClientSubscription(id){if(!confirm('تأكيد تجديد الاشتراك؟'))return;try{await tryApi(['/api/admin/commerce/subscriptions/'+encodeURIComponent(id)+'/renew'],{method:'POST',body:JSON.stringify({})});showToast('تم تجديد الاشتراك','success');await loadClientSubscriptions();}catch(error){showToast(error.message||'تعذر تجديد الاشتراك','error');}}
 async function changeClientSubscriptionStatus(id,status){try{await tryApi(['/api/admin/commerce/subscriptions/'+encodeURIComponent(id)+'/status'],{method:'PATCH',body:JSON.stringify({status,reason:'تحديث من لوحة الإدارة'})});showToast('تم تحديث حالة الاشتراك','success');await loadClientSubscriptions();}catch(error){showToast(error.message||'تعذر تحديث الاشتراك','error');}}
 function renderCommercePlans(){const rows=state.commerceItems||[];return `<section class="mt-4 space-y-3"><div class="premium-panel p-4 flex items-center justify-between gap-2"><div><h2 class="font-black text-sm">باقات الاشتراك</h2><p class="text-[11px] text-slate-500 mt-1">كتالوج مرن قابل لإضافة المنتجات لاحقًا</p></div><button class="pill-btn primary-btn" onclick="openCommercePlanEditor()">إضافة باقة</button></div>${state.commerceLoading?'<p class="text-center p-5">جاري التحميل...</p>':''}${rows.length?rows.map(item=>`<article class="premium-card p-4 flex items-center justify-between gap-3"><div class="min-w-0"><h3 class="font-black text-sm">${escHtml(item.name)}</h3><p class="text-xs text-slate-500 mt-1">${Number(item.price).toLocaleString('ar-EG')} جنيه · ${Number(item.durationDays)} يوم</p><p class="text-[11px] text-slate-500 mt-1">${escHtml(item.description||'')}</p><p class="text-[10px] text-slate-500 mt-1" dir="ltr">${escHtml(item._id)}</p><span class="text-[10px] font-bold ${item.active?'text-emerald-700':'text-red-600'}">${item.active?'مفعلة':'متوقفة'}</span></div><div class="flex flex-col gap-2 shrink-0"><button class="pill-btn soft-btn" onclick="openCommercePlanEditor('${item._id}')">تعديل</button><button class="pill-btn soft-btn" onclick="toggleCommercePlan('${item._id}')">${item.active?'إيقاف':'تفعيل'}</button></div></article>`).join(''):'<p class="premium-panel p-6 text-center text-sm text-slate-500">لا توجد باقات حتى الآن.</p>'}</section>`;}
-function renderCommerceSubscriptions(){const rows=state.clientSubscriptions||[];return `<section class="mt-4 space-y-3"><div class="premium-panel p-4 flex items-center justify-between gap-2"><div><h2 class="font-black text-sm">اشتراكات العملاء</h2><p class="text-[11px] text-slate-500 mt-1">التفعيل والتجديد والإيقاف ومتابعة المدة</p></div><button class="pill-btn primary-btn" onclick="createClientSubscription()">إضافة اشتراك</button></div>${state.commerceLoading?'<p class="text-center p-5">جاري التحميل...</p>':''}${rows.length?rows.map(sub=>{const client=sub.client||{};const end=sub.endsAt?new Date(sub.endsAt).toLocaleDateString('ar-EG'):'—';const status=({active:'نشط',pending:'بانتظار التفعيل',paused:'موقوف مؤقتًا',cancelled:'ملغي',expired:'منتهي'})[sub.status]||sub.status;return `<article class="premium-card p-4 space-y-2"><div class="flex items-start justify-between gap-2"><div><h3 class="font-black text-sm">${escHtml(client.name||'عميل')}</h3><p class="text-xs text-slate-500" dir="ltr">${escHtml(client.phone||'')}</p></div><span class="text-xs font-black">${escHtml(status)}</span></div><p class="text-sm font-bold">${escHtml(sub.itemName)} · ${Number(sub.amount||0).toLocaleString('ar-EG')} جنيه</p><p class="text-xs text-slate-500">ينتهي: ${end} · الدفع: ${escHtml(sub.paymentStatus||'')}</p>${sub.subscriptionDetails?'<div class="rounded-xl border border-blue-100 bg-blue-50 p-3 text-[11px] leading-6 whitespace-pre-wrap break-words"><b class="block mb-1">تفاصيل الاشتراك</b>'+escHtml(sub.subscriptionDetails)+'</div>':''}<div class="flex flex-wrap gap-2"><button class="pill-btn soft-btn" onclick="editClientSubscriptionDetails(\'${sub._id}\')">${sub.subscriptionDetails?'تعديل التفاصيل':'إضافة تفاصيل الاشتراك'}</button><button class="pill-btn soft-btn" onclick="renewClientSubscription('${sub._id}')">تجديد</button>${sub.status==='active'?'<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus(\''+sub._id+'\',\'paused\')">إيقاف مؤقت</button>':'<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus(\''+sub._id+'\',\'active\')">تفعيل</button>'}<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus('${sub._id}','cancelled')">إلغاء</button></div></article>`}).join(''):'<p class="premium-panel p-6 text-center text-sm text-slate-500">لا توجد اشتراكات مسجلة.</p>'}</section>`;}
+function renderCommerceSubscriptions(){
+  const rows=state.clientSubscriptions||[];
+  const now=Date.now();
+  const groupOf=sub=>{
+    const status=String(sub.status||'').toLowerCase();
+    if(status==='pending')return 'pending';
+    if(status==='active'){
+      if(!sub.endsAt)return 'active';
+      const end=Date.parse(sub.endsAt);
+      return Number.isFinite(end)&&end>now?'active':'expired';
+    }
+    // Keep paused/cancelled/expired and unknown legacy records visible in the non-active tab.
+    return 'expired';
+  };
+  const tabs=[
+    {id:'active',label:'الاشتراكات السارية'},
+    {id:'expired',label:'الاشتراكات المنتهية'},
+    {id:'pending',label:'طلبات الاشتراك الجديدة'}
+  ];
+  const selected=tabs.some(tab=>tab.id===state.clientSubscriptionStatusTab)?state.clientSubscriptionStatusTab:'active';
+  state.clientSubscriptionStatusTab=selected;
+  const filtered=rows.filter(sub=>groupOf(sub)===selected);
+  const tabButtons=tabs.map(tab=>{
+    const count=rows.filter(sub=>groupOf(sub)===tab.id).length;
+    return '<button type="button" onclick="setClientSubscriptionStatusTab(\''+tab.id+'\')" class="rounded-xl px-3 py-2 text-[11px] font-black border '+(selected===tab.id?'bg-blue-700 text-white border-blue-700':'bg-white text-slate-700 border-slate-200')+'">'+tab.label+' <span class="mr-1">'+count+'</span></button>';
+  }).join('');
+  const cards=filtered.map(sub=>{
+    const client=sub.client||{};
+    const end=sub.endsAt?new Date(sub.endsAt).toLocaleDateString('ar-EG'):'—';
+    const labels={active:'نشط',pending:'بانتظار التفعيل',paused:'موقوف مؤقتًا',cancelled:'ملغي',expired:'منتهي'};
+    const status=labels[sub.status]||sub.status||'غير محدد';
+    return '<article class="premium-card p-4 space-y-2"><div class="flex items-start justify-between gap-2"><div><h3 class="font-black text-sm">'+escHtml(client.name||'عميل')+'</h3><p class="text-xs text-slate-500" dir="ltr">'+escHtml(client.phone||'')+'</p></div><span class="text-xs font-black">'+escHtml(status)+'</span></div>'+
+      '<p class="text-sm font-bold">'+escHtml(sub.itemName||'اشتراك')+' · '+Number(sub.amount||0).toLocaleString('ar-EG')+' جنيه</p>'+
+      '<p class="text-xs text-slate-500">ينتهي: '+end+' · الدفع: '+escHtml(sub.paymentStatus||'')+'</p>'+
+      (sub.subscriptionDetails?'<div class="rounded-xl border border-blue-100 bg-blue-50 p-3 text-[11px] leading-6 whitespace-pre-wrap break-words"><b class="block mb-1">تفاصيل الاشتراك</b>'+escHtml(sub.subscriptionDetails)+'</div>':'')+
+      '<div class="flex flex-wrap gap-2"><button class="pill-btn soft-btn" onclick="editClientSubscriptionDetails(\''+escHtml(sub._id)+'\')">'+(sub.subscriptionDetails?'تعديل التفاصيل':'إضافة تفاصيل الاشتراك')+'</button>'+
+      '<button class="pill-btn soft-btn" onclick="renewClientSubscription(\''+escHtml(sub._id)+'\')">تجديد</button>'+
+      (sub.status==='active'?'<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus(\''+escHtml(sub._id)+'\',\'paused\')">إيقاف مؤقت</button>':'<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus(\''+escHtml(sub._id)+'\',\'active\')">تفعيل</button>')+
+      '<button class="pill-btn soft-btn" onclick="changeClientSubscriptionStatus(\''+escHtml(sub._id)+'\',\'cancelled\')">إلغاء</button></div></article>';
+  }).join('');
+  return '<section class="mt-4 space-y-3"><div class="premium-panel p-4 flex items-center justify-between gap-2"><div><h2 class="font-black text-sm">اشتراكات العملاء</h2><p class="text-[11px] text-slate-500 mt-1">متابعة الاشتراكات السارية والمنتهية وطلبات التفعيل الجديدة</p></div><button class="pill-btn primary-btn" onclick="createClientSubscription()">إضافة اشتراك</button></div>'+
+    '<div class="flex flex-wrap gap-2">'+tabButtons+'</div>'+
+    (state.commerceLoading?'<p class="text-center p-5">جاري التحميل...</p>':'')+
+    (filtered.length?cards:'<p class="premium-panel p-6 text-center text-sm text-slate-500">لا توجد سجلات في هذا التبويب.</p>')+'</section>';
+}
 function renderCommerce(){return state.tab==='commercePlans'?renderCommercePlans():renderCommerceSubscriptions();}
