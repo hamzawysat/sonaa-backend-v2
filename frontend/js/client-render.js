@@ -310,6 +310,7 @@ ${state.tracked.acceptedOfferId && String(state.tracked.acceptedOfferId)===offer
       </div>`:''}
     </div>`:''}
     ${state.tab==='wallet'?renderClientWallet():''}
+     ${state.tab==='subscriptions'?renderClientSubscriptions():''}
     ${state.tab==='complaint'?`
     <div class="mt-4 animate-fade">
       <div class="panel p-4 sm:p-5">
