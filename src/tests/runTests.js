@@ -1350,6 +1350,19 @@ async function run() {
       });
       const purchaseKey = 'test-client-subscription-purchase-0001';
       const balanceBeforeRequest = Number((await Client.findById(clientId).lean()).walletBalance);
+      const overpricedPlan = await CommerceItem.create({
+        kind: 'subscription', name: 'باقة أعلى من الرصيد', price: balanceBeforeRequest + 1,
+        durationDays: 30, active: true, features: ['اختبار الرصيد غير الكافي']
+      });
+      const insufficientRequest = await request(app).post('/api/client/commerce/subscriptions/purchase')
+        .set('Authorization', 'Bearer ' + clientToken)
+        .send({ itemId: String(overpricedPlan._id), idempotencyKey: 'test-client-subscription-insufficient-0001' });
+      assert.equal(insufficientRequest.status, 409, JSON.stringify(insufficientRequest.body));
+      assert.equal(insufficientRequest.body.required, balanceBeforeRequest + 1);
+      assert.equal(insufficientRequest.body.balance, balanceBeforeRequest);
+      assert.equal(await ClientSubscription.countDocuments({ client: clientId, item: overpricedPlan._id }), 0, 'insufficient balance must not create a pending subscription');
+      assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), balanceBeforeRequest, 'failed request must not debit wallet');
+
       const purchase = await request(app).post('/api/client/commerce/subscriptions/purchase')
         .set('Authorization', 'Bearer ' + clientToken)
         .send({ itemId: String(plan._id), idempotencyKey: purchaseKey });
