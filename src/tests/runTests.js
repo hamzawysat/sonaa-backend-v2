@@ -1209,6 +1209,37 @@ async function run() {
         .set('Authorization', 'Bearer ' + clientToken);
       assert.ok(finalChat.body.messages.some(message => message.text === 'تم تحديد موعد الزيارة.'));
       assert.ok(finalChat.body.messages.some(message => message.text === 'شكرًا، في انتظارك.'));
+
+      const Client = require('../models/Client');
+      await Client.updateOne({ _id: clientId }, { $set: { walletBalance: 1000 } });
+      const servicePayment = await request(app).post('/api/client/orders/' + order.sn + '/pay')
+        .set('Authorization', 'Bearer ' + clientToken).send({});
+      assert.equal(servicePayment.status, 200, JSON.stringify(servicePayment.body));
+      assert.equal(servicePayment.body.balance, 500);
+      assert.equal(servicePayment.body.paymentStatus, 'held');
+      const heldOrder = await Order.findById(order._id).lean();
+      assert.equal(heldOrder.clientPaymentStatus, 'held');
+      assert.equal(heldOrder.clientPaymentAmount, 500);
+      const holdLedger = await WalletTransaction.findOne({ order: order._id, type: 'client_escrow_hold' }).lean();
+      assert.ok(holdLedger);
+      assert.equal(holdLedger.amount, -500);
+
+      const completed = await request(app).post('/api/orders/' + order.sn + '/complete')
+        .set('Authorization', 'Bearer ' + fanniToken).send({});
+      assert.equal(completed.status, 200, JSON.stringify(completed.body));
+      assert.equal(completed.body.settlement.amount, 500);
+      assert.equal(completed.body.settlement.balance, 1450);
+      const settledOrder = await Order.findById(order._id).lean();
+      assert.equal(settledOrder.status, 'تم الانتهاء');
+      assert.equal(settledOrder.clientPaymentStatus, 'settled');
+      assert.ok(settledOrder.technicianSettledAt);
+      const settlementLedger = await WalletTransaction.findOne({ order: order._id, type: 'technician_settlement' }).lean();
+      assert.ok(settlementLedger);
+      assert.equal(settlementLedger.amount, 500);
+      const duplicateCompletion = await request(app).post('/api/orders/' + order.sn + '/complete')
+        .set('Authorization', 'Bearer ' + fanniToken).send({});
+      assert.equal(duplicateCompletion.status, 409, 'completed orders must not credit the technician twice');
+      assert.equal((await Fanni.findById(fanni._id).lean()).walletBalance, 1450);
     });
 
     await test('order chat rejects revoked technician sessions after password changes', async () => {
