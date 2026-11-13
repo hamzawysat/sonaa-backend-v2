@@ -70,12 +70,18 @@ async function main() {
       });
       htmlCount++;
     } else if (ext === '.js') {
-      const result = await minifyJs(original, {
-        compress: true,
-        mangle: true,
-        format: { comments: false },
-        ecma: 2020
-      });
+      let result;
+      try {
+        result = await minifyJs(original, {
+          compress: true,
+          mangle: true,
+          format: { comments: false },
+          ecma: 2020
+        });
+      } catch (error) {
+        error.message = path.relative(source, file) + ': ' + error.message;
+        throw error;
+      }
       if (result.error) throw result.error;
       minified = result.code;
       jsCount++;
