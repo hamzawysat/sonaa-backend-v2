@@ -20,6 +20,7 @@ const clientSubscriptionSchema = new mongoose.Schema({
   endsAt: { type: Date, default: null, index: true },
   paymentStatus: { type: String, enum: ['unpaid', 'pending', 'paid', 'refunded'], default: 'pending', index: true },
   paymentMethod: { type: String, trim: true, maxlength: 40, default: '' },
+  requestKey: { type: String, trim: true, maxlength: 150, default: '', index: true },
   notes: { type: String, trim: true, maxlength: 1000, default: '' },
   history: { type: [renewalSchema], default: [] },
   createdBy: { type: String, trim: true, maxlength: 50, default: 'الإدارة' },
