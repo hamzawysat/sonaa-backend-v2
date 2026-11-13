@@ -50,7 +50,10 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then break; fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:4173/index.html >/dev/null
+          if ! curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then
+            cat /tmp/sonaa-http.log
+            exit 1
+          fi
           SONAA_SMOKE_REAL_API=1 NODE_PATH=/tmp/sonaa-playwright/node_modules node scripts/ui-smoke.cjs
 
       - name: Enforce high-severity dependency audit
