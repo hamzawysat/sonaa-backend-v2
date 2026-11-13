@@ -159,7 +159,7 @@ function createAdminCommerceRouter({ auth, validate, Joi, mongoose, Client, Comm
       const subscription = await ClientSubscription.findById(req.params.id);
       if (!subscription) return res.status(404).json({ message: 'الاشتراك غير موجود.' });
       const item = subscription.item ? await CommerceItem.findById(subscription.item).lean() : null;
-      const duration = Number(subscription.durationDays || item?.durationDays || 30);
+      const duration = Number(item?.durationDays || subscription.durationDays || 30);
       const now = new Date(), startsAt = subscription.endsAt && new Date(subscription.endsAt) > now ? new Date(subscription.endsAt) : now;
       const endsAt = new Date(startsAt.getTime() + duration * 86400000);
       const amount = req.body.amount === undefined ? Number(subscription.amount || item?.price || 0) : Number(req.body.amount);
