@@ -28,7 +28,7 @@
   --sonaa-color-1e3a8a15: #24283215;
   --sonaa-color-24456f: #24456f;
   --sonaa-color-315b9c: #315b9c;
-  --sonaa-color-3b82f6a8: #c9a34fa8;
+  --sonaa-color-3b82f6a8: #087F83;
   --sonaa-color-438bfa: #438bfa;
   --sonaa-color-5eead4: #5eead4;
   --sonaa-color-93c5fd55: #e8e0cf55;
@@ -45,7 +45,7 @@
   --sonaa-color-e0e8f3: #e0e8f3;
   --sonaa-color-e6eefc: #e6eefc;
   --sonaa-color-e9eef6: #e9eef6;
-  --sonaa-color-f1f5fb: #f8f6f0;
+  --sonaa-color-f1f5fb: #ffffff;
   --sonaa-color-f1f6fd: #f1f6fd;
   --sonaa-color-f59e0b12: #f59e0b12;
   --sonaa-color-f7faff: #f7faff;
@@ -58,9 +58,9 @@
   --sonaa-color-02061735: #02061735;
   --sonaa-color-02081730: #02081730;
   --sonaa-color-02081766: #02081766;
-  --sonaa-color-0284c7: #0284c7;
+  --sonaa-color-0284c7: #087F83;
   --sonaa-color-030b1b80: #030b1b80;
-  --sonaa-color-0369a1: #0369a1;
+  --sonaa-color-0369a1: #06696D;
   --sonaa-color-047857: #047857;
   --sonaa-color-04785730: #04785730;
   --sonaa-color-04785735: #04785735;
@@ -95,8 +95,8 @@
   --sonaa-color-0b1b3a35: #171a2235;
   --sonaa-color-0b1b3a38: #171a2238;
   --sonaa-color-0b1b3ab8: #171a22b8;
-  --sonaa-color-0d9488: #b88d3a;
-  --sonaa-color-0d94881c: #b88d3a1c;
+  --sonaa-color-0d9488: #087F83;
+  --sonaa-color-0d94881c: #087F83;
   --sonaa-color-0f172a: #242832;
   --sonaa-color-0f172a08: #24283208;
   --sonaa-color-0f172a09: #24283209;
@@ -130,74 +130,74 @@
   --sonaa-color-173779: #242832;
   --sonaa-color-173c6c: #242832;
   --sonaa-color-173c82: #173c82;
-  --sonaa-color-173fae: #a9822e;
-  --sonaa-color-175cd3: #175cd3;
+  --sonaa-color-173fae: #06696D;
+  --sonaa-color-175cd3: #087F83;
   --sonaa-color-19477d: #242832;
-  --sonaa-color-1d4ed8: #a9822e;
-  --sonaa-color-1d4ed810: #a9822e10;
-  --sonaa-color-1d4ed814: #a9822e14;
-  --sonaa-color-1d4ed818: #a9822e18;
-  --sonaa-color-1d4ed81a: #a9822e1a;
-  --sonaa-color-1d4ed820: #a9822e20;
-  --sonaa-color-1d4ed82b: #a9822e2b;
-  --sonaa-color-1d4ed82c: #a9822e2c;
-  --sonaa-color-1d4ed82e: #a9822e2e;
+  --sonaa-color-1d4ed8: #06696D;
+  --sonaa-color-1d4ed810: #087F83;
+  --sonaa-color-1d4ed814: #087F83;
+  --sonaa-color-1d4ed818: #087F83;
+  --sonaa-color-1d4ed81a: #087F83;
+  --sonaa-color-1d4ed820: #087F83;
+  --sonaa-color-1d4ed82b: #087F83;
+  --sonaa-color-1d4ed82c: #087F83;
+  --sonaa-color-1d4ed82e: #087F83;
   --sonaa-color-1e293b: #1e293b;
   --sonaa-color-1e3a8a: #242832;
   --sonaa-color-1e3a8a10: #24283210;
   --sonaa-color-1e3a8a12: #24283212;
   --sonaa-color-1e3a8a18: #24283218;
   --sonaa-color-1e3a8a66: #24283266;
-  --sonaa-color-1e40af: #1e40af;
+  --sonaa-color-1e40af: #06696D;
   --sonaa-color-203d65: #203d65;
   --sonaa-color-214b7d: #214b7d;
-  --sonaa-color-214ca8: #a9822e;
+  --sonaa-color-214ca8: #06696D;
   --sonaa-color-243b5b: #243b5b;
   --sonaa-color-244fae: #244fae;
-  --sonaa-color-2455bf: #a9822e;
+  --sonaa-color-2455bf: #06696D;
   --sonaa-color-2459b6: #2459b6;
-  --sonaa-color-2563eb: #c9a34f;
-  --sonaa-color-2563eb0b: #c9a34f0b;
-  --sonaa-color-2563eb15: #c9a34f15;
-  --sonaa-color-2563eb18: #c9a34f18;
-  --sonaa-color-2563eb1a: #c9a34f1a;
-  --sonaa-color-2563eb1f: #c9a34f1f;
-  --sonaa-color-2563eb20: #c9a34f20;
-  --sonaa-color-2563eb25: #c9a34f25;
-  --sonaa-color-2563eb30: #c9a34f30;
-  --sonaa-color-2563eb35: #c9a34f35;
+  --sonaa-color-2563eb: #087F83;
+  --sonaa-color-2563eb0b: #087F83;
+  --sonaa-color-2563eb15: #087F83;
+  --sonaa-color-2563eb18: #087F83;
+  --sonaa-color-2563eb1a: #087F83;
+  --sonaa-color-2563eb1f: #087F83;
+  --sonaa-color-2563eb20: #087F83;
+  --sonaa-color-2563eb25: #087F83;
+  --sonaa-color-2563eb30: #087F83;
+  --sonaa-color-2563eb35: #087F83;
   --sonaa-color-263449: #263449;
   --sonaa-color-28528a: #242832;
-  --sonaa-color-2875f0: #2875f0;
+  --sonaa-color-2875f0: #087F83;
   --sonaa-color-293548: #293548;
   --sonaa-color-2c7b61: #2c7b61;
-  --sonaa-color-315ec1: #315ec1;
+  --sonaa-color-315ec1: #06696D;
   --sonaa-color-315f99: #171a22;
-  --sonaa-color-315fc5: #c9a34f;
+  --sonaa-color-315fc5: #087F83;
   --sonaa-color-334155: #334155;
   --sonaa-color-344965: #344965;
   --sonaa-color-34d399: #34d399;
   --sonaa-color-35527f: #35527f;
   --sonaa-color-38bdf8: #38bdf8;
-  --sonaa-color-3983f6: #3983f6;
-  --sonaa-color-3b82f6: #c9a34f;
-  --sonaa-color-3b82f612: #c9a34f12;
-  --sonaa-color-3b82f625: #c9a34f25;
-  --sonaa-color-3b82f650: #c9a34f50;
-  --sonaa-color-3b82f6b8: #c9a34fb8;
+  --sonaa-color-3983f6: #087F83;
+  --sonaa-color-3b82f6: #087F83;
+  --sonaa-color-3b82f612: #087F83;
+  --sonaa-color-3b82f625: #087F83;
+  --sonaa-color-3b82f650: #087F83;
+  --sonaa-color-3b82f6b8: #06696D;
   --sonaa-color-42628a: #42628a;
-  --sonaa-color-4380ff: #c9a34f;
+  --sonaa-color-4380ff: #087F83;
   --sonaa-color-475569: #475569;
   --sonaa-color-4ade80: #4ade80;
-  --sonaa-color-4c8cf4: #4c8cf4;
+  --sonaa-color-4c8cf4: #087F83;
   --sonaa-color-52627a: #52627a;
   --sonaa-color-526781: #526781;
   --sonaa-color-5277a6: #5277a6;
   --sonaa-color-536078: #536078;
   --sonaa-color-5a6a85: #5a6a85;
-  --sonaa-color-604c19: #604c19;
-  --sonaa-color-60a5fa: #d9b96c;
-  --sonaa-color-60a5fa2e: #d9b96c2e;
+  --sonaa-color-604c19: #06696D;
+  --sonaa-color-60a5fa: #087F83;
+  --sonaa-color-60a5fa2e: #087F83;
   --sonaa-color-628ce433: #628ce433;
   --sonaa-color-64748b: #64748b;
   --sonaa-color-65758d: #65758d;
@@ -205,7 +205,7 @@
   --sonaa-color-78350f: #78350f;
   --sonaa-color-794b00: #794b00;
   --sonaa-color-7a889d: #7a889d;
-  --sonaa-color-7aa8f5: #7aa8f5;
+  --sonaa-color-7aa8f5: #087F83;
   --sonaa-color-7f1d1d: #7f1d1d;
   --sonaa-color-7f1d1d66: #7f1d1d66;
   --sonaa-color-855b12: #855b12;
@@ -218,7 +218,7 @@
   --sonaa-color-92400e: #92400e;
   --sonaa-color-92400e12: #92400e12;
   --sonaa-color-92400e18: #92400e18;
-  --sonaa-color-93c5fd: #e8e0cf;
+  --sonaa-color-93c5fd: #f5fafc;
   --sonaa-color-94a3b8: #94a3b8;
   --sonaa-color-991b1b: #991b1b;
   --sonaa-color-991b1b18: #991b1b18;
@@ -243,7 +243,7 @@
   --sonaa-color-bcd5ff: #bcd5ff;
   --sonaa-color-bdcfe8: #bdcfe8;
   --sonaa-color-bfd7fb: #bfd7fb;
-  --sonaa-color-bfdbfe: #e8e0cf;
+  --sonaa-color-bfdbfe: #f5fafc;
   --sonaa-color-c2d0e3: #c2d0e3;
   --sonaa-color-c3d8f5: #c3d8f5;
   --sonaa-color-c4d3e8: #c4d3e8;
@@ -276,11 +276,11 @@
   --sonaa-color-dbe5f1: #dbe5f1;
   --sonaa-color-dbe7f8: #dbe7f8;
   --sonaa-color-dbe9ff: #dbe9ff;
-  --sonaa-color-dbeafe: #f1e9d7;
+  --sonaa-color-dbeafe: #f5fafc;
   --sonaa-color-dc2626: #dc2626;
   --sonaa-color-dce4f0: #dce4f0;
   --sonaa-color-dce5f1: #dce5f1;
-  --sonaa-color-dce5f2: #e8e0cf;
+  --sonaa-color-dce5f2: #f5fafc;
   --sonaa-color-dce6f3: #dce6f3;
   --sonaa-color-dceaff: #dceaff;
   --sonaa-color-dfc27d: #dfc27d;
@@ -288,14 +288,14 @@
   --sonaa-color-e11d48: #e11d48;
   --sonaa-color-e11d4824: #e11d4824;
   --sonaa-color-e1e5ec: #e1e5ec;
-  --sonaa-color-e1e8f2: #e8e0cf;
-  --sonaa-color-e2e8f0: #e8e0cf;
-  --sonaa-color-e5ebf3: #e8e0cf;
+  --sonaa-color-e1e8f2: #f5fafc;
+  --sonaa-color-e2e8f0: #f5fafc;
+  --sonaa-color-e5ebf3: #f5fafc;
   --sonaa-color-e5edf8: #e5edf8;
   --sonaa-color-e5efff: #e5efff;
   --sonaa-color-e6edf7: #e6edf7;
-  --sonaa-color-e6efff: #f1e9d7;
-  --sonaa-color-e7edf5: #e8e0cf;
+  --sonaa-color-e6efff: #f5fafc;
+  --sonaa-color-e7edf5: #f5fafc;
   --sonaa-color-e7eef8: #e7eef8;
   --sonaa-color-e8cf91: #e8cf91;
   --sonaa-color-e8eef5: #e8eef5;
@@ -320,18 +320,18 @@
   --sonaa-color-f1f5f9: #f1f5f9;
   --sonaa-color-f2f6fc: #f2f6fc;
   --sonaa-color-f3f5f8: #f3f5f8;
-  --sonaa-color-f4f7fb: #f8f6f0;
-  --sonaa-color-f4f7fc: #f8f6f0;
+  --sonaa-color-f4f7fb: #ffffff;
+  --sonaa-color-f4f7fc: #ffffff;
   --sonaa-color-f4f8ff: #f4f8ff;
   --sonaa-color-f4fff8: #f4fff8;
   --sonaa-color-f59e0b: #f59e0b;
-  --sonaa-color-f5b928: #c9a34f;
-  --sonaa-color-f5b92818: #c9a34f18;
-  --sonaa-color-f5b92830: #c9a34f30;
-  --sonaa-color-f5f8fd: #f8f6f0;
+  --sonaa-color-f5b928: #087F83;
+  --sonaa-color-f5b92818: #087F83;
+  --sonaa-color-f5b92830: #087F83;
+  --sonaa-color-f5f8fd: #ffffff;
   --sonaa-color-f5f9ff: #f5f9ff;
-  --sonaa-color-f7f9fc: #f8f6f0;
-  --sonaa-color-f7f9fd: #f8f6f0;
+  --sonaa-color-f7f9fc: #ffffff;
+  --sonaa-color-f7f9fd: #ffffff;
   --sonaa-color-f87171: #f87171;
   --sonaa-color-f8fafc: #f8fafc;
   --sonaa-color-f8fbff: #f8fbff;
@@ -390,10 +390,10 @@
   --sonaa-color-ffffffb8: #ffffffb8;
   --sonaa-color-ffffffc9: #ffffffc9;
   --sonaa-brand-navy: var(--sonaa-color-0b1b3a);
-  --sonaa-brand-blue: var(--sonaa-color-2563eb);
-  --sonaa-brand-blue-dark: var(--sonaa-color-1d4ed8);
-  --sonaa-brand-gold: var(--sonaa-color-f5b928);
-  --sonaa-brand-teal: var(--sonaa-color-0d9488);
+  --sonaa-brand-blue: #087F83;
+  --sonaa-brand-blue-dark: #06696D;
+  --sonaa-brand-gold: #087F83;
+  --sonaa-brand-teal: #087F83;
   --sonaa-surface: var(--sonaa-color-ffffff);
   --sonaa-page: var(--sonaa-color-f4f7fb);
   --sonaa-text: var(--sonaa-color-0f172a);
@@ -405,19 +405,19 @@
   --sonaa-info: var(--sonaa-color-0284c7);
 }
 
-:root[data-sonaa-theme="index"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; --page:#F5FAFC; }
+:root[data-sonaa-theme="index"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#087F83; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; --page:#F5FAFC; }
 
 :root[data-sonaa-theme="client"] { --navy:#173244; --navy2:#244B5B; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --muted:#667D89; }
 
 :root[data-sonaa-theme="fanni"] { --navy:#173244; --navy-light:#244B5B; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --muted:#667D89; }
 
-:root[data-sonaa-theme="admin"] { --navy:#173244; --blue:#087F83; --blue2:#06696D; --teal:#087F83; --gold:#C9A45C; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --card:#FFFFFF; }
+:root[data-sonaa-theme="admin"] { --navy:#173244; --blue:#087F83; --blue2:#06696D; --teal:#087F83; --gold:#087F83; --page:#F5FAFC; --border:#DCE9ED; --text:#173244; --card:#FFFFFF; }
 
-:root[data-sonaa-theme="support"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#C9A45C; --page:#F5FAFC; --border:#DCE9ED; --muted:#667D89; --text:#173244; }
+:root[data-sonaa-theme="support"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --teal:#087F83; --gold:#087F83; --page:#F5FAFC; --border:#DCE9ED; --muted:#667D89; --text:#173244; }
 
-:root[data-sonaa-theme="customers"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
+:root[data-sonaa-theme="customers"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#087F83; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
 
-:root[data-sonaa-theme="technicians"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#C9A45C; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
+:root[data-sonaa-theme="technicians"] { --navy:#173244; --blue:#087F83; --blue-dark:#06696D; --gold:#087F83; --ink:#173244; --muted:#667D89; --line:#DCE9ED; --paper:#F5FAFC; }
 
 :root { --navy:var(--sonaa-brand-navy); --blue:var(--sonaa-brand-blue); --blue-dark:var(--sonaa-brand-blue-dark); --gold:var(--sonaa-brand-gold); --teal:var(--sonaa-brand-teal); --text:var(--sonaa-text); --ink:var(--sonaa-text); --muted:var(--sonaa-muted); --border:var(--sonaa-border); --line:var(--sonaa-border); --paper:var(--sonaa-surface); --page:var(--sonaa-page); --card:var(--sonaa-surface); }
 
