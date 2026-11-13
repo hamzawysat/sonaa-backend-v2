@@ -6,6 +6,7 @@ const commerceOrderSchema = new mongoose.Schema({
   buyer: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
   buyerName: { type: String, trim: true, maxlength: 100, default: '' },
   buyerPhone: { type: String, trim: true, maxlength: 20, default: '' },
+  requestKey: { type: String, trim: true, maxlength: 150, default: undefined },
   item: { type: mongoose.Schema.Types.ObjectId, ref: 'CommerceItem', required: true, index: true },
   itemName: { type: String, required: true, trim: true, maxlength: 100 },
   sku: { type: String, trim: true, maxlength: 40, default: '' },
@@ -19,4 +20,5 @@ const commerceOrderSchema = new mongoose.Schema({
   statusHistory: [{ status: String, note: String, changedBy: String, at: { type: Date, default: Date.now } }]
 }, { timestamps: true });
 commerceOrderSchema.index({ buyerRole: 1, buyer: 1, createdAt: -1 });
+commerceOrderSchema.index({ buyerRole: 1, buyer: 1, requestKey: 1 }, { unique: true, partialFilterExpression: { requestKey: { $type: 'string' } } });
 module.exports = mongoose.models.CommerceOrder || mongoose.model('CommerceOrder', commerceOrderSchema);
