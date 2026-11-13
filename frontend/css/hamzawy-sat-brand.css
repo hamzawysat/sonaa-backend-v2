@@ -282,3 +282,44 @@ html[data-sonaa-theme] body #admin-tab-content .subnav-btn:active,
 html[data-sonaa-theme] body #admin-tab-content .tab-btn:active {
   transform: translateY(2px);
 }
+
+/* Admin navigation tabs: these controls sit outside #admin-tab-content.
+   Apply the shared tab palette directly so legacy inline admin styles cannot win. */
+html[data-sonaa-theme="admin"] body .section-nav-btn,
+html[data-sonaa-theme="admin"] body .subnav-btn,
+html[data-sonaa-theme="admin"] body .tab-btn,
+html[data-sonaa-theme="admin"] body [role="tablist"] > button {
+  background: linear-gradient(145deg,#FFFFFF,#EAF0F8) !important;
+  background-color: #FFFFFF !important;
+  border-color: #D5DFED !important;
+  color: #344965 !important;
+  -webkit-text-fill-color: #344965 !important;
+  box-shadow: 0 3px 0 #CBD7E7,0 5px 8px rgba(11,27,58,.08),inset 0 1px 0 #FFFFFF !important;
+}
+
+html[data-sonaa-theme="admin"] body .section-nav-btn.active,
+html[data-sonaa-theme="admin"] body .subnav-btn.active,
+html[data-sonaa-theme="admin"] body .tab-btn.active,
+html[data-sonaa-theme="admin"] body [role="tablist"] > button[aria-selected="true"],
+html[data-sonaa-theme="admin"] body [role="tablist"] > button[class*="bg-blue-700"] {
+  background: linear-gradient(145deg,#C9A34F,#A9822E) !important;
+  background-color: #C9A34F !important;
+  border-color: #8D6C25 !important;
+  color: #171A22 !important;
+  -webkit-text-fill-color: #171A22 !important;
+  box-shadow: 0 4px 0 #8D6C25,0 7px 12px rgba(169,130,46,.18),inset 0 1px 0 rgba(255,255,255,.45) !important;
+}
+
+html[data-sonaa-theme="admin"] body .section-nav-btn:hover,
+html[data-sonaa-theme="admin"] body .subnav-btn:hover,
+html[data-sonaa-theme="admin"] body .tab-btn:hover {
+  border-color: #C9A34F !important;
+}
+
+html[data-sonaa-theme="admin"] body .section-nav-btn:active,
+html[data-sonaa-theme="admin"] body .subnav-btn:active,
+html[data-sonaa-theme="admin"] body .tab-btn:active,
+html[data-sonaa-theme="admin"] body [role="tablist"] > button:active {
+  transform: translateY(2px);
+}
+
