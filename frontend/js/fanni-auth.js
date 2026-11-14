@@ -38,7 +38,7 @@ async function doLogin(){
   currentUser=user;
   if(data.mustChangePassword&&!window.IS_EDITOR_PREVIEW){location.href='password.html?role=fanni&mode=change&support=1';return;}
   state.loading=false;
-  state.tab='available';
+  state.tab='home';
   state.loginPass='';
   render();
 
