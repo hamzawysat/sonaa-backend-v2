@@ -220,7 +220,7 @@ function apiResponse(pathname) {
             const resumed = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
             if (!stopped || !resumed) failures.push('technician/mobile: polling did not stop/resume with page visibility');
 
-            await page.locator('button[onclick="openTechnicianSection(\'support\')"]').first().click({ timeout: 8000 });
+            await page.locator('button[onclick="openTechnicianSection(\'support\')"]:visible').first().click({ timeout: 8000 });
             await page.waitForURL(url => url.pathname.endsWith('/support.html') && url.searchParams.get('role') === 'fanni', { timeout: 5000 });
           }
 
