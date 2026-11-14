@@ -325,14 +325,19 @@
     if (typeof section !== 'string' || !/^[a-z0-9_-]{1,80}$/i.test(section)) return;
     var aliases = {
       client: { 'my-orders':'orders', 'new-order':'new', 'complaint-form':'complaint' },
-      fanni: { 'my-orders':'myOffers', 'notifications':'notifications' },
+      fanni: { 'my-orders':'myOrders', 'my-offers':'myOffers' },
       admin: { 'technicians':'fannis', 'clients':'clients', 'password-recovery':'__passwordRecovery' },
       password: { 'change-password':'changePassword', 'profile':'profile', 'my-cases':'adminQueue', 'new-case':'recovery' },
       support: { 'my-cases':'main', 'new-case':'new-title' }
     };
     var actual = aliases[page] && aliases[page][section] || section;
     if (page === 'client' && ['new','orders','track','complaint'].indexOf(actual) !== -1 && goTab(actual)) return;
-    if (page === 'fanni' && ['available','myOffers','completed','wallet','profile','notifications','login','register'].indexOf(actual) !== -1 && goTab(actual)) return;
+    if (page === 'fanni' && actual === 'notifications') { if (typeof window.toggleNotifications === 'function') window.toggleNotifications(); return; }
+    if (page === 'fanni' && actual === 'support') { location.href = '/support.html?role=fanni'; return; }
+    if (page === 'fanni' && ['home','dashboard'].indexOf(actual) !== -1) { window.scrollTo({top:0,behavior:'smooth'}); return; }
+    if (page === 'fanni' && actual === 'completed') { if (typeof window.setMyOrdersView === 'function') window.setMyOrdersView('completed'); if (goTab('myOrders')) return; }
+    if (page === 'fanni' && actual === 'myOffers') { if (typeof window.setMyOrdersView === 'function') window.setMyOrdersView('active'); if (goTab('myOrders')) return; }
+    if (page === 'fanni' && ['available','myOrders','wallet','store','profile','login','register'].indexOf(actual) !== -1 && goTab(actual)) return;
     if (page === 'admin' && ['dashboard','stats','clients','orders','fannis','pending','profileEdits','disabled','levels','offers','wallets','topups','services','regions','complaints','support','notifications','content','pricing','reports','pageVisits','security','settings','roles'].indexOf(actual) !== -1 && goTab(actual)) return;
     if (page === 'admin' && actual === '__passwordRecovery') { location.href = '/password.html?role=admin&mode=support'; return; }
     if (page === 'client' && ['login','register','profile'].indexOf(actual) !== -1) {
