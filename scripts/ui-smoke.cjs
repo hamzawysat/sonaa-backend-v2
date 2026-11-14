@@ -181,9 +181,9 @@ function apiResponse(pathname) {
               }
 
               await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
-              await page.waitForFunction(() => state.tab === 'new', { timeout: 5000 });
+              await page.waitForFunction(() => state.tab === 'new', null, { timeout: 5000 });
               await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
-              await page.waitForFunction(() => state.tab === 'wallet', { timeout: 5000 });
+              await page.waitForFunction(() => state.tab === 'wallet', null, { timeout: 5000 });
               await page.goto(BASE + '/client.html', { waitUntil: 'domcontentloaded' });
               await page.locator('#accountPhone').waitFor({ state: 'visible', timeout: 5000 });
 
@@ -289,9 +289,9 @@ function apiResponse(pathname) {
               }
             }
             await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
-            await page.waitForFunction(() => state.tab === 'new', { timeout: 5000 });
+            await page.waitForFunction(() => state.tab === 'new', null, { timeout: 5000 });
             await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
-            await page.waitForFunction(() => state.tab === 'wallet', { timeout: 5000 });
+            await page.waitForFunction(() => state.tab === 'wallet', null, { timeout: 5000 });
           }
 
           if (viewport.name === 'mobile' && target.name === 'technician' && process.env.SONAA_SMOKE_REAL_API === '1') {
