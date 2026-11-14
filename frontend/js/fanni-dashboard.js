@@ -2,11 +2,12 @@
 
 let fanniLoadingSafetyTimer=null;
 let globalRefreshInProgress=false;
+let technicianRefreshInProgress=false;
 function showFanniLoading(message){let overlay=document.getElementById('fanniLoadingOverlay');if(!overlay){overlay=document.createElement('div');overlay.id='fanniLoadingOverlay';overlay.className='fanni-loading-overlay';overlay.setAttribute('role','status');overlay.setAttribute('aria-live','polite');overlay.innerHTML='<main class="account-gate min-h-screen px-4 py-8 flex items-center justify-center"><div class="w-full max-w-[440px] text-center"><div class="account-brand mx-auto mb-5 flex items-center justify-center"><img src="/images/LOGO_UPLOAD_HERE/logo.png" alt="صُنّاع" class="sonaa-logo-svg account-loading-logo"></div><h1 class="text-2xl font-black">صُنّاع</h1><p class="account-slogan mt-1 text-base font-extrabold">كل خدمة تبدأ بخطوة</p><div class="mt-7 inline-flex items-center gap-3 rounded-2xl border border-blue-200 bg-white/90 px-5 py-4 font-extrabold text-blue-900 shadow-xl"><span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span><span id="fanniLoadingMessage">جاري تحميل البيانات...</span></div></div></main>';document.body.appendChild(overlay);}const label=document.getElementById('fanniLoadingMessage');if(label)label.textContent=message||'جاري تحميل البيانات...';overlay.classList.remove('is-hidden');clearTimeout(fanniLoadingSafetyTimer);fanniLoadingSafetyTimer=setTimeout(hideFanniLoading,9000);}
 function hideFanniLoading(){clearTimeout(fanniLoadingSafetyTimer);const overlay=document.getElementById('fanniLoadingOverlay');if(overlay)overlay.classList.add('is-hidden');}
 async function refreshTechnicianPage(){
- if(globalRefreshInProgress)return;
- globalRefreshInProgress=true;
+ if(technicianRefreshInProgress)return;
+ technicianRefreshInProgress=true;
  showFanniLoading('جاري تحديث بيانات الفني...');
  try{
   const checks=[['الخدمات',loadServices],['مناطق العمل',loadAreas]];
@@ -24,7 +25,7 @@ async function refreshTechnicianPage(){
   else toast('تم تحديث جميع بيانات الفني بنجاح','success');
  }finally{
   hideFanniLoading();
-  globalRefreshInProgress=false;
+  technicianRefreshInProgress=false;
  }
 }
 async function start(){
