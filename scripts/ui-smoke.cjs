@@ -106,7 +106,16 @@ function apiResponse(pathname) {
                 failures.push('client/desktop: client stylesheets were not extracted or the original inline CSS remains');
               }
 
-              const clientSections = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
+              const editorSectionValues = {
+                new: 'client:new-order',
+                orders: 'client:my-orders',
+                track: 'client:track',
+                wallet: 'client:wallet',
+                subscriptions: 'client:subscriptions',
+                store: 'client:store',
+                complaint: 'client:complaint'
+              };
+              const clientSections = Object.keys(editorSectionValues);
               const editorOptions = await page.evaluate(async () => {
                 const response = await fetch('/editor.html');
                 const markup = await response.text();
@@ -115,8 +124,8 @@ function apiResponse(pathname) {
               });
               const editorScript = await (await page.request.get(BASE + '/js/editor.js')).text();
               for (const section of clientSections) {
-                if (!editorOptions.includes('client:' + section) ||
-                    !editorScript.includes('client:' + section)) {
+                const optionValue = editorSectionValues[section];
+                if (!editorOptions.includes(optionValue) || !editorScript.includes(optionValue)) {
                   failures.push('client/desktop: shared editor is missing the ' + section + ' section');
                 }
                 const previewResponse = await page.goto(BASE + '/client.html?preview=true&section=' + section, {
