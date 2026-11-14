@@ -107,15 +107,15 @@ function apiResponse(pathname) {
               const clientActionsSource = await (await page.request.get(BASE + '/js/client-actions.js')).text();
               const clientAccountSource = await (await page.request.get(BASE + '/js/client-account.js')).text();
               const clientComponentsSource = await (await page.request.get(BASE + '/css/client-components.css')).text();
-              const orderPollingIntervals = (clientActionsSource.match(/},\\s*25000\\);/g) || []).length;
+              const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
               if (clientStyleOrder.some(index => index < 0) ||
                   clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
-                  /<style\\b/i.test(clientHtmlSource) ||
-                  /<style\\b/i.test(clientAccountSource) ||
+                  /<style\b/i.test(clientHtmlSource) ||
+                  /<style\b/i.test(clientAccountSource) ||
                   clientHtmlSource.includes(':root{--navy:') ||
                   clientHtmlSource.includes('#app .client-section-tabs{') ||
                   orderPollingIntervals < 2 ||
-                  !/setInterval\\(refreshTrackedChatSilently,\\s*10000\\)/.test(clientActionsSource) ||
+                  !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
                   clientActionsSource.includes('},3000);') ||
                   clientActionsSource.includes('},2000);' ) ||
                   !clientComponentsSource.includes('@keyframes client-refresh-spin')) {
