@@ -107,6 +107,14 @@ function apiResponse(pathname) {
                 await page.locator('button[onclick="saveProfileChanges()"]').click();
                 await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 10000 });
                 await page.locator('#toast').getByText(/تم إرسال طلب تعديل بيانات/).waitFor({ state: 'visible', timeout: 3000 });
+                await page.route('**/api/areas', route => route.fulfill({
+                  status: 503,
+                  contentType: 'application/json; charset=utf-8',
+                  body: JSON.stringify({ message: 'فشل اختبار تحميل المناطق' })
+                }));
+                await page.locator('#global-refresh').click();
+                await page.locator('#toast').getByText(/تعذر تحديث: مناطق العمل/).waitFor({ state: 'visible', timeout: 8000 });
+                await page.unroute('**/api/areas');
               }
             } else if (target.name === 'admin') {
               await page.locator('#login-btn').click();
