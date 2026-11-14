@@ -67,3 +67,7 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 - 12 new script paths are present and resolve to files in the frontend source tree.
 - The server prefers `frontend-dist`, then `frontend`; the build script recursively copies the entire frontend tree, so nested admin JS paths are included automatically.
 - GitHub Actions returned no workflow runs for the organization commit. No browser-level test or local Node build has been run in this environment; runtime verification remains a required later phase.
+
+## Permission alignment correction found during the API audit
+
+The client-service refund action calls `/api/admin/client-wallet/orders/:sn/refund`. The backend classifies all `/client-wallet/*` routes under the `wallet` permission, while the frontend had a one-off override that classified this refund endpoint as `orders`. The override was removed. The refund button now also requires wallet write permission in addition to the current order-tab write guard, and the backend permission suite now includes explicit read-only-denied / wallet-manager-allowed assertions for this refund route.
