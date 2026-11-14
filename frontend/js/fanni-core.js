@@ -192,7 +192,7 @@ function addCustomRegArea(){
 }
 async function loadAreas(){
  let loaded=false;
- try{const data=await API.areas();AREA_OPTIONS=Array.isArray(data?.areas)?data.areas:[];loaded=AREA_OPTIONS.length>0;}
+ try{const data=await API.areas();AREA_OPTIONS=Array.isArray(data?.areas)?data.areas:[];loaded=Array.isArray(data?.areas);}
  catch(e){log('تعذر تحميل المناطق',e);AREA_OPTIONS=[];}
  render();
  return loaded;
