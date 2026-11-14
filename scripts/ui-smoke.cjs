@@ -210,6 +210,35 @@ function apiResponse(pathname) {
             }
           }
 
+          if (viewport.name === 'mobile' && target.name === 'client') {
+            const clientTabs = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
+            const loadedClientCss = await page.locator('link[rel="stylesheet"]').evaluateAll(items =>
+              items.map(item => new URL(item.href).pathname));
+            if (!loadedClientCss.includes('/css/client-foundation.css') ||
+                !loadedClientCss.includes('/css/client-layout.css') ||
+                !loadedClientCss.includes('/css/client-components.css')) {
+              failures.push('client/mobile: one or more extracted client stylesheets are missing');
+            }
+            for (const tab of clientTabs) {
+              await page.goto(BASE + '/client.html?preview=true&section=' + tab, {
+                waitUntil: 'domcontentloaded', timeout: 15000
+              });
+              await page.waitForFunction(expected => window.IS_EDITOR_PREVIEW === true && state.tab === expected,
+                tab, { timeout: 5000 });
+              const tabDimensions = await page.evaluate(() => ({
+                viewport: document.documentElement.clientWidth,
+                document: document.documentElement.scrollWidth
+              }));
+              if (tabDimensions.document > tabDimensions.viewport + 2) {
+                overflow.push('client/' + tab + '/mobile: ' + tabDimensions.document + 'px content in ' + tabDimensions.viewport + 'px viewport');
+              }
+            }
+            await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
+            await page.waitForFunction(() => state.tab === 'new', { timeout: 5000 });
+            await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
+            await page.waitForFunction(() => state.tab === 'wallet', { timeout: 5000 });
+          }
+
           if (viewport.name === 'mobile' && target.name === 'technician' && process.env.SONAA_SMOKE_REAL_API === '1') {
             await page.locator('#fanniLoginPhone').fill('01012345671');
             await page.locator('#fanniLoginPassword').fill('FanniSmokePass123');
