@@ -191,10 +191,18 @@ function apiResponse(pathname) {
                 if (customerTabIds.join(',') !== 'new,orders,wallet,subscriptions,store,complaint') {
                   failures.push('client/desktop: signed-in customer navigation is missing or out of order');
                 }
+                const customerTabButtons = page.locator('.client-section-tabs button');
                 for (const tab of customerTabIds) {
-                  const trigger = page.locator('.client-section-tabs button[onclick="setTab(\\'' + tab + '\\')"]');
-                  if (await trigger.count()) {
-                    await trigger.click();
+                  let foundButton = false;
+                  for (let buttonIndex = 0; buttonIndex < await customerTabButtons.count(); buttonIndex++) {
+                    const button = customerTabButtons.nth(buttonIndex);
+                    if (await button.getAttribute('onclick') === "setTab('" + tab + "')") {
+                      await button.click();
+                      foundButton = true;
+                      break;
+                    }
+                  }
+                  if (foundButton) {
                     await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 5000 });
                   } else {
                     failures.push('client/desktop: visible navigation button is missing for ' + tab);
