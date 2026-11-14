@@ -208,6 +208,51 @@ function apiResponse(pathname) {
                   await customerTabButtons.nth(buttonIndex).click();
                   await page.waitForFunction(expected => state.tab === expected, customerTabIds[buttonIndex], { timeout: 5000 });
                 }
+
+                // Exercise the shared visual editor against the isolated MongoDB-backed API.
+                const adminLogin = await page.request.post(BASE + '/api/admin/login', {
+                  data: { phone: '01012345678', password: 'AdminSmokePass123' }
+                });
+                if (adminLogin.status() !== 200) {
+                  failures.push('client/desktop: editor admin login failed with HTTP ' + adminLogin.status());
+                } else {
+                  const adminSession = await adminLogin.json();
+                  await page.evaluate(token => localStorage.setItem('admin_token_v3', token), adminSession.token);
+                  const editorResponse = await page.goto(BASE + '/editor.html', { waitUntil: 'domcontentloaded', timeout: 15000 });
+                  if (!editorResponse || editorResponse.status() !== 200) {
+                    failures.push('client/desktop: visual editor route failed');
+                  } else {
+                    const preview = page.frameLocator('#previewFrame');
+                    await preview.locator('#app .account-slogan').waitFor({ state: 'visible', timeout: 10000 });
+                    await page.locator('#editModeBtn').click();
+                    await preview.locator('#app .account-slogan').click();
+                    await page.locator('#ctrlText').fill('اختبار حفظ واسترجاع المحرر');
+                    await page.locator('#saveBtn').click();
+                    await page.getByText('تم الحفظ في MongoDB', { exact: false }).waitFor({ state: 'visible', timeout: 10000 });
+
+                    const layoutResponse = await page.request.get(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    });
+                    const persisted = await layoutResponse.json();
+                    const savedText = Object.values(persisted.layout?.elements || {}).some(item => item.text === 'اختبار حفظ واسترجاع المحرر');
+                    if (layoutResponse.status() !== 200 || !savedText) {
+                      failures.push('client/desktop: editor save was not persisted by the MongoDB-backed API');
+                    }
+
+                    await page.locator('#reloadPreviewBtn').click();
+                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+                    await page.locator('[data-device="mobile"]').click();
+                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 5000 });
+                    await page.locator('[data-device="desktop"]').click();
+
+                    const resetLayout = await page.request.delete(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    });
+                    if (resetLayout.status() !== 200) {
+                      failures.push('client/desktop: isolated editor test data could not be reset');
+                    }
+                  }
+                }
               }
             } else if (target.name === 'technician') {
               await page.locator('#fanniLoginPhone').fill('123');
