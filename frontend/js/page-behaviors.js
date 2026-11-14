@@ -6,8 +6,9 @@
  * order and the existing classic-script global scope remain unchanged.
  */
 (function () {
-  const feature = document.currentScript && document.currentScript.dataset.sonaaFeature;
-
+  const scriptData = document.currentScript && document.currentScript.dataset;
+  const features = String(scriptData && (scriptData.sonaaFeatures || scriptData.sonaaFeature) || '').split(/[\s,]+/).filter(Boolean);
+  features.forEach(function (feature) {
   switch (feature) {
     case 'admin-recovery-count': {
       let busy = false;
@@ -245,4 +246,5 @@
     default:
       console.warn('Unknown Sonaa page behavior:', feature);
   }
+  });
 })();
