@@ -134,14 +134,19 @@ function apiResponse(pathname) {
                     failures.push('admin/desktop: navigation tab has no setTab target');
                     continue;
                   }
-                  await navigationTabs.nth(index).click();
-                  await page.waitForFunction(id => {
-                    const active = document.querySelector('.section-nav-btn.active');
-                    return active && active.getAttribute('onclick') === "setTab('" + id + "')";
-                  }, tabId, { timeout: 5000 });
-                  await page.waitForTimeout(120);
-                  const tabContent = await page.locator('#admin-tab-content').innerText().catch(() => '');
-                  if (!tabContent.trim()) failures.push('admin/desktop: empty tab content for ' + tabId);
+                  try {
+                    await navigationTabs.nth(index).click();
+                    await page.waitForTimeout(180);
+                    const activeHandler = await page.locator('.section-nav-btn.active').first().getAttribute('onclick').catch(() => null);
+                    if (activeHandler !== "setTab('" + tabId + "')") {
+                      failures.push('admin/desktop: tab did not become active: ' + tabId + ' (active=' + activeHandler + ')');
+                    }
+                    const tabContent = await page.locator('#admin-tab-content').innerText().catch(() => '');
+                    if (!tabContent.trim()) failures.push('admin/desktop: empty tab content for ' + tabId);
+                  } catch (error) {
+                    failures.push('admin/desktop: failed to open tab ' + tabId + ': ' + error.message);
+                    break;
+                  }
                 }
               }
             }
