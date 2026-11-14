@@ -73,6 +73,18 @@ async function run() {
       for (const legacyAsset of ['web-push.js', 'page-visit.js', 'manifest.webmanifest', 'service-worker.js', 'robots.txt', 'js/preview-bootstrap.js', 'js/shared-editor-bridge.js', 'js/ui-layout-loader.js', 'js/shared-preview-links.js']) {
         assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyAsset)), false, 'unreachable root frontend asset remains: ' + legacyAsset);
       }
+      for (const legacyPath of [
+        'admin-audio-review.js', 'admin-setup.html', 'customers.html', 'editor.backup.html',
+        'google58b294ada8d0da43.html', 'palette-preview.html', 'sitemap.xml',
+        'icons/sonaa-logo.svg', 'images/LOGO_UPLOAD_HERE/logo.png',
+        'js/admin-setup.js', 'js/editor.js', 'js/fanni-auth.js', 'js/index-embed-focus.js',
+        'js/index-embed-links.js', 'js/page-behaviors.js', 'js/password-page.js', 'js/support-page.js'
+      ]) {
+        assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyPath)), false, 'unreachable root duplicate remains: ' + legacyPath);
+      }
+      for (const unusedFrontendFile of ['admin-audio-review.js', 'editor.backup.html', 'palette-preview.html']) {
+        assert.equal(fs.existsSync(path.join(frontendRoot, unusedFrontendFile)), false, 'unused frontend file remains: ' + unusedFrontendFile);
+      }
       for (const legacyPath of ['js/admin-core.js', 'js/admin-auth.js', 'js/admin-shell.js', 'js/admin-people.js', 'js/admin-orders.js', 'js/admin-navigation.js', 'js/admin-entity-actions.js', 'js/admin-platform-actions.js']) {
         assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyPath)), false, 'unreachable root admin script remains: ' + legacyPath);
       }
@@ -105,9 +117,11 @@ async function run() {
       const groupCount = (registry[1].match(/^\s*\{id:/gm) || []).length;
       const tabCount = (registry[1].match(/\{id:'[^']+',label:/g) || []).length - groupCount;
       assert.equal(groupCount, 8);
-      for (const groupId of ['dashboard', 'clients', 'finance', 'commerce', 'technicians', 'service-management', 'customer-operations', 'platform-admin']) {
+      for (const groupId of ['dashboard', 'clients', 'technicians', 'finance', 'commerce', 'service-management', 'customer-operations', 'platform-admin']) {
         assert.ok(registry[1].includes("id:'" + groupId + "'"), 'missing admin navigation group: ' + groupId);
       }
+      const groupPositions = ['dashboard', 'clients', 'technicians', 'finance', 'commerce', 'service-management', 'customer-operations', 'platform-admin'].map(id => registry[1].indexOf("id:'" + id + "'"));
+      assert.ok(groupPositions.every((position, index) => index === 0 || position > groupPositions[index - 1]), 'admin navigation groups must follow the approved order');
       const financeGroup = registry[1].match(/\{id:'finance'[^]*?tabs:\[([^\]]+)\]/);
       assert.ok(financeGroup, 'dedicated finance group must exist');
       for (const tabId of ['clientWallet', 'wallets', 'topups']) {

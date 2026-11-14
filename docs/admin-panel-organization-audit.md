@@ -12,9 +12,9 @@ Eight navigation groups, 29 tabs:
 |---|---|
 | الرئيسية | dashboard, stats |
 | إدارة العملاء | clients, orders |
+| إدارة الفنيين | fannis, pending, profileEdits, disabled, levels, offers |
 | الإدارة المالية | clientWallet, wallets, topups |
 | الاشتراكات والمتجر | commercePlans, commerceSubscriptions, store, storeOrders |
-| إدارة الفنيين | fannis, pending, profileEdits, disabled, levels, offers |
 | إدارة الخدمات والمناطق | services, regions |
 | خدمة العملاء والتواصل | complaints, support, notifications, content |
 | إعدادات وإدارة المنصة | pricing, reports, pageVisits, security, settings, roles |
@@ -67,7 +67,7 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 - 185 inline event-handler attributes were found across the admin module templates, calling 115 distinct handler names. The only statically unbound handler name is `openFanniProfileEditor`, which is intentionally exported as `window.openFanniProfileEditor`.
 - 12 new script paths are present and resolve to files in the frontend source tree.
 - The server prefers `frontend-dist`, then `frontend`; the build script recursively copies the entire frontend tree, so nested admin JS paths are included automatically.
-- GitHub Actions returned no workflow runs for the organization commit. No browser-level test or local Node build has been run in this environment; runtime verification remains a required later phase.
+- GitHub Actions returned no workflow runs for the organization commit. At the first-pass checkpoint, browser-level and local Node verification had not yet run; final CI verification is recorded below.
 
 ## Permission alignment correction found during the API audit
 
@@ -96,3 +96,11 @@ A second pass across all 12 frontend modules found no remaining mutating templat
 ## Final navigation correction
 
 The approved eight-group structure separates finance from client and technician management without changing any of the 29 tab IDs, labels, API endpoints or permission keys. The dedicated `الإدارة المالية` group now contains `clientWallet`, `wallets` and `topups`; client management contains only clients and orders, and technician management contains only technician operations. Pending-count badges were reassigned to the group that now owns each queue. The structure regression test now asserts all eight group IDs and the three finance tabs.
+
+## Final dependency cleanup and verification
+
+The final reference pass removed only files proven redundant or unreachable: root-level copies of assets already served from `frontend/`; the unused legacy `admin-audio-review.js` (the active audio-review UI and handlers are already implemented in `admin-orders.js`); the unreferenced palette preview utility; and the old editor backup copies. The active `frontend/admin-setup.html`, `frontend/customers.html`, Google site-verification file, sitemap, shared logo, and all assets referenced by the live pages were retained. The logo placeholder remains because active pages reference `/images/LOGO_UPLOAD_HERE/logo.png`.
+
+The final navigation order is: الرئيسية, إدارة العملاء, إدارة الفنيين, الإدارة المالية, الاشتراكات والمتجر, إدارة الخدمات والمناطق, خدمة العملاء والتواصل, إعدادات وإدارة المنصة. The finance group owns client wallet, technician wallet and wallet top-up tabs; all 29 tab IDs and permission mappings remain unchanged.
+
+GitHub Actions run `43538810367` completed successfully on the eight-group revision: dependency installation, backend integration/security tests, frontend browser smoke tests, and the high-severity dependency audit all passed. This is CI verification; no production deployment or merge was performed.
