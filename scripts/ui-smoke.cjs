@@ -110,6 +110,8 @@ function apiResponse(pathname) {
                   failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
                 }
                 await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
+                const pollingStarted = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
+                if (!pollingStarted) failures.push('technician: chat/message polling did not start after login');
                 await page.locator('nav button[onclick="openTechnicianSection('support')"]').waitFor({ state: 'visible', timeout: 3000 });
                 await page.evaluate(() => setTab('myOrders'));
                 await page.getByRole('button', { name: /المهام المكتملة/ }).click();
