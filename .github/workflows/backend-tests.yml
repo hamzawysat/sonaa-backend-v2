@@ -2,7 +2,7 @@ name: Backend integration tests # re-run after admin runtime fix
 
 on:
   push:
-    branches: [main, 'feature/**', 'fix/**']
+    branches: [main, 'feature/**', 'fix/**', 'refactor/**']
     paths:
       - 'src/**'
       - 'frontend/admin.html'
@@ -10,6 +10,7 @@ on:
       - 'frontend/client.html'
       - 'frontend/fanni.html'
       - 'frontend/js/**'
+      - 'frontend/css/**'
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/**'
