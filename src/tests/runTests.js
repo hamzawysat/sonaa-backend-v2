@@ -91,7 +91,7 @@ async function run() {
       }
       const core = fs.readFileSync(path.join(frontendRoot, 'js/admin/core/admin-core.js'), 'utf8');
       const shell = fs.readFileSync(path.join(frontendRoot, 'js/admin/dashboard/admin-shell.js'), 'utf8');
-      for (const action of ['createAdminClientSubscription', 'editClientSubscriptionDetails', 'deductClientWalletBalance', 'settleClientWalletBalance', 'changeAccountPassword', 'issueSupportPassword', 'saveAnnouncement', 'clearAnnouncement', 'moveCategoryByIndex', 'restoreRegion', 'bulkEditRegions', 'bulkToggleRegions', 'bulkDeleteRegions', 'bulkRestoreRegions']) {
+      for (const action of ['createAdminClientSubscription', 'editClientSubscriptionDetails', 'deductClientWalletBalance', 'settleClientWalletBalance', 'changeAccountPassword', 'issueSupportPassword', 'saveAnnouncement', 'clearAnnouncement', 'moveCategoryByIndex', 'restoreRegion', 'bulkEditRegions', 'bulkToggleRegions', 'bulkDeleteRegions', 'bulkRestoreRegions', 'reviewFanniProfileEdit']) {
         assert.ok(core.includes("'" + action + "'"), 'admin write guard missing action: ' + action);
       }
       assert.ok(core.includes('walletActionBlocked'), 'wallet mutations must also check wallet write permission');
