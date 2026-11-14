@@ -18,3 +18,5 @@ if(tab==='myOrders')loadMyOffers();
 }
 
 function setMyOrdersView(view){if(!['active','completed'].includes(view))return;state.myOrdersView=view;render();}
+
+function openTechnicianSection(id){if(id==='support'){window.location.href='support.html?role=fanni';return;}setTab(id);}
