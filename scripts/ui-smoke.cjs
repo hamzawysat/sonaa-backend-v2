@@ -97,8 +97,10 @@ function apiResponse(pathname) {
 
               const clientStyles = await page.locator('link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
               const clientHtmlSource = await (await page.request.get(BASE + '/client.html')).text();
-              if (!clientStyles.includes('/css/client-layout.css') ||
+              if (!clientStyles.includes('/css/client-foundation.css') ||
+                  !clientStyles.includes('/css/client-layout.css') ||
                   !clientStyles.includes('/css/client-components.css') ||
+                  clientHtmlSource.includes('<style>') ||
                   clientHtmlSource.includes(':root{--navy:') ||
                   clientHtmlSource.includes('#app .client-section-tabs{')) {
                 failures.push('client/desktop: client stylesheets were not extracted or the original inline CSS remains');
