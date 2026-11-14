@@ -94,6 +94,31 @@ function apiResponse(pathname) {
               await page.locator('#accountPassword').fill('x');
               await page.locator('.account-submit').click();
               await page.getByText('رقم الموبايل غير صحيح؛ اكتب 11 رقمًا يبدأ بـ 01.').waitFor({ state: 'visible', timeout: 3000 });
+
+              const clientSections = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
+              const editorMarkup = await (await page.request.get(BASE + '/editor.html')).text();
+              const editorScript = await (await page.request.get(BASE + '/js/editor.js')).text();
+              for (const section of clientSections) {
+                if (!editorMarkup.includes('value="client:' + section + '"') ||
+                    !editorScript.includes("'client:" + section + "'")) {
+                  failures.push('client/desktop: shared editor is missing the ' + section + ' section');
+                }
+                const previewResponse = await page.goto(BASE + '/client.html?preview=true&section=' + section, {
+                  waitUntil: 'domcontentloaded', timeout: 15000
+                });
+                if (!previewResponse || previewResponse.status() !== 200) {
+                  failures.push('client/desktop: preview route failed for ' + section);
+                  continue;
+                }
+                await page.waitForFunction(expected => window.IS_EDITOR_PREVIEW === true && state.tab === expected,
+                  section, { timeout: 5000 });
+              }
+
+              await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => state.tab === 'new', { timeout: 5000 });
+              await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
+              await page.waitForFunction(() => state.tab === 'wallet', { timeout: 5000 });
+
               if (process.env.SONAA_SMOKE_REAL_API === '1') {
                 await page.locator('#accountPhone').fill('01012345670');
                 await page.locator('#accountPassword').fill('ClientSmokePass123');
