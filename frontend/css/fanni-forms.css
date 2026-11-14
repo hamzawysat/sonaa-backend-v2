@@ -1,0 +1,44 @@
+
+/* Technician sign-in uses the same blue, white and 3D identity as the client sign-in. */
+.fanni-login-gate{padding-bottom:12px}
+.fanni-login-gate .fanni-login-hero{color:var(--sonaa-color-173c6c)!important;background:linear-gradient(145deg,var(--sonaa-color-fff) 0%,var(--sonaa-color-f4f8ff) 100%)!important;border:1px solid var(--sonaa-color-d7e2f0); border-radius:25px!important;box-shadow:0 5px 0 var(--sonaa-color-dce5f1),0 18px 38px var(--sonaa-color-0b1b3a16),0 3px 9px var(--sonaa-color-0b1b3a08)!important}
+.fanni-login-gate .fanni-login-hero p{color:var(--sonaa-color-52627a)!important}
+.fanni-login-gate .fanni-login-hero>div>div:first-child{background:linear-gradient(145deg,var(--sonaa-color-fff),var(--sonaa-color-e8eff9))!important;color:var(--sonaa-color-173c6c);border:1px solid var(--sonaa-color-fff);box-shadow:0 4px 0 var(--sonaa-color-cbd8ea),0 8px 14px var(--sonaa-color-0b1b3a18),inset 0 1px 0 var(--sonaa-color-fff)}
+.fanni-login-gate .fanni-login-hero .grid>div{background:linear-gradient(145deg,var(--sonaa-color-fff),var(--sonaa-color-edf3fb))!important;border:1px solid var(--sonaa-color-d5e0ef);color:var(--sonaa-color-24456f);box-shadow:0 3px 0 var(--sonaa-color-d5dfed),0 5px 9px var(--sonaa-color-0b1b3a0c),inset 0 1px 0 var(--sonaa-color-fff)}
+.fanni-login-gate .fanni-login-tabs{padding:6px!important;background:linear-gradient(145deg,var(--sonaa-color-e6edf7),var(--sonaa-color-f8fbff))!important;border:1px solid var(--sonaa-color-d5e0ef)!important;border-radius:17px!important;box-shadow:inset 0 2px 4px var(--sonaa-color-0b1b3a0d),0 3px 0 var(--sonaa-color-dce5f1)!important}
+.fanni-login-gate .fanni-login-tabs button{min-height:44px;border:1px solid var(--sonaa-color-d5dfed);border-radius:11px;background:linear-gradient(145deg,var(--sonaa-color-fff),var(--sonaa-color-eaf0f8));color:var(--sonaa-color-344965);box-shadow:0 3px 0 var(--sonaa-color-cbd7e7),0 5px 8px var(--sonaa-color-0b1b3a0d),inset 0 1px 0 var(--sonaa-color-fff);transition:transform .16s,box-shadow .16s,background .18s}
+.fanni-login-gate .fanni-login-tabs button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sonaa-color-0b1b3a20)}
+.fanni-login-gate .fanni-login-tabs button[class*="bg-[#171A22]"]{background:linear-gradient(145deg,var(--sonaa-color-315f99) 0%,var(--sonaa-color-173c6c) 65%,var(--sonaa-color-102b50) 100%)!important;color:var(--sonaa-color-fff)!important;border-color:var(--sonaa-color-42628a);box-shadow:0 4px 0 var(--sonaa-color-0b1b3a),0 7px 12px var(--sonaa-color-0b1b3a2c),inset 0 1px 0 var(--sonaa-color-ffffff40)!important}
+.fanni-login-panel{border:1px solid var(--sonaa-color-d7e2f0)!important;border-radius:25px!important;background:linear-gradient(145deg,var(--sonaa-color-fff) 0%,var(--sonaa-color-fbfdff) 100%)!important;box-shadow:0 5px 0 var(--sonaa-color-dce5f1),0 18px 38px var(--sonaa-color-0b1b3a16),0 3px 9px var(--sonaa-color-0b1b3a08)!important}
+.fanni-login-panel .field{border:1px solid var(--sonaa-color-d8e2ef);border-radius:13px;background:var(--sonaa-color-fbfdff);transition:border-color .18s,box-shadow .18s,background .18s}
+.fanni-login-panel .field:focus{background:var(--sonaa-color-fff);border-color:var(--sonaa-color-2563eb)!important;box-shadow:0 0 0 4px var(--sonaa-color-2563eb18),0 3px 8px var(--sonaa-color-0b1b3a08)}
+.fanni-login-panel .primary-btn,.fanni-login-panel button.primary-btn{background:linear-gradient(145deg,var(--sonaa-color-3983f6) 0%,var(--sonaa-color-1d4ed8) 55%,var(--sonaa-color-173c6c) 100%)!important;color:var(--sonaa-color-fff)!important;border:1px solid var(--sonaa-color-ffffff45)!important;border-radius:13px!important;box-shadow:0 5px 0 var(--sonaa-color-123b85),0 9px 16px var(--sonaa-color-1d4ed82e),inset 0 1px 0 var(--sonaa-color-ffffff45)!important;text-shadow:0 1px 2px var(--sonaa-color-102b5066);transition:transform .16s,box-shadow .16s,filter .16s}
+.fanni-login-panel .primary-btn:active,.fanni-login-panel button.primary-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--sonaa-color-123b85),0 4px 8px var(--sonaa-color-0b1b3a20)!important}
+.fanni-login-panel .secondary-btn{border-radius:12px;box-shadow:0 3px 0 var(--sonaa-color-cbd7e7),0 5px 8px var(--sonaa-color-0b1b3a0d)}
+@media(prefers-reduced-motion:reduce){.fanni-login-gate .fanni-login-tabs button,.fanni-login-panel .field,.fanni-login-panel .primary-btn{transition:none}}
+
+/* Back button on the far right; homepage button on the far left. */
+.fanni-account-nav{direction:rtl;display:flex!important;justify-content:space-between!important;gap:0!important;width:100%}
+.fanni-account-nav .fanni-account-home-btn{order:2!important;margin-left:auto}
+.fanni-account-nav button.fanni-account-nav-btn{order:1!important;margin-right:auto}
+.fanni-brand-tagline{white-space:normal;line-height:1.5}
+/* Header navigation matches the client's joined, raised two-button group. */
+.fanni-account-nav{direction:rtl;justify-content:center!important;gap:0!important}
+.fanni-account-nav-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:38px;white-space:nowrap;border-radius:0!important;border:1px solid var(--sonaa-color-bfdbfe)!important;box-shadow:0 3px 0 var(--sonaa-color-dbeafe),0 5px 10px var(--sonaa-color-1e3a8a12)!important;transition:transform .16s,box-shadow .16s,filter .16s}
+.fanni-account-nav .fanni-account-home-btn{order:1;background:linear-gradient(145deg,var(--sonaa-color-3983f6) 0%,var(--sonaa-color-1d4ed8) 55%,var(--sonaa-color-173c6c) 100%)!important;color:var(--sonaa-color-fff)!important;-webkit-text-fill-color:var(--sonaa-color-fff)!important;text-decoration:none!important;border-color:var(--sonaa-color-ffffff45)!important;border-radius:0 13px 13px 0!important;box-shadow:0 4px 0 var(--sonaa-color-123b85),0 8px 14px var(--sonaa-color-0b1b3a25),inset 0 1px 0 var(--sonaa-color-ffffff45)!important}
+.fanni-account-nav button.fanni-account-nav-btn{order:2;background:linear-gradient(145deg,var(--sonaa-color-eff6ff),var(--sonaa-color-dbeafe))!important;color:var(--sonaa-color-1e40af)!important;-webkit-text-fill-color:var(--sonaa-color-1e40af)!important;border-color:var(--sonaa-color-bfdbfe)!important;border-radius:13px 0 0 13px!important;box-shadow:0 3px 0 var(--sonaa-color-bfdbfe),0 5px 10px var(--sonaa-color-1e3a8a12),inset 0 1px 0 var(--sonaa-color-fff)!important}
+.fanni-account-nav .fanni-account-home-btn:active,.fanni-account-nav button.fanni-account-nav-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sonaa-color-123b85)!important}
+@media(max-width:360px){.fanni-account-nav-btn{padding-inline:10px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.fanni-account-nav-btn{transition:none}}
+
+/* Match the client page's button order, spacing and raised controls. */
+.fanni-account-nav{direction:rtl}
+.fanni-account-nav-btn{min-height:36px;white-space:nowrap;box-shadow:0 3px 0 var(--sonaa-color-0b1b3a12);transition:transform .16s,box-shadow .16s,filter .16s}
+.fanni-account-nav-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sonaa-color-0b1b3a12)}
+.fanni-account-nav .fanni-account-home-btn{background:linear-gradient(135deg,var(--sonaa-color-2875f0),var(--sonaa-color-173c6c))!important;color:var(--sonaa-color-fff)!important;-webkit-text-fill-color:var(--sonaa-color-fff)!important;text-decoration:none!important;border:1px solid var(--sonaa-color-ffffff45)!important;box-shadow:0 3px 0 var(--sonaa-color-0b1b3a24),0 6px 12px var(--sonaa-color-0b1b3a12),inset 0 1px 0 var(--sonaa-color-ffffff45)!important}
+.fanni-account-nav .fanni-account-home-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sonaa-color-0b1b3a12)!important}
+.fanni-login-panel .secondary-btn{min-height:44px;padding-inline:16px;font-weight:800;border:1px solid var(--sonaa-color-d5dfed);background:linear-gradient(145deg,var(--sonaa-color-fff),var(--sonaa-color-eaf0f8));color:var(--sonaa-color-344965);box-shadow:0 3px 0 var(--sonaa-color-cbd7e7),0 5px 8px var(--sonaa-color-0b1b3a0d);transition:transform .16s,box-shadow .16s}
+.fanni-login-panel .secondary-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sonaa-color-cbd7e7)}
+.fanni-login-panel .primary-btn{min-height:48px}
+@media(max-width:360px){.fanni-account-nav-btn{padding-inline:10px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.fanni-account-nav-btn,.fanni-login-panel .secondary-btn{transition:none}}
