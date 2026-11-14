@@ -136,20 +136,22 @@ const ADMIN_PERMISSION_SECTIONS=[
   ['regions','المناطق'],
   ['offers','العروض'],
   ['notifications','الإشعارات'],
-  ['clientsData','بيانات حسابات العملاء']
+  ['clientsData','بيانات حسابات العملاء'],
+  ['commerce','الاشتراكات والباقات'],
+  ['store','المتجر والطلبات']
 ];
 function getDefaultAdminPermissions(role){
   const keys=ADMIN_PERMISSION_SECTIONS.map(([key])=>key);
   const writes={
     'قراءة فقط':[],
     'مشرف':['orders','complaints','support','offers'],
-    'مشرف أول':['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData'],
+    'مشرف أول':['fannis','orders','complaints','services','clients','topups','wallet','support','regions','offers','notifications','clientsData','commerce'],
     'مدير':keys
   };
   const readOnly=role==='قراءة فقط';
   const readAll=role==='مدير'||role==='مشرف أول'||readOnly;
   const writeSet=new Set(writes[role]||[]);
-  const readSet=new Set(readAll?keys:['dashboard','fannis','orders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','content','support','regions','offers','notifications','clientsData']);
+  const readSet=new Set(readAll?keys:['dashboard','fannis','orders','voiceReview','passwordRecovery','complaints','services','clients','topups','wallet','pricing','content','support','regions','offers','notifications','clientsData','store']);
   return Object.fromEntries(keys.map(key=>[key,{read:readSet.has(key)||writeSet.has(key),write:writeSet.has(key)}]));
 }
 function getEffectiveAdminPermissions(user){
