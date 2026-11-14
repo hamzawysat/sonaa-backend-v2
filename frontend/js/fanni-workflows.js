@@ -366,7 +366,7 @@ async function refreshFanniChatsSilently(){
   const afterCompleted=JSON.stringify((state.completedOffers||[]).map(o=>String(o._id||'')));
   const afterOrders=JSON.stringify((state.orders||[]).map(o=>({sn:String(o.sn||o.orderSn||''),status:o.status||o.orderStatus||'',offersCount:(o.offers||[]).length})));
   const listChanged=beforeOffers!==afterOffers||beforeCompleted!==afterCompleted||beforeOrders!==afterOrders;
-  if(newlyAccepted||(listChanged&&['available','myOffers','completed'].includes(state.tab)))fanniLiveRenderPending=true;
+  if(newlyAccepted||(listChanged&&['available','myOrders'].includes(state.tab)))fanniLiveRenderPending=true;
   if(fanniLiveRenderPending&&liveFanniCanRender()){
    fanniLiveRenderPending=false;const scrollY=window.scrollY||window.pageYOffset||0;render();window.scrollTo({top:scrollY,left:0,behavior:'instant'});
   }
@@ -375,7 +375,7 @@ async function refreshFanniChatsSilently(){
 }
 let fanniMessagesPollInFlight=false;
 async function refreshFanniChatMessagesSilently(){
- if(!getToken()||document.hidden||fanniMessagesPollInFlight||state.tab!=='myOffers')return;
+ if(!getToken()||document.hidden||fanniMessagesPollInFlight||(state.tab!=='myOrders'||state.myOrdersView!=='active'))return;
  fanniMessagesPollInFlight=true;
  try{
   await Promise.allSettled((state.myOffers||[]).map(async function(offer){
