@@ -115,7 +115,8 @@ function apiResponse(pathname) {
                 await page.getByRole('button', { name: /العروض الجارية/ }).click();
                 await page.getByRole('heading', { name: 'عروضي' }).waitFor({ state: 'visible', timeout: 3000 });
                 await page.evaluate(() => setTab('profile'));
-                await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 5000 });
+                await page.getByRole('button', { name: /تغيير كلمة المرور/ }).waitFor({ state: 'visible', timeout: 3000 });
+                await page.locator('button[onclick="beginEditProfile()"]')
                 await page.locator('button[onclick="beginEditProfile()"]').click();
                 await page.locator('#fanniEditPhone').fill('01012345672');
                 await page.locator('button[onclick="saveProfileChanges()"]').click();
