@@ -115,17 +115,28 @@ function apiResponse(pathname) {
               if (clientStyleOrder.some(index => index < 0) ||
                   clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
                   /<style\b/i.test(clientHtmlSource) ||
-                  /<style\b/i.test(clientAccountSource) ||
                   clientHtmlSource.includes(':root{--navy:') ||
-                  clientHtmlSource.includes('#app .client-section-tabs{') ||
-                  orderPollingIntervals < 2 ||
+                  clientHtmlSource.includes('#app .client-section-tabs{')) {
+                failures.push('client/desktop: stylesheet extraction or cascade order is incorrect');
+              }
+              if (/<style\b/i.test(clientAccountSource) || /<style\b/i.test(clientRenderSource) ||
+                  !clientComponentsSource.includes('.account-top-nav') ||
+                  !clientComponentsSource.includes('body .support-float') ||
+                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg') ||
+                  !clientLayoutSource.includes('animation:global-refresh-spin')) {
+                failures.push('client/desktop: dynamic CSS remains in JavaScript or extracted component rules are missing');
+              }
+              if (orderPollingIntervals < 2 ||
                   !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
                   clientActionsSource.includes('},3000);') ||
-                  clientActionsSource.includes('},2000);' ) ||
-                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg') || !clientLayoutSource.includes('animation:global-refresh-spin') ||
-                  !clientComponentsSource.includes('.account-top-nav') ||
-                  !clientComponentsSource.includes('body .support-float')) {
-                failures.push('client/desktop: extracted styles or 25s/10s polling cadence is incorrect');
+                  clientActionsSource.includes('},2000);')) {
+                failures.push('client/desktop: customer polling does not follow the 25s/10s project cadence');
+              }
+              if (behaviorScripts.length !== 1 ||
+                  !behaviorScripts[0].includes('client-global-refresh') ||
+                  !behaviorScripts[0].includes('sticky-tabs') ||
+                  new Set(clientScriptPaths).size !== clientScriptPaths.length) {
+                failures.push('client/desktop: client JavaScript features are missing or a module is loaded more than once');
               }
 
               const editorSectionValues = {
