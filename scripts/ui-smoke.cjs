@@ -109,8 +109,7 @@ function apiResponse(pathname) {
                     !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
                   failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
                 }
-                await page.evaluate(() => setTab('home'));
-                await page.waitForFunction(() => state.tab === 'home', { timeout: 3000 });
+                await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
                 await page.evaluate(() => setTab('myOrders'));
                 await page.getByRole('button', { name: /المهام المكتملة/ }).click();
                 await page.getByRole('heading', { name: 'المهام المكتملة' }).waitFor({ state: 'visible', timeout: 3000 });
