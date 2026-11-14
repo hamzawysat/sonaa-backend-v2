@@ -94,11 +94,166 @@ function apiResponse(pathname) {
               await page.locator('#accountPassword').fill('x');
               await page.locator('.account-submit').click();
               await page.getByText('رقم الموبايل غير صحيح؛ اكتب 11 رقمًا يبدأ بـ 01.').waitFor({ state: 'visible', timeout: 3000 });
+
+              const clientHeadStyles = await page.locator('head link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
+              const clientStyleOrder = [
+                '/css/client-foundation.css',
+                '/css/client-layout.css',
+                '/css/theme.css',
+                '/css/hamzawy-sat-brand.css',
+                '/css/client-components.css'
+              ].map(path => clientHeadStyles.indexOf(path));
+              const clientHtmlSource = await (await page.request.get(BASE + '/frontend/client.html')).text();
+              const clientActionsSource = await (await page.request.get(BASE + '/frontend/js/client-actions.js')).text();
+              const clientAccountSource = await (await page.request.get(BASE + '/frontend/js/client-account.js')).text();
+              const clientRenderSource = await (await page.request.get(BASE + '/frontend/js/client-render.js')).text();
+              const behaviorScripts = await page.locator('script[src="/js/page-behaviors.js"]').evaluateAll(items => items.map(item => item.dataset.sonaaFeatures || item.dataset.sonaaFeature || ''));
+              const clientScriptPaths = await page.locator('script[src]').evaluateAll(items => items.map(item => new URL(item.src).pathname).filter(path => path.startsWith('/js/')));
+              const clientComponentsSource = await (await page.request.get(BASE + '/frontend/css/client-components.css')).text();
+              const clientLayoutSource = await (await page.request.get(BASE + '/frontend/css/client-layout.css')).text();
+              const sharedEditorSource = await (await page.request.get(BASE + '/frontend/js/editor.js')).text();
+              const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
+              if (!sharedEditorSource.includes('function getEffectiveData(data)') ||
+                  !sharedEditorSource.includes('function clearMobileOverrideProperties(data,properties)') ||
+                  !sharedEditorSource.includes("clearMobileOverrideProperties(data,[property])") ||
+                  (sharedEditorSource.split("clearMobileOverrideProperties(data,['translateX','translateY'])").length - 1) < 2 ||
+                  !sharedEditorSource.includes('const data=getSelectedData(),effective=getEffectiveData(data)') ||
+                  !sharedEditorSource.includes('originX:Number(effective.translateX)||0,originY:Number(effective.translateY)||0') ||
+                  !sharedEditorSource.includes('const x=(Number(effective.translateX)||0)+dx,y=(Number(effective.translateY)||0)+dy')) {
+                failures.push('client/desktop: editor changes do not consistently apply to shared desktop/mobile layout data');
+              }
+              if (clientStyleOrder.some(index => index < 0) ||
+                  clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
+                  /<style\b/i.test(clientHtmlSource) ||
+                  clientHtmlSource.includes(':root{--navy:') ||
+                  clientHtmlSource.includes('#app .client-section-tabs{')) {
+                failures.push('client/desktop: stylesheet extraction or cascade order is incorrect');
+              }
+              if (/<style\b/i.test(clientAccountSource) || /<style\b/i.test(clientRenderSource) ||
+                  !clientLayoutSource.includes('.account-top-nav{') ||
+                  !clientComponentsSource.includes('body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:85px!important;top:auto!important;z-index:80!important}') ||
+                  !clientComponentsSource.includes('body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:85px!important;top:auto!important;z-index:80!important}') ||
+                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg{animation:global-refresh-spin 1s linear infinite}')) {
+                failures.push('client/desktop: dynamic CSS remains in JavaScript or extracted component rules are missing');
+              }
+              if (orderPollingIntervals < 2 ||
+                  !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
+                  clientActionsSource.includes('},3000);') ||
+                  clientActionsSource.includes('},2000);')) {
+                failures.push('client/desktop: customer polling does not follow the 25s/10s project cadence');
+              }
+              if (behaviorScripts.length !== 1 ||
+                  !behaviorScripts[0].includes('client-global-refresh') ||
+                  !behaviorScripts[0].includes('sticky-tabs') ||
+                  new Set(clientScriptPaths).size !== clientScriptPaths.length) {
+                failures.push('client/desktop: client JavaScript features are missing or a module is loaded more than once');
+              }
+
+              const editorSectionValues = {
+                new: 'client:new-order',
+                orders: 'client:my-orders',
+                track: 'client:track',
+                wallet: 'client:wallet',
+                subscriptions: 'client:subscriptions',
+                store: 'client:store',
+                complaint: 'client:complaint'
+              };
+              const clientSections = Object.keys(editorSectionValues);
+              const editorOptions = await page.evaluate(async () => {
+                const response = await fetch('/editor.html');
+                const markup = await response.text();
+                const editorDocument = new DOMParser().parseFromString(markup, 'text/html');
+                return [...editorDocument.querySelectorAll('#subPageSelect option')].map(option => option.value);
+              });
+              const editorScript = await (await page.request.get(BASE + '/frontend/js/editor.js')).text();
+              for (const section of clientSections) {
+                const optionValue = editorSectionValues[section];
+                if (!editorOptions.includes(optionValue) || !editorScript.includes(optionValue)) {
+                  failures.push('client/desktop: shared editor is missing the ' + section + ' section');
+                }
+                const previewResponse = await page.goto(BASE + '/client.html?preview=true&section=' + section, {
+                  waitUntil: 'domcontentloaded', timeout: 15000
+                });
+                if (!previewResponse || previewResponse.status() !== 200) {
+                  failures.push('client/desktop: preview route failed for ' + section);
+                  continue;
+                }
+                await page.waitForFunction(expected => window.IS_EDITOR_PREVIEW === true && state.tab === expected,
+                  section, { timeout: 5000 });
+              }
+
+              await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => state.tab === 'new', null, { timeout: 5000 });
+              await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
+              await page.waitForFunction(() => state.tab === 'wallet', null, { timeout: 5000 });
+              await page.goto(BASE + '/client.html', { waitUntil: 'domcontentloaded' });
+              await page.locator('#accountPhone').waitFor({ state: 'visible', timeout: 5000 });
+
               if (process.env.SONAA_SMOKE_REAL_API === '1') {
                 await page.locator('#accountPhone').fill('01012345670');
                 await page.locator('#accountPassword').fill('ClientSmokePass123');
                 await page.locator('.account-submit').click();
                 await page.waitForFunction(() => !!localStorage.getItem('sonaa_client_account_token'), { timeout: 10000 });
+                await page.waitForFunction(() => !!state.account && !!state.accountToken, { timeout: 10000 });
+                await page.locator('.client-section-tabs').waitFor({ state: 'visible', timeout: 10000 });
+                const customerTabIds = await page.evaluate(() => CLIENT_TAB_DEFINITIONS.map(tab => tab.id));
+                if (customerTabIds.join(',') !== 'new,orders,wallet,subscriptions,store,complaint') {
+                  failures.push('client/desktop: signed-in customer navigation is missing or out of order');
+                }
+                const customerTabButtons = page.locator('.client-section-tabs button');
+                if (await customerTabButtons.count() !== customerTabIds.length) {
+                  failures.push('client/desktop: visible customer navigation button count is incorrect');
+                }
+                for (let buttonIndex = 0; buttonIndex < customerTabIds.length; buttonIndex++) {
+                  await customerTabButtons.nth(buttonIndex).click();
+                  await page.waitForFunction(expected => state.tab === expected, customerTabIds[buttonIndex], { timeout: 5000 });
+                }
+
+                // Exercise the shared visual editor against the isolated MongoDB-backed API.
+                const adminLogin = await page.request.post(BASE + '/api/admin/login', {
+                  data: { phone: '01012345678', password: 'AdminSmokePass123' }
+                });
+                if (adminLogin.status() !== 200) {
+                  failures.push('client/desktop: editor admin login failed with HTTP ' + adminLogin.status());
+                } else {
+                  const adminSession = await adminLogin.json();
+                  await page.evaluate(token => localStorage.setItem('admin_token_v3', token), adminSession.token);
+                  const editorResponse = await page.goto(BASE + '/editor.html', { waitUntil: 'domcontentloaded', timeout: 15000 });
+                  if (!editorResponse || editorResponse.status() !== 200) {
+                    failures.push('client/desktop: visual editor route failed');
+                  } else {
+                    const preview = page.frameLocator('#previewFrame');
+                    await preview.locator('#app .account-slogan').waitFor({ state: 'visible', timeout: 10000 });
+                    await page.locator('#editModeBtn').click();
+                    await preview.locator('#app .account-slogan').click();
+                    await page.locator('#ctrlText').fill('اختبار حفظ واسترجاع المحرر');
+                    await page.locator('#saveBtn').click();
+                    await page.getByText('تم الحفظ في MongoDB', { exact: false }).waitFor({ state: 'visible', timeout: 10000 });
+
+                    const layoutResponse = await page.request.get(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    });
+                    const persisted = await layoutResponse.json();
+                    const savedText = Object.values(persisted.layout?.elements || {}).some(item => item.text === 'اختبار حفظ واسترجاع المحرر');
+                    if (layoutResponse.status() !== 200 || !savedText) {
+                      failures.push('client/desktop: editor save was not persisted by the MongoDB-backed API');
+                    }
+
+                    await page.locator('[data-device="mobile"]').click();
+                    await page.locator('#reloadPreviewBtn').click();
+                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+                    await page.locator('[data-device="desktop"]').click();
+                    await page.locator('#reloadPreviewBtn').click();
+                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+
+                    const resetLayout = await page.request.delete(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    });
+                    if (resetLayout.status() !== 200) {
+                      failures.push('client/desktop: isolated editor test data could not be reset');
+                    }
+                  }
+                }
               }
             } else if (target.name === 'technician') {
               await page.locator('#fanniLoginPhone').fill('123');
@@ -164,6 +319,36 @@ function apiResponse(pathname) {
               }
             }
           }
+
+          if (viewport.name === 'mobile' && target.name === 'client') {
+            const clientTabs = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
+            const loadedClientCss = await page.locator('link[rel="stylesheet"]').evaluateAll(items =>
+              items.map(item => new URL(item.href).pathname));
+            if (!loadedClientCss.includes('/css/client-foundation.css') ||
+                !loadedClientCss.includes('/css/client-layout.css') ||
+                !loadedClientCss.includes('/css/client-components.css')) {
+              failures.push('client/mobile: one or more extracted client stylesheets are missing');
+            }
+            for (const tab of clientTabs) {
+              await page.goto(BASE + '/client.html?preview=true&section=' + tab, {
+                waitUntil: 'domcontentloaded', timeout: 15000
+              });
+              await page.waitForFunction(expected => window.IS_EDITOR_PREVIEW === true && state.tab === expected,
+                tab, { timeout: 5000 });
+              const tabDimensions = await page.evaluate(() => ({
+                viewport: document.documentElement.clientWidth,
+                document: document.documentElement.scrollWidth
+              }));
+              if (tabDimensions.document > tabDimensions.viewport + 2) {
+                overflow.push('client/' + tab + '/mobile: ' + tabDimensions.document + 'px content in ' + tabDimensions.viewport + 'px viewport');
+              }
+            }
+            await page.goto(BASE + '/client.html?preview=true&section=new', { waitUntil: 'domcontentloaded' });
+            await page.waitForFunction(() => state.tab === 'new', null, { timeout: 5000 });
+            await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
+            await page.waitForFunction(() => state.tab === 'wallet', null, { timeout: 5000 });
+          }
+
 
           if (viewport.name === 'mobile' && target.name === 'technician' && process.env.SONAA_SMOKE_REAL_API === '1') {
             await page.locator('#fanniLoginPhone').fill('01012345671');

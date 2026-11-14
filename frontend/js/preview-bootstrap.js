@@ -29,8 +29,12 @@
     const pageToTab = {
       'new': 'new', 'new-order': 'new', 'طلب جديد': 'new',
       'orders': 'orders', 'my-orders': 'orders', 'طلباتي': 'orders',
+      'track': 'track', 'track-order': 'track', 'تتبع الطلب': 'track',
+      'wallet': 'wallet', 'المحفظة': 'wallet',
+      'subscriptions': 'subscriptions', 'الاشتراكات': 'subscriptions',
+      'store': 'store', 'المتجر': 'store',
       'complaint': 'complaint', 'complaint-form': 'complaint', 'شكوى': 'complaint',
-      'track-complaint': 'complaint', 'track': 'complaint',
+      'track-complaint': 'complaint',
       'profile': 'orders', 'الملف الشخصي': 'orders',
       'login': 'login', 'client-login': 'login', 'client': 'login', 'تسجيل الدخول': 'login',
       'register': 'register', 'client-register': 'register', 'تسجيل جديد': 'register'
