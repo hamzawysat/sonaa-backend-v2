@@ -118,28 +118,6 @@ function toast(message,type='success'){
  setTimeout(()=>{if(el.firstElementChild)el.innerHTML=''},4000);
 }
 
-async function copyWalletNumber(index){
- const walletNumber=String(document.getElementById('wallet-transfer-number-'+index)?.textContent||'').trim();
- if(!/^01[0-9]{9}$/.test(walletNumber))return toast('رقم المحفظة غير متاح حاليًا.','error');
- try{
-  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(walletNumber);}
-  else{
-   const input=document.createElement('textarea');input.value=walletNumber;input.readOnly=true;input.style.position='fixed';input.style.left='-9999px';input.style.top='0';input.setAttribute('aria-hidden','true');document.body.appendChild(input);
-   input.focus();input.select();input.setSelectionRange(0,input.value.length);
-   let copied=false;try{copied=document.execCommand('copy');}finally{input.remove();}
-   if(!copied)throw new Error('تعذر نسخ الرقم تلقائيًا');
-  }
-  toast('تم نسخ رقم المحفظة');
- }catch(error){toast('تعذر النسخ تلقائيًا. اضغط مطولًا على الرقم لنسخه.','error');}
-}
-async function loadWalletTransferNumbers(){
- let loaded=false;
- try{const data=await apiGet('/api/wallet-settings');state.walletPhone1=String(data.walletPhone1||'').trim();state.walletPhone2=String(data.walletPhone2||'').trim();loaded=true;}
- catch(error){log('تعذر تحميل أرقام التحويل',error.message);state.walletPhone1='';state.walletPhone2='';}
- if(state.tab==='wallet')render();
- return loaded;
-}
-
 function onRegAreaSearch(value){
  state.regAreaSearch=String(value||'').slice(0,60);
  const cursor=state.regAreaSearch.length;
@@ -404,24 +382,6 @@ function performFanniLogout(){
  toast('تم تسجيل الخروج');
 }
 
-const TECHNICIAN_TAB_DEFINITIONS=[{id:'available',label:'فرص العمل'},{id:'myOrders',label:'طلباتي'},{id:'wallet',label:'المحفظة'},{id:'store',label:'المتجر'},{id:'profile',label:'حسابي'}];
-function setTab(tab){
- if(tab==='myOffers'){tab='myOrders';state.myOrdersView='active';}
- if(tab==='completed'){tab='myOrders';state.myOrdersView='completed';}
- state.tab=tab;
- state.error='';
- state.success='';
- state.pendingMsg='';
- render();
-
- if(tab==='available')loadOrders();
-if(tab==='myOrders')loadMyOffers();
- if(tab==='wallet'){loadWalletHistory();loadWalletTransferNumbers();}
- if(tab==='profile')loadProfile();
- if(tab==='store'&&getToken())loadStoreForRole('fanni');
-}
-
-function setMyOrdersView(view){if(!['active','completed'].includes(view))return;state.myOrdersView=view;render();}
 function toggleSpecialtyCategory(label){
  state.openSpecialtyCategory=state.openSpecialtyCategory===label?'':label;
  render();
@@ -557,16 +517,4 @@ function renderAcceptedClient(o){
  </section>`;
 }
 
-async function loadNotifications(){if(!getToken())return false;try{const data=await API.notifications();state.notifications=Array.isArray(data.notifications)?data.notifications:[];state.notificationsUnread=Number(data.unreadCount||0);var badge=document.getElementById('notificationBadge');if(badge)badge.textContent=state.notificationsUnread?(state.notificationsUnread>99?'99+':String(state.notificationsUnread)):'';if(state.notificationsOpen)render();return true;}catch(e){log('تعذر تحميل الإشعارات',e.message);return false;}}
-async function toggleNotifications(){state.notificationsOpen=!state.notificationsOpen;if(state.notificationsOpen)await loadNotifications();render();}
-async function openNotification(id){const selected=state.notifications.find(n=>n.id===id);try{if(selected&&!selected.read)await API.readNotification(id);}catch(e){}state.notifications=state.notifications.map(n=>n.id===id?Object.assign({},n,{read:true}):n);if(selected&&!selected.read)state.notificationsUnread=Math.max(0,state.notificationsUnread-1);state.notificationsOpen=false;if(selected&&['topup_approved','topup_rejected'].includes(selected.type))state.tab='wallet';else if(selected&&selected.type==='offer_accepted'){state.tab='myOrders';state.myOrdersView='active';}else if(selected&&selected.type==='new_opportunity')state.tab='available';render();if(state.tab==='wallet')loadWalletHistory();else if(state.tab==='myOrders')loadMyOffers();else if(state.tab==='available')loadOrders();}
-async function markAllNotificationsRead(){try{await API.readAllNotifications();state.notifications=state.notifications.map(n=>Object.assign({},n,{read:true}));state.notificationsUnread=0;render();}catch(e){toast(e.message||'تعذر تحديث الإشعارات','error');}}
-function notificationBadge(){return '<span id="notificationBadge" class="absolute -right-1 -top-1 min-w-[17px] rounded-full bg-red-600 px-1 text-[9px] font-black !text-white">'+(state.notificationsUnread?(state.notificationsUnread>99?'99+':state.notificationsUnread):'')+'</span>';}
-function notificationPanel(){if(!state.notificationsOpen)return '';var html='<div class="fixed inset-0 z-[99]" onclick="state.notificationsOpen=false;render()"></div><div class="fixed left-3 right-3 top-[70px] z-[100] mx-auto max-w-[420px] overflow-hidden rounded-2xl border border-amber-200 bg-white text-slate-800 shadow-2xl"><div class="flex items-center justify-between gap-2 border-b p-3"><b class="text-[15px] font-extrabold">الإشعارات</b><div class="flex items-center gap-3"><button onclick="markAllNotificationsRead()" class="text-[12px] font-extrabold text-blue-700">تعليم الكل كمقروء</button><button type="button" aria-label="إغلاق الإشعارات" title="إغلاق" onclick="state.notificationsOpen=false;render()" class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold leading-none text-slate-700 hover:bg-slate-200">×</button></div></div><div class="max-h-[60vh] overflow-y-auto">';if(!state.notifications.length)html+='<p class="p-6 text-center text-[12px] text-slate-500">مفيش إشعارات لحد دلوقتي.</p>';state.notifications.forEach(n=>{html+='<button type="button" data-fanni-notification-id="'+esc(n.id)+'" class="block w-full border-b p-3 text-right '+(n.read?'bg-white':'bg-amber-50')+'"><b class="block text-[16px] font-bold text-slate-900">'+esc(n.title)+'</b><span class="mt-1 block text-[15px] font-semibold leading-7 text-slate-800">'+esc(n.message)+'</span><small class="mt-2 block text-[11px] font-medium text-slate-500">'+(n.createdAt?new Date(n.createdAt).toLocaleString('ar-EG'):'')+'</small></button>';});return html+'</div></div>';}
-document.addEventListener('click',e=>{const item=e.target.closest('[data-fanni-notification-id]');if(item)openNotification(item.getAttribute('data-fanni-notification-id'));});
-document.addEventListener('click',function(e){const button=e.target.closest('[data-fanni-tab]');if(!button)return;const tab=button.getAttribute('data-fanni-tab');if(tab==='profile'){e.preventDefault();location.href='password.html?role=fanni&mode=account';}});
 async function acceptTechnicianGuidelines(){try{const result=await API.acceptGuidelines();if(currentUser){currentUser.technicianGuidelinesAcceptedAt=result.acceptedAt||new Date().toISOString();currentUser.technicianGuidelinesVersion=result.version||'2026-10-20-v1';}toast(result.message||'تم تسجيل الموافقة.');render();}catch(e){toast(e.message||'تعذر تسجيل الموافقة.','error');}}
-async function sendFanniQuickReply(sn,offerId,reply){try{await API.sendChat(sn,reply,offerId);await refreshFanniChatsSilently();toast('تم إرسال الرد.');}catch(e){toast(e.message||'تعذر إرسال الرد.','error');}}
-async function sendFanniChat(sn,offerId){const el=document.getElementById('fanni-chat-'+sn);const text=String(el?.value||'').trim();if(!text)return toast('اكتب الرسالة أولًا.','error');try{await API.sendChat(sn,text,offerId);if(el)el.value='';await refreshFanniChatsSilently();toast('تم إرسال الرسالة.');}catch(e){toast(e.message||'تعذر إرسال الرسالة.','error');}}
-async function requestFanniPriceChange(sn){const price=Number(document.getElementById('price-change-'+sn)?.value);const reason=String(document.getElementById('price-reason-'+sn)?.value||'').trim();const offer=[...state.myOffers,...state.completedOffers].find(o=>String(o.orderSn||o.sn||o.order?.sn||'').toUpperCase()===String(sn||'').toUpperCase());const currentPrice=Number(offer?.client?.acceptedOfferPrice??offer?.acceptedOfferPrice??offer?.priceNum??offer?.price);if(!Number.isFinite(currentPrice))return toast('تعذر تحديد السعر الحالي؛ حدّث البيانات وحاول مرة أخرى.','error');if(!Number.isFinite(price)||price<=currentPrice||price<=0)return toast('السعر الجديد لازم يكون أعلى من السعر الحالي ('+currentPrice+' جنيه).','error');if(reason.length<5)return toast('اكتب سببًا واضحًا للتعديل.','error');try{const r=await API.requestPriceChange(sn,price,reason);toast(r.message||'تم إرسال طلب تعديل السعر.');await loadMyOffers();}catch(e){toast(e.message||'تعذر طلب تعديل السعر.','error');}}
-
