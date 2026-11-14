@@ -116,7 +116,7 @@ function apiResponse(pathname) {
                   supportFloat: !!document.querySelector('a.support-float[href="support.html?role=fanni"]'),
                   topTabs: !!document.querySelector('.fanni-dashboard-tabs'),
                   bottomTabs: document.querySelectorAll('nav.fixed.bottom-0 button[onclick^="openTechnicianSection("]').length,
-                  refreshOnLeft: (() => { const button = document.querySelector('#global-refresh'); const style = button && getComputedStyle(button); return !!style && style.left !== 'auto' && style.right === 'auto'; })()
+                  refreshOnLeft: (() => { const button = document.querySelector('#global-refresh'); if (!button) return false; const rect = button.getBoundingClientRect(); return rect.left >= 0 && rect.left < window.innerWidth / 2; })()
                 }));
                 if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support') {
                   failures.push('technician/desktop: expected technician section definitions are missing');
