@@ -282,3 +282,4 @@ body #app [class*="text-blue-"],body #app [class*="text-sky-"],body #app [class*
 body #app [class*="bg-blue-"],body #app [class*="bg-sky-"],body #app [class*="bg-cyan-"]{background-color:#F8F6F0!important}
 body #app [class*="border-blue-"],body #app [class*="border-sky-"],body #app [class*="border-cyan-"]{border-color:#E8E0CF!important}
 body #app [class*="ring-blue-"],body #app [class*="ring-sky-"],body #app [class*="ring-cyan-"]{--tw-ring-color:#C9A34F!important}
+
