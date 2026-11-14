@@ -106,6 +106,8 @@ function apiResponse(pathname) {
               const clientHtmlSource = await (await page.request.get(BASE + '/client.html')).text();
               const clientActionsSource = await (await page.request.get(BASE + '/js/client-actions.js')).text();
               const clientAccountSource = await (await page.request.get(BASE + '/js/client-account.js')).text();
+              const clientRenderSource = await (await page.request.get(BASE + '/js/client-render.js')).text();
+              const behaviorScripts = await page.locator('script[src="/js/page-behaviors.js"]').evaluateAll(items => items.map(item => item.dataset.sonaaFeatures || item.dataset.sonaaFeature || ''));
               const clientComponentsSource = await (await page.request.get(BASE + '/css/client-components.css')).text();
               const clientLayoutSource = await (await page.request.get(BASE + '/css/client-layout.css')).text();
               const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
@@ -119,7 +121,9 @@ function apiResponse(pathname) {
                   !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
                   clientActionsSource.includes('},3000);') ||
                   clientActionsSource.includes('},2000);' ) ||
-                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg') || !clientLayoutSource.includes('animation:global-refresh-spin')) {
+                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg') || !clientLayoutSource.includes('animation:global-refresh-spin') ||
+                  !clientComponentsSource.includes('.account-top-nav') ||
+                  !clientComponentsSource.includes('body .support-float')) {
                 failures.push('client/desktop: extracted styles or 25s/10s polling cadence is incorrect');
               }
 
