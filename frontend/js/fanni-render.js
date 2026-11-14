@@ -129,7 +129,8 @@ function renderContent(){
    </details>
   </section>
 
-   <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-5 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','طلبات متاحه',state.filteredOrders.length],myOffers:['💼','طلبات جاريه',state.myOffers.length],completed:['🏁','المهام المكتملة',state.completedOffers.length],wallet:['💳','محفظتي',''],store:['🛍️','المتجر','']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border p-1 flex flex-col items-center justify-center gap-0.5 min-h-[52px] transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-[8px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
+   <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-5 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','فرص العمل',state.filteredOrders.length],myOrders:['💼','طلباتي',state.myOffers.length+state.completedOffers.length],wallet:['💳','المحفظة',''],store:['🛍️','المتجر',''],profile:['👤','حسابي','']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border p-1 flex flex-col items-center justify-center gap-0.5 min-h-[52px] transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-[8px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
+  ${state.tab==='myOrders'?`<div class="mt-3 panel p-2 grid grid-cols-2 gap-2"><button type="button" onclick="setMyOrdersView('active')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='active'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">العروض الجارية (${state.myOffers.length})</button><button type="button" onclick="setMyOrdersView('completed')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='completed'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">المهام المكتملة (${state.completedOffers.length})</button></div>`:''}
 
   ${state.tab==='available'?`
    <section class="mt-4 space-y-3">
@@ -179,7 +180,7 @@ function renderContent(){
     ${state.ordersPagination?.page<state.ordersPagination?.pages?`<button type="button" onclick="loadOrders(${Number(state.ordersPagination.page)+1},true)" ${state.loading?'disabled':''} class="secondary-btn w-full py-3 text-[12px]">${state.loading?'جاري تحميل المزيد...':'تحميل 20 طلبًا إضافيًا'}</button>`:''}
    </section>`:''}
 
-  ${state.tab==='myOffers'?`
+  ${state.tab==='myOrders'&&state.myOrdersView==='active'?`
    <section class="mt-4 space-y-3">
     <div class="flex justify-between items-center"><h3 class="section-title">عروضي</h3></div>
 
@@ -203,7 +204,7 @@ function renderContent(){
      ${o?.accepted===true && o.orderStatus==='تم اختيار فني' ? `<button data-sn="${esc(o.orderSn||o.sn||o.order?.sn||'')}" onclick="completeOrder(this.dataset.sn)" class="primary-btn w-full h-11 text-[12px]">إنهاء المهمة</button>` : ''}
     </article>`).join('')}
    </section>`:''}
-     ${state.tab==='completed'?`
+     ${state.tab==='myOrders'&&state.myOrdersView==='completed'?`
    <section class="mt-4 space-y-3">
     <div class="flex justify-between items-center">
      <h3 class="section-title">المهام المكتملة</h3>
@@ -343,7 +344,7 @@ function renderContent(){
 
  <nav class="fixed bottom-0 inset-x-0 z-30 border-t bg-white/95 backdrop-blur-xl safe-bottom">
    <div class="mx-auto max-w-[680px] px-1 h-[70px] grid grid-cols-5 gap-0.5">
-    ${authenticated?TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','طلبات متاحه'],myOffers:['💼','طلبات جاريه'],completed:['🏁','المهام المكتملة'],wallet:['💳','محفظتي'],store:['🛍️','المتجر']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-base leading-none">${info[0]}</span><span class="text-[9px] font-extrabold text-center">${info[1]}</span></button>`}).join(''):`<button onclick="setTab('login')">🔑<span class="block text-[10px]">دخول</span></button><button onclick="setTab('register')">📝<span class="block text-[10px]">تسجيل</span></button><button onclick="goClient()">👥<span class="block text-[10px]">عميل</span></button><button onclick="setTab('register')">🧑‍🔧<span class="block text-[10px]">فني</span></button>`}
+    ${authenticated?TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={available:['📋','فرص العمل'],myOrders:['💼','طلباتي'],wallet:['💳','المحفظة'],store:['🛍️','المتجر'],profile:['👤','حسابي']}[t.id];return `<button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-base leading-none">${info[0]}</span><span class="text-[9px] font-extrabold text-center">${info[1]}</span></button>`}).join(''):`<button onclick="setTab('login')">🔑<span class="block text-[10px]">دخول</span></button><button onclick="setTab('register')">📝<span class="block text-[10px]">تسجيل</span></button><button onclick="goClient()">👥<span class="block text-[10px]">عميل</span></button><button onclick="setTab('register')">🧑‍🔧<span class="block text-[10px]">فني</span></button>`}
        
    </div>
   </nav>
