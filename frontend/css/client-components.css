@@ -177,8 +177,8 @@ body .support-float{left:12px!important;bottom:18px!important;width:48px!importa
 body .global-refresh-float{right:12px!important;bottom:18px!important;width:48px!important;height:48px!important;z-index:90!important}
 
 /* Keep floating actions clear of the fixed bottom client navigation. */
-body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;top:auto!important;z-index:80!important}
-body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;top:auto!important;z-index:80!important}
+body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:85px!important;top:auto!important;z-index:80!important}
+body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:85px!important;top:auto!important;z-index:80!important}
 
 
 /* Match the admin refresh feedback: fade the floating button while data refreshes. */
@@ -274,11 +274,3 @@ body .fanni-login-gate .account-switch-link:focus-visible{
   body .fanni-login-gate .account-switch-link{transition:none!important}
 }
 
-
-
-.account-top-nav{justify-content:center!important;align-items:center!important;flex-wrap:nowrap!important;width:100%!important;margin-inline:auto!important}
-body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:85px!important}
-body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:85px!important}
-
-.global-refresh.is-refreshing svg{animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
