@@ -103,14 +103,14 @@ function apiResponse(pathname) {
                 '/css/hamzawy-sat-brand.css',
                 '/css/client-components.css'
               ].map(path => clientHeadStyles.indexOf(path));
-              const clientHtmlSource = await (await page.request.get(BASE + '/client.html')).text();
-              const clientActionsSource = await (await page.request.get(BASE + '/js/client-actions.js')).text();
-              const clientAccountSource = await (await page.request.get(BASE + '/js/client-account.js')).text();
-              const clientRenderSource = await (await page.request.get(BASE + '/js/client-render.js')).text();
+              const clientHtmlSource = await (await page.request.get(BASE + '/frontend/client.html')).text();
+              const clientActionsSource = await (await page.request.get(BASE + '/frontend/js/client-actions.js')).text();
+              const clientAccountSource = await (await page.request.get(BASE + '/frontend/js/client-account.js')).text();
+              const clientRenderSource = await (await page.request.get(BASE + '/frontend/js/client-render.js')).text();
               const behaviorScripts = await page.locator('script[src="/js/page-behaviors.js"]').evaluateAll(items => items.map(item => item.dataset.sonaaFeatures || item.dataset.sonaaFeature || ''));
               const clientScriptPaths = await page.locator('script[src]').evaluateAll(items => items.map(item => new URL(item.src).pathname).filter(path => path.startsWith('/js/')));
-              const clientComponentsSource = await (await page.request.get(BASE + '/css/client-components.css')).text();
-              const clientLayoutSource = await (await page.request.get(BASE + '/css/client-layout.css')).text();
+              const clientComponentsSource = await (await page.request.get(BASE + '/frontend/css/client-components.css')).text();
+              const clientLayoutSource = await (await page.request.get(BASE + '/frontend/css/client-layout.css')).text();
               const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
               if (clientStyleOrder.some(index => index < 0) ||
                   clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
@@ -157,7 +157,7 @@ function apiResponse(pathname) {
                 const editorDocument = new DOMParser().parseFromString(markup, 'text/html');
                 return [...editorDocument.querySelectorAll('#subPageSelect option')].map(option => option.value);
               });
-              const editorScript = await (await page.request.get(BASE + '/js/editor.js')).text();
+              const editorScript = await (await page.request.get(BASE + '/frontend/js/editor.js')).text();
               for (const section of clientSections) {
                 const optionValue = editorSectionValues[section];
                 if (!editorOptions.includes(optionValue) || !editorScript.includes(optionValue)) {
