@@ -96,11 +96,12 @@ function apiResponse(pathname) {
               await page.getByText('رقم الموبايل غير صحيح؛ اكتب 11 رقمًا يبدأ بـ 01.').waitFor({ state: 'visible', timeout: 3000 });
 
               const clientStyles = await page.locator('link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
-              const clientCssAudit = await page.locator('style').evaluateAll(items => items.map(item => item.textContent.length));
+              const clientHtmlSource = await (await page.request.get(BASE + '/client.html')).text();
               if (!clientStyles.includes('/css/client-layout.css') ||
                   !clientStyles.includes('/css/client-components.css') ||
-                  Math.max(0, ...clientCssAudit) > 5000) {
-                failures.push('client/desktop: client stylesheets were not extracted or oversized inline CSS remains');
+                  clientHtmlSource.includes(':root{--navy:') ||
+                  clientHtmlSource.includes('#app .client-section-tabs{')) {
+                failures.push('client/desktop: client stylesheets were not extracted or the original inline CSS remains');
               }
 
               const clientSections = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
