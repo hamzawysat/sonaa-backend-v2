@@ -20,7 +20,7 @@ Seven navigation groups, 29 tabs:
 
 ## Frontend module map
 
-The active admin page loads 12 classic-script modules in dependency order:
+The active admin page loads 12 classic-script modules in dependency order from the new `frontend/js/admin/` domain folders (source files were copied without changing their contents):
 - `admin-core.js`: shared state, API wrapper, section registry, permission mapping and guards.
 - `admin-shell.js`: authenticated shell, navigation rendering, dashboard and tab dispatch.
 - `admin-people.js`: technician, admin-role and support-password views.
@@ -33,6 +33,8 @@ The active admin page loads 12 classic-script modules in dependency order:
 - `admin-client-wallet.js`: client wallet operations and ledger.
 - `admin-commerce.js`: subscription catalog and client subscriptions.
 - `admin-auth.js`: admin login.
+
+Current directory grouping: `core/`, `dashboard/`, `technicians/`, `orders/`, `system/`, `commerce/`, `navigation/` and `finance/`. The original flat source files are intentionally retained until the final duplicate/reference audit and behavior verification.
 
 The frontend modules contain approximately 236 top-level function declarations and call a broad API surface (67 distinct literal route prefixes/paths found in the modules). Preserve classic-script ordering and global function names during reorganization; these files are not ES modules.
 
@@ -47,7 +49,7 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 - `frontend/admin.html` and root `admin.html` are not identical (32,486 vs 32,277 bytes at audit time); the frontend copy has three additional script tags.
 - The production build copies `frontend/` into `frontend-dist/`; the server prefers `frontend-dist` and separately serves the repository frontend for editor preview. The root-level HTML file is not copied by the frontend build.
 - The admin page is intentionally hidden from public static URLs and served only through the configured private admin path; do not expose it while reorganizing files.
-- The current admin page had a 29,687-byte inline style block, 386 `!important` declarations, and 20 script tags. The inline style block has now been extracted to `frontend/css/admin-layout.css`; the stylesheet is linked before the shared theme and brand styles, preserving cascade order. No inline style block or style attribute remains in `frontend/admin.html`.
+- The current admin page had a 29,687-byte inline style block, 386 `!important` declarations, and 20 script tags. The inline style block has now been extracted to `frontend/css/admin-layout.css`; the stylesheet is linked before the shared theme and brand styles, preserving cascade order. No inline style block or style attribute remains in `frontend/admin.html`. The 12 new module paths were checked against all script references and each file exists. Script execution order is unchanged.
 
 ## Constraints for subsequent phases
 
@@ -56,3 +58,12 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 3. Do not delete duplicate or legacy files until the full reference/dependency audit and behavior checks prove they are unused.
 4. Do not delete old backups until final verification; at the end retain only the newest verified backup.
 5. Do not use echo; do not interrupt for routine progress updates.
+
+## Static verification after the first organization pass
+
+- 7 navigation groups and 29 tabs remain registered.
+- All 29 tabs have a render path. All regular tabs have a frontend permission key; `security` and `roles` intentionally remain root-admin-only and are denied to subordinate roles.
+- 185 inline event-handler attributes were found across the admin module templates, calling 115 distinct handler names. The only statically unbound handler name is `openFanniProfileEditor`, which is intentionally exported as `window.openFanniProfileEditor`.
+- 12 new script paths are present and resolve to files in the frontend source tree.
+- The server prefers `frontend-dist`, then `frontend`; the build script recursively copies the entire frontend tree, so nested admin JS paths are included automatically.
+- GitHub Actions returned no workflow runs for the organization commit. No browser-level test or local Node build has been run in this environment; runtime verification remains a required later phase.
