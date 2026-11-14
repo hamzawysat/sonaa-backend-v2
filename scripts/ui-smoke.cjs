@@ -37,6 +37,16 @@ function apiResponse(pathname) {
     ]) {
       for (const target of pages) {
         const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+        if (target.name === 'technician' && viewport.name === 'mobile') {
+          await page.addInitScript(() => {
+            const nativeSetInterval = window.setInterval.bind(window);
+            window.__sonaaIntervalDelays = [];
+            window.setInterval = (handler, delay, ...args) => {
+              window.__sonaaIntervalDelays.push(Number(delay));
+              return nativeSetInterval(handler, delay, ...args);
+            };
+          });
+        }
         const pageErrors = [];
         const badLocalResponses = [];
 
@@ -100,13 +110,40 @@ function apiResponse(pathname) {
                 await page.locator('#fanniLoginPassword').fill('FanniSmokePass123');
                 await page.getByRole('button', { name: 'دخول إلى حسابي' }).click();
                 await page.waitForFunction(() => !!localStorage.getItem('fanni_token_v4'), { timeout: 10000 });
+                const technicianNavigation = await page.evaluate(() => ({
+                  tabs: typeof TECHNICIAN_TAB_DEFINITIONS !== 'undefined' ? TECHNICIAN_TAB_DEFINITIONS.map(tab => tab.id) : [],
+                  notificationBell: !!document.querySelector('button[aria-label="الإشعارات"]'),
+                  supportLink: !!document.querySelector('a.support-float[href="support.html?role=fanni"]')
+                }));
+                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support' ||
+                    !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
+                  failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
+                }
+                const initialTab = await page.evaluate(() => state.tab);
+            if (initialTab !== 'home') failures.push('technician/mobile: dashboard did not open on the home section');
+                const pollingStarted = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
+                if (!pollingStarted) failures.push('technician: chat/message polling did not start after login');
+                await page.getByRole('button', { name: /الدعم الفني/ }).first().waitFor({ state: 'visible', timeout: 3000 });
+                await page.evaluate(() => setTab('myOrders'));
+                await page.getByRole('button', { name: /المهام المكتملة/ }).click();
+                await page.getByRole('heading', { name: 'المهام المكتملة' }).waitFor({ state: 'visible', timeout: 3000 });
+                await page.getByRole('button', { name: /العروض الجارية/ }).click();
+                await page.getByRole('heading', { name: 'عروضي' }).waitFor({ state: 'visible', timeout: 3000 });
                 await page.evaluate(() => setTab('profile'));
-                await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 5000 });
+                await page.getByRole('button', { name: /تغيير كلمة المرور/ }).waitFor({ state: 'visible', timeout: 3000 });
                 await page.locator('button[onclick="beginEditProfile()"]').click();
                 await page.locator('#fanniEditPhone').fill('01012345672');
                 await page.locator('button[onclick="saveProfileChanges()"]').click();
                 await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 10000 });
                 await page.locator('#toast').getByText(/تم إرسال طلب تعديل بيانات/).waitFor({ state: 'visible', timeout: 3000 });
+                await page.route('**/api/areas', route => route.fulfill({
+                  status: 200,
+                  contentType: 'application/json; charset=utf-8',
+                  body: JSON.stringify({ message: 'فشل اختبار تحميل المناطق' })
+                }));
+                await page.locator('#global-refresh').click();
+                await page.locator('#toast').getByText(/تعذر تحديث: مناطق العمل/).waitFor({ state: 'visible', timeout: 8000 });
+                await page.unroute('**/api/areas');
               }
             } else if (target.name === 'admin') {
               await page.locator('#login-btn').click();
@@ -119,6 +156,72 @@ function apiResponse(pathname) {
                 await page.waitForTimeout(1200);
               }
             }
+          }
+
+          if (viewport.name === 'mobile' && target.name === 'technician' && process.env.SONAA_SMOKE_REAL_API === '1') {
+            await page.locator('#fanniLoginPhone').fill('01012345671');
+            await page.locator('#fanniLoginPassword').fill('FanniSmokePass123');
+            await page.getByRole('button', { name: 'دخول إلى حسابي' }).click();
+            await page.waitForFunction(() => !!localStorage.getItem('fanni_token_v4'), { timeout: 10000 });
+            await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
+
+            const resources = await page.evaluate(() => ({
+              css: [...document.querySelectorAll('link[rel="stylesheet"]')].map(item => item.href).filter(url => url.includes('/css/fanni-')),
+              scripts: [...document.querySelectorAll('script[src]')].map(item => item.src).filter(url => url.includes('/js/fanni-'))
+            }));
+            if (new Set(resources.css).size !== resources.css.length || new Set(resources.scripts).size !== resources.scripts.length) {
+              failures.push('technician/mobile: duplicate CSS or JavaScript module references detected');
+            }
+
+            const expectedTabs = [
+              ['الرئيسية', 'home'],
+              ['فرص العمل', 'available'],
+              ['طلباتي', 'myOrders'],
+              ['المحفظة', 'wallet'],
+              ['المتجر', 'store'],
+              ['حسابي', 'profile']
+            ];
+            for (const [label, tab] of expectedTabs) {
+              try {
+                const tabButton = page.locator(`button[onclick="openTechnicianSection('${tab}')"]`).first();
+                await tabButton.click({ timeout: 8000 });
+                await page.waitForTimeout(120);
+                const isActive = await page.evaluate(expected => [...document.querySelectorAll('button')]
+                  .some(button => button.getAttribute('onclick') === "openTechnicianSection('" + expected + "')" &&
+                    String(button.className).includes('from-[#C9A34F]')), tab);
+                if (!isActive) failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
+              } catch (error) {
+                failures.push('technician/mobile: ' + tab + ' navigation click failed: ' + error.message);
+                throw error;
+              }
+            }
+
+            const polling = await page.evaluate(() => ({
+              chats: !!fanniChatsPollTimer,
+              messages: !!fanniMessagesPollTimer,
+              bell: !!document.querySelector('button[aria-label="الإشعارات"]'),
+              intervals: window.__sonaaIntervalDelays || []
+            }));
+            if (!polling.chats || !polling.messages || !polling.bell ||
+                polling.intervals.filter(delay => delay === 25000).length !== 1 ||
+                polling.intervals.filter(delay => delay === 10000).length !== 1) {
+              failures.push('technician/mobile: polling timers must run once at 25s and 10s and keep the notification bell');
+            }
+
+            await page.evaluate(() => {
+              Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+              document.dispatchEvent(new Event('visibilitychange'));
+            });
+            const stopped = await page.evaluate(() => !fanniChatsPollTimer && !fanniMessagesPollTimer);
+            await page.evaluate(() => {
+              Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+              document.dispatchEvent(new Event('visibilitychange'));
+            });
+            const resumed = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
+            if (!stopped || !resumed) failures.push('technician/mobile: polling did not stop/resume with page visibility');
+
+            await page.locator('button[onclick="openTechnicianSection(\'support\')"]:visible').first().click({ timeout: 8000 });
+            await page.waitForURL(url => url.pathname.endsWith('/support.html') && url.searchParams.get('role') === 'fanni', { timeout: 5000 });
           }
 
           if (pageErrors.length) failures.push(target.name + '/' + viewport.name + ': ' + pageErrors.join(' | '));
