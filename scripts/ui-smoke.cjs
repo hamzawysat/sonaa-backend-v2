@@ -107,11 +107,16 @@ function apiResponse(pathname) {
               }
 
               const clientSections = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
-              const editorMarkup = await (await page.request.get(BASE + '/editor.html')).text();
+              const editorOptions = await page.evaluate(async () => {
+                const response = await fetch('/editor.html');
+                const markup = await response.text();
+                const editorDocument = new DOMParser().parseFromString(markup, 'text/html');
+                return [...editorDocument.querySelectorAll('#subPageSelect option')].map(option => option.value);
+              });
               const editorScript = await (await page.request.get(BASE + '/js/editor.js')).text();
               for (const section of clientSections) {
-                if (!editorMarkup.includes('value="client:' + section + '"') ||
-                    !editorScript.includes("'client:" + section + "'")) {
+                if (!editorOptions.includes('client:' + section) ||
+                    !editorScript.includes('client:' + section)) {
                   failures.push('client/desktop: shared editor is missing the ' + section + ' section');
                 }
                 const previewResponse = await page.goto(BASE + '/client.html?preview=true&section=' + section, {
@@ -129,6 +134,8 @@ function apiResponse(pathname) {
               await page.waitForFunction(() => state.tab === 'new', { timeout: 5000 });
               await page.evaluate(() => window.postMessage({ action: 'openSection', section: 'wallet' }, '*'));
               await page.waitForFunction(() => state.tab === 'wallet', { timeout: 5000 });
+              await page.goto(BASE + '/client.html', { waitUntil: 'domcontentloaded' });
+              await page.locator('#accountPhone').waitFor({ state: 'visible', timeout: 5000 });
 
               if (process.env.SONAA_SMOKE_REAL_API === '1') {
                 await page.locator('#accountPhone').fill('01012345670');
