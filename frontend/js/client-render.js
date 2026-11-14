@@ -27,13 +27,7 @@ function render(){
     ?Number(CATEGORIES.find(category=>category.services.includes(state.service))?.serviceTechnicianCountsByArea?.[state.service]?.[state.area]||0)
     :null;
   document.getElementById('app').innerHTML=`
-  <style>
-   .account-top-nav{justify-content:center!important;align-items:center!important;flex-wrap:nowrap!important;width:100%!important;margin-inline:auto!important}
-   body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:85px!important}
-   body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:85px!important}
-
-
-  </style>
+  
   <header class="app-header fanni-app-header sticky top-0 z-40 backdrop-blur-xl">
    <div class="mx-auto w-full max-w-[640px] px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
     <div class="flex items-center gap-2 min-w-0 flex-1">
