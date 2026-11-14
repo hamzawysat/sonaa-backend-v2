@@ -110,7 +110,7 @@ function apiResponse(pathname) {
                   failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
                 }
                 await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
-                await page.locator('nav a[href="support.html?role=fanni"]').waitFor({ state: 'visible', timeout: 3000 });
+                await page.locator('nav button[onclick="openTechnicianSection('support')"]').waitFor({ state: 'visible', timeout: 3000 });
                 await page.evaluate(() => setTab('myOrders'));
                 await page.getByRole('button', { name: /المهام المكتملة/ }).click();
                 await page.getByRole('heading', { name: 'المهام المكتملة' }).waitFor({ state: 'visible', timeout: 3000 });
