@@ -1448,6 +1448,50 @@ async function run() {
       assert.equal(duplicateRenewal.body.duplicate, true);
       assert.equal((await ClientSubscription.findById(subscriptionId).lean()).history.length, 2);
       assert.equal(Number((await Client.findById(clientId).lean()).walletBalance), afterApproval - 50);
+
+      const StoreProduct = require('../models/StoreProduct');
+      const StoreOrder = require('../models/StoreOrder');
+      const storeProduct = await StoreProduct.create({
+        name: 'منتج اختبار الفني', description: 'اختبار طلب شراء من متجر الفني',
+        price: 75, type: 'product', isActive: true, stock: 5
+      });
+      const fanniBalanceBeforeStore = Number((await Fanni.findById(fanni._id).lean()).walletBalance);
+      const storeKey = 'fanni-store-product-purchase-0001';
+      const storePurchase = await request(app).post('/api/store/fanni/orders')
+        .set('Authorization', 'Bearer ' + fanniToken)
+        .send({ productId: String(storeProduct._id), quantity: 2, paymentMethod: 'wallet', idempotencyKey: storeKey });
+      assert.equal(storePurchase.status, 201, JSON.stringify(storePurchase.body));
+      assert.equal(storePurchase.body.balance, fanniBalanceBeforeStore - 150);
+      assert.equal(storePurchase.body.order.paymentStatus, 'مدفوع');
+      assert.equal((await StoreProduct.findById(storeProduct._id).lean()).stock, 3);
+      const storedOrder = await StoreOrder.findById(storePurchase.body.order.id).lean();
+      assert.equal(storedOrder.buyerRole, 'fanni');
+      assert.equal(storedOrder.total, 150);
+      const storeLedger = await WalletTransaction.findOne({ fanni: fanni._id, type: 'fanni_store_payment', idempotencyKey: 'store-order:' + String(storedOrder._id) }).lean();
+      assert.ok(storeLedger);
+      assert.equal(storeLedger.amount, -150);
+      assert.equal(storeLedger.balanceBefore, fanniBalanceBeforeStore);
+      assert.equal(storeLedger.balanceAfter, fanniBalanceBeforeStore - 150);
+
+      const duplicateStorePurchase = await request(app).post('/api/store/fanni/orders')
+        .set('Authorization', 'Bearer ' + fanniToken)
+        .send({ productId: String(storeProduct._id), quantity: 2, paymentMethod: 'wallet', idempotencyKey: storeKey });
+      assert.equal(duplicateStorePurchase.status, 200);
+      assert.equal(duplicateStorePurchase.body.duplicate, true);
+      assert.equal(Number((await Fanni.findById(fanni._id).lean()).walletBalance), fanniBalanceBeforeStore - 150);
+      assert.equal((await StoreProduct.findById(storeProduct._id).lean()).stock, 3);
+
+      const storeSubscription = await StoreProduct.create({
+        name: 'اشتراك اختبار الفني', price: 120, type: 'subscription',
+        subscriptionDuration: '30 يوم', isActive: true
+      });
+      const subscriptionRequest = await request(app).post('/api/store/fanni/orders')
+        .set('Authorization', 'Bearer ' + fanniToken)
+        .send({ productId: String(storeSubscription._id), quantity: 1, idempotencyKey: 'fanni-store-subscription-request-0001' });
+      assert.equal(subscriptionRequest.status, 201, JSON.stringify(subscriptionRequest.body));
+      assert.equal(subscriptionRequest.body.order.paymentStatus, 'غير مدفوع');
+      assert.equal(subscriptionRequest.body.order.paymentMethod, 'غير محدد');
+      assert.equal(Number((await Fanni.findById(fanni._id).lean()).walletBalance), fanniBalanceBeforeStore - 150);
     });
 
     await test('order chat rejects revoked technician sessions after password changes', async () => {
