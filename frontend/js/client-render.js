@@ -49,11 +49,42 @@ function render(){
   <a href="support.html?role=client" aria-label="خدمة العملاء" class="support-float"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="2"/><rect x="17" y="12" width="4" height="7" rx="2"/><path d="M17 19a5 5 0 0 1-5 2h-1"/></svg></a><button id="global-refresh" type="button" onclick="handleGlobalRefresh()" class="global-refresh global-refresh-float ${globalRefreshInProgress?'is-refreshing':''}"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 17 5l3 7M4 12l3 7a7 7 0 0 0 11.4-2"/></svg></button>
   ${renderPublicContent()}
   <main class="mx-auto w-full max-w-[640px] px-3 sm:px-4 pb-[160px] safe-bottom">
-    <div class="client-section-tabs sticky top-0 z-40 mt-0 flex p-1 bg-white/95 rounded-[15px] shadow-sm border border-slate-200 gap-1 backdrop-blur-xl">
-      ${CLIENT_TAB_DEFINITIONS.map(t=>`
-         <button type="button" onclick="setTab('${t.id}')" class="flex-1 h-11 rounded-xl text-[12px] font-extrabold transition-colors ${state.tab===t.id?'tab-active':'tab-idle'}">${t.label}</button>
-      `).join('')}
-    </div>
+    ${state.tab==='home'?(() => {
+      const orders=Array.isArray(state.myOrders)?state.myOrders:[];
+      const closed=['تم الانتهاء','منتهي','ملغي','مؤرشف','منتهي - اعتذار'];
+      const activeCount=orders.filter(o=>!closed.includes(String(o.status||''))).length;
+      const completedCount=orders.length-activeCount;
+      return `
+      <section class="client-home-dashboard mt-4 space-y-3" aria-labelledby="clientHomeTitle">
+        <div class="panel p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div><p class="text-[10px] font-bold text-slate-500">نظرة سريعة على حسابك</p><h2 id="clientHomeTitle" class="text-[17px] font-black mt-1">أهلاً ${escHtml(state.account?.name||state.clientName||'بك')}</h2><p class="text-[11px] text-slate-500 mt-1">كل خدمات حمزاوي سات في مكان واحد</p></div>
+            <span class="rounded-full bg-cyan-50 px-3 py-1.5 text-[10px] font-extrabold text-cyan-800">لوحة العميل</span>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <article class="rounded-xl border border-slate-200 bg-white p-3"><p class="text-[10px] font-bold text-slate-500">إجمالي طلباتي</p><p class="mt-1 text-2xl font-black text-slate-900">${orders.length}</p><button type="button" onclick="setTab('orders')" class="mt-2 text-[11px] font-extrabold text-cyan-800">عرض الطلبات</button></article>
+            <article class="rounded-xl border border-slate-200 bg-white p-3"><p class="text-[10px] font-bold text-slate-500">طلبات جارية</p><p class="mt-1 text-2xl font-black text-slate-900">${activeCount}</p><button type="button" onclick="setTab('orders');state.accountOrdersTab='current';render()" class="mt-2 text-[11px] font-extrabold text-cyan-800">متابعة الجاري</button></article>
+            <article class="rounded-xl border border-slate-200 bg-white p-3"><p class="text-[10px] font-bold text-slate-500">طلبات سابقة</p><p class="mt-1 text-2xl font-black text-slate-900">${completedCount}</p><button type="button" onclick="setTab('orders');state.accountOrdersTab='previous';render()" class="mt-2 text-[11px] font-extrabold text-cyan-800">عرض السابق</button></article>
+            <article class="rounded-xl border border-slate-200 bg-white p-3"><p class="text-[10px] font-bold text-slate-500">رصيد محفظتي</p><p class="mt-1 text-2xl font-black text-slate-900">${Number(state.walletBalance||0).toLocaleString('ar-EG')} <span class="text-xs">ج</span></p><button type="button" onclick="setTab('wallet')" class="mt-2 text-[11px] font-extrabold text-cyan-800">فتح المحفظة</button></article>
+          </div>
+          <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center justify-between gap-3"><div><p class="text-[11px] font-extrabold">الإشعارات</p><p class="text-[10px] text-slate-500 mt-1"> ${Number(state.notificationsUnread||0)} إشعار غير مقروء</p></div><button type="button" onclick="toggleNotifications()" class="rounded-lg bg-white border border-slate-200 px-3 py-2 text-[11px] font-extrabold">فتح الإشعارات</button></div>
+        </div>
+        <div class="panel p-4">
+          <h3 class="text-[14px] font-extrabold">القائمة الرئيسية</h3>
+          <p class="mt-1 text-[10px] text-slate-500">اختار القسم اللي عايز تفتحه</p>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <button type="button" onclick="setTab('new')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">＋ طلب خدمة جديدة</button>
+            <button type="button" onclick="setTab('orders')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">📋 طلباتي</button>
+            <button type="button" onclick="setTab('track')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">🔎 تتبع طلب</button>
+            <button type="button" onclick="setTab('wallet')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">💳 محفظتي</button>
+            <button type="button" onclick="setTab('subscriptions')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">📄 الاشتراكات</button>
+            <button type="button" onclick="setTab('store')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">🛍️ المتجر</button>
+            <button type="button" onclick="setTab('complaint')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">⚠️ الشكاوى</button>
+            <a href="password.html?role=client&mode=account" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[12px] font-extrabold text-slate-800">👤 حسابي</a>
+          </div>
+        </div>
+      </section>`;
+    })():''}
     ${state.tab==='new'?`
       ${!state.sn?`
       <div class="mt-4 space-y-3 animate-fade client-new-order">
@@ -395,15 +426,11 @@ ${state.tracked.acceptedOfferId && String(state.tracked.acceptedOfferId)===offer
     </div>`:''}
   </main>
   <nav class="fixed bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-xl safe-bottom">
-    <div class="mx-auto max-w-[640px] px-1 h-[72px] grid grid-cols-6 gap-0">
-      ${[{id:'new',icon:'＋',label:'طلب'},{id:'track',icon:'◉',label:'تتبع'},{id:'wallet',icon:'💳',label:'محفظة'},{id:'subscriptions',icon:'📄',label:'الاشتراكات'},{id:'store',icon:'🛍️',label:'المتجر'},{id:'complaint',icon:'⚠',label:'شكوى'}].map(t=>`
-        <button type="button" onclick="setTab('${t.id}')" class="rounded-xl flex flex-col items-center justify-center gap-1 ${state.tab===t.id?'bg-[#F8F6F0] text-blue-800':'text-slate-500'}">
-          <span class="text-[17px] font-black">${t.icon}</span>
-          <span class="text-[10px] font-extrabold">${t.label}</span>
-          ${state.tab===t.id?'<span class="w-5 h-0.5 rounded-full bg-blue-700"></span>':''}
+    <div class="mx-auto max-w-[680px] px-1 h-[70px] grid grid-cols-7 gap-0.5">
+      ${[{id:'home',icon:'⌂',label:'الرئيسية'},{id:'new',icon:'＋',label:'طلب جديد'},{id:'orders',icon:'📋',label:'طلباتي'},{id:'wallet',icon:'💳',label:'المحفظة'},{id:'subscriptions',icon:'📄',label:'الاشتراكات'},{id:'store',icon:'🛍️',label:'المتجر'},{id:'complaint',icon:'🎧',label:'الشكاوى'}].map(t=>`
+        <button type="button" onclick="setTab('${t.id}')" class="min-w-0 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}">
+          <span class="text-base leading-none">${t.icon}</span><span class="text-[9px] font-extrabold text-center leading-tight">${t.label}</span>
         </button>`).join('')}
-      
-      
     </div>
   </nav>`;
 }
