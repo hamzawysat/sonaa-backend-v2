@@ -156,7 +156,7 @@ async function saveProfileChanges(){
 }
 
 async function loadProfile(){
- if(!getToken())return;
+ if(!getToken())return false;
 
  try{
   const data=await API.profile();
@@ -171,7 +171,9 @@ async function loadProfile(){
    }
 
    render();
+   return true;
   }
+  return false;
  }catch(e){
   if(e.status===401){
    clearAuth();
@@ -182,5 +184,6 @@ async function loadProfile(){
   }else{
    log('profile',e);
   }
+  return false;
  }
 }
