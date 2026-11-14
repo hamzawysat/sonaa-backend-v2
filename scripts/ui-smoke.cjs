@@ -113,11 +113,15 @@ function apiResponse(pathname) {
                 const technicianNavigation = await page.evaluate(() => ({
                   tabs: typeof TECHNICIAN_TAB_DEFINITIONS !== 'undefined' ? TECHNICIAN_TAB_DEFINITIONS.map(tab => tab.id) : [],
                   notificationBell: !!document.querySelector('button[aria-label="الإشعارات"]'),
-                  supportLink: !!document.querySelector('a.support-float[href="support.html?role=fanni"]')
+                  supportFloat: !!document.querySelector('a.support-float[href="support.html?role=fanni"]'),
+                  topTabs: !!document.querySelector('.fanni-dashboard-tabs'),
+                  bottomTabs: document.querySelectorAll('nav.fixed.bottom-0 button[onclick^="openTechnicianSection("]').length,
+                  refreshOnLeft: (() => { const button = document.querySelector('#global-refresh'); const style = button && getComputedStyle(button); return !!style && style.left !== 'auto' && style.right === 'auto'; })()
                 }));
                 if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support' ||
-                    !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
-                  failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
+                    !technicianNavigation.notificationBell || technicianNavigation.supportFloat || technicianNavigation.topTabs ||
+                    technicianNavigation.bottomTabs !== 7 || !technicianNavigation.refreshOnLeft) {
+                  failures.push('technician/desktop: dashboard sections, single bottom navigation, or refresh placement is incorrect');
                 }
                 const initialTab = await page.evaluate(() => state.tab);
             if (initialTab !== 'home') failures.push('technician/mobile: dashboard did not open on the home section');
