@@ -275,3 +275,7 @@ body .fanni-login-gate .account-switch-link:focus-visible{
 }
 
 
+
+.account-top-nav{justify-content:center!important;align-items:center!important;flex-wrap:nowrap!important;width:100%!important;margin-inline:auto!important}
+body .support-float{position:fixed!important;left:16px!important;right:auto!important;bottom:85px!important}
+body .global-refresh-float{position:fixed!important;right:16px!important;left:auto!important;bottom:85px!important}
