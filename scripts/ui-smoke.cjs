@@ -118,11 +118,14 @@ function apiResponse(pathname) {
                   bottomTabs: document.querySelectorAll('nav.fixed.bottom-0 button[onclick^="openTechnicianSection("]').length,
                   refreshOnLeft: (() => { const button = document.querySelector('#global-refresh'); const style = button && getComputedStyle(button); return !!style && style.left !== 'auto' && style.right === 'auto'; })()
                 }));
-                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support' ||
-                    !technicianNavigation.notificationBell || technicianNavigation.supportFloat || technicianNavigation.topTabs ||
-                    technicianNavigation.bottomTabs !== 7 || !technicianNavigation.refreshOnLeft) {
-                  failures.push('technician/desktop: dashboard sections, single bottom navigation, or refresh placement is incorrect');
+                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support') {
+                  failures.push('technician/desktop: expected technician section definitions are missing');
                 }
+                if (!technicianNavigation.notificationBell) failures.push('technician/desktop: notification bell is missing');
+                if (technicianNavigation.supportFloat) failures.push('technician/desktop: floating support shortcut still exists');
+                if (technicianNavigation.topTabs) failures.push('technician/desktop: duplicate top navigation still exists');
+                if (technicianNavigation.bottomTabs !== 7) failures.push('technician/desktop: expected 7 bottom navigation buttons, found ' + technicianNavigation.bottomTabs);
+                if (!technicianNavigation.refreshOnLeft) failures.push('technician/desktop: refresh control is not positioned on the left');
                 const initialTab = await page.evaluate(() => state.tab);
             if (initialTab !== 'home') failures.push('technician/mobile: dashboard did not open on the home section');
                 const pollingStarted = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
