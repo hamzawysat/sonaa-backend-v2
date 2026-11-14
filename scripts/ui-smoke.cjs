@@ -245,11 +245,23 @@ function apiResponse(pathname) {
                     await page.locator('[data-device="mobile"]').click();
                     await page.locator('#reloadPreviewBtn').click();
                     await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), null, { timeout: 20000 });
-                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+                    await preview.locator('#app .account-slogan').waitFor({ state: 'visible', timeout: 10000 });
+                    const mobileReloadLayout = await (await page.request.get(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    })).json();
+                    if (!Object.values(mobileReloadLayout.layout?.elements || {}).some(item => item.text === 'اختبار حفظ واسترجاع المحرر')) {
+                      failures.push('client/desktop: saved editor text was not retained after mobile preview reload');
+                    }
                     await page.locator('[data-device="desktop"]').click();
                     await page.locator('#reloadPreviewBtn').click();
                     await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), null, { timeout: 20000 });
-                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+                    await preview.locator('#app .account-slogan').waitFor({ state: 'visible', timeout: 10000 });
+                    const desktopReloadLayout = await (await page.request.get(BASE + '/api/admin/ui-layout/client', {
+                      headers: { Authorization: 'Bearer ' + adminSession.token }
+                    })).json();
+                    if (!Object.values(desktopReloadLayout.layout?.elements || {}).some(item => item.text === 'اختبار حفظ واسترجاع المحرر')) {
+                      failures.push('client/desktop: saved editor text was not retained after desktop preview reload');
+                    }
 
                     const resetLayout = await page.request.delete(BASE + '/api/admin/ui-layout/client', {
                       headers: { Authorization: 'Bearer ' + adminSession.token }
