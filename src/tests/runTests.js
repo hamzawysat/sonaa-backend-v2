@@ -91,6 +91,13 @@ async function run() {
       }
       const core = fs.readFileSync(path.join(frontendRoot, 'js/admin/core/admin-core.js'), 'utf8');
       const shell = fs.readFileSync(path.join(frontendRoot, 'js/admin/dashboard/admin-shell.js'), 'utf8');
+      for (const action of ['createAdminClientSubscription', 'editClientSubscriptionDetails', 'deductClientWalletBalance', 'settleClientWalletBalance', 'changeAccountPassword', 'issueSupportPassword', 'saveAnnouncement', 'clearAnnouncement', 'moveCategoryByIndex', 'restoreRegion', 'bulkEditRegions', 'bulkToggleRegions', 'bulkDeleteRegions', 'bulkRestoreRegions']) {
+        assert.ok(core.includes("'" + action + "'"), 'admin write guard missing action: ' + action);
+      }
+      assert.ok(core.includes('walletActionBlocked'), 'wallet mutations must also check wallet write permission');
+      assert.ok(core.includes('commerceActionBlocked'), 'client subscription creation must also check commerce write permission');
+      assert.ok(core.includes('passwordRecoveryWriteBlocked'), 'support password issuance must check password recovery write permission');
+      assert.ok(core.includes('passwordRecoveryReadBlocked'), 'support password reveal must check password recovery read permission');
       const registry = core.match(/const ADMIN_SECTIONS = \[([\s\S]*?)\n\];/);
       assert.ok(registry, 'admin section registry must exist');
       const groupCount = (registry[1].match(/^\s*\{id:/gm) || []).length;
