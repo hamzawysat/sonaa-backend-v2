@@ -337,7 +337,7 @@
     if (page === 'fanni' && actual === 'home') { if (goTab('home')) { window.scrollTo({top:0,behavior:'smooth'}); return; } }
     if (page === 'fanni' && actual === 'completed') { if (typeof window.setMyOrdersView === 'function') window.setMyOrdersView('completed'); if (goTab('myOrders')) return; }
     if (page === 'fanni' && actual === 'myOffers') { if (typeof window.setMyOrdersView === 'function') window.setMyOrdersView('active'); if (goTab('myOrders')) return; }
-    if (page === 'fanni' && ['home','available','myOrders','wallet','store','profile','login','register'].indexOf(actual) !== -1 && goTab(actual)) return;
+    if (page === 'fanni' && ['home','available','myOrders','wallet','store','profile','support','login','register'].indexOf(actual) !== -1 && goTab(actual)) return;
     if (page === 'admin' && ['dashboard','stats','clients','orders','fannis','pending','profileEdits','disabled','levels','offers','wallets','topups','services','regions','complaints','support','notifications','content','pricing','reports','pageVisits','security','settings','roles'].indexOf(actual) !== -1 && goTab(actual)) return;
     if (page === 'admin' && actual === '__passwordRecovery') { location.href = '/password.html?role=admin&mode=support'; return; }
     if (page === 'client' && ['login','register','profile'].indexOf(actual) !== -1) {
