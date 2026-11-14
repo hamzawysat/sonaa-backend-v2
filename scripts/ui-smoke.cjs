@@ -239,11 +239,12 @@ function apiResponse(pathname) {
                       failures.push('client/desktop: editor save was not persisted by the MongoDB-backed API');
                     }
 
+                    await page.locator('[data-device="mobile"]').click();
                     await page.locator('#reloadPreviewBtn').click();
                     await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
-                    await page.locator('[data-device="mobile"]').click();
-                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 5000 });
                     await page.locator('[data-device="desktop"]').click();
+                    await page.locator('#reloadPreviewBtn').click();
+                    await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
 
                     const resetLayout = await page.request.delete(BASE + '/api/admin/ui-layout/client', {
                       headers: { Authorization: 'Bearer ' + adminSession.token }
