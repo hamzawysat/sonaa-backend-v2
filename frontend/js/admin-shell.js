@@ -52,7 +52,7 @@ function render(){
       ${state.pageMode==='home'?`<section class="mt-4 premium-panel p-3 space-y-3">
         <div class="flex items-center justify-between px-1">
           <h2 class="text-[12px] font-black text-slate-700">مركز التحكم</h2>
-          <span class="text-[10px] text-slate-500">6 أقسام رئيسية</span>
+          <span class="text-[10px] text-slate-500">8 أقسام رئيسية</span>
         </div>
         
         <div class="section-nav" aria-label="كل أدوات لوحة الإدارة">
