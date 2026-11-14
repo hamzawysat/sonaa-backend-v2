@@ -22,7 +22,7 @@ async function loadWalletTransferNumbers(){
  return loaded;
 }
 
-function loadWalletHistory(){
+async function loadWalletHistory(){
  if(!getToken())return false;
 
  try{
