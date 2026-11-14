@@ -192,21 +192,12 @@ function apiResponse(pathname) {
                   failures.push('client/desktop: signed-in customer navigation is missing or out of order');
                 }
                 const customerTabButtons = page.locator('.client-section-tabs button');
-                for (const tab of customerTabIds) {
-                  let foundButton = false;
-                  for (let buttonIndex = 0; buttonIndex < await customerTabButtons.count(); buttonIndex++) {
-                    const button = customerTabButtons.nth(buttonIndex);
-                    if (await button.getAttribute('onclick') === "setTab('" + tab + "')") {
-                      await button.click();
-                      foundButton = true;
-                      break;
-                    }
-                  }
-                  if (foundButton) {
-                    await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 5000 });
-                  } else {
-                    failures.push('client/desktop: visible navigation button is missing for ' + tab);
-                  }
+                if (await customerTabButtons.count() !== customerTabIds.length) {
+                  failures.push('client/desktop: visible customer navigation button count is incorrect');
+                }
+                for (let buttonIndex = 0; buttonIndex < customerTabIds.length; buttonIndex++) {
+                  await customerTabButtons.nth(buttonIndex).click();
+                  await page.waitForFunction(expected => state.tab === expected, customerTabIds[buttonIndex], { timeout: 5000 });
                 }
               }
             } else if (target.name === 'technician') {
