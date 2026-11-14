@@ -111,7 +111,15 @@ function apiResponse(pathname) {
               const clientScriptPaths = await page.locator('script[src]').evaluateAll(items => items.map(item => new URL(item.src).pathname).filter(path => path.startsWith('/js/')));
               const clientComponentsSource = await (await page.request.get(BASE + '/frontend/css/client-components.css')).text();
               const clientLayoutSource = await (await page.request.get(BASE + '/frontend/css/client-layout.css')).text();
+              const sharedEditorSource = await (await page.request.get(BASE + '/frontend/js/editor.js')).text();
               const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
+              if (!sharedEditorSource.includes('function getEffectiveData(data)') ||
+                  !sharedEditorSource.includes('function clearMobileOverrideProperties(data,properties)') ||
+                  !sharedEditorSource.includes("clearMobileOverrideProperties(data,[property])") ||
+                  !sharedEditorSource.includes("clearMobileOverrideProperties(data,['translateX','translateY'])") ||
+                  !sharedEditorSource.includes('const data=getSelectedData(),effective=getEffectiveData(data)')) {
+                failures.push('client/desktop: editor changes do not consistently apply to shared desktop/mobile layout data');
+              }
               if (clientStyleOrder.some(index => index < 0) ||
                   clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
                   /<style\b/i.test(clientHtmlSource) ||
