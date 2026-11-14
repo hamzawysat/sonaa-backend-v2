@@ -123,12 +123,18 @@ function apiResponse(pathname) {
                 if (navigationGroups !== 8) failures.push('admin/desktop: expected 8 navigation groups, found ' + navigationGroups);
                 if (navigationTabCount !== 29) failures.push('admin/desktop: expected 29 navigation tabs, found ' + navigationTabCount);
                 const tabIds = await navigationTabs.evaluateAll(buttons => buttons.map(button => {
-                  const match = (button.getAttribute('onclick') || '').match(/setTab\\('([^']+)'\\)/);
-                  return match ? match[1] : '';
+                  const handler = button.getAttribute('onclick') || '';
+                  const firstQuote = handler.indexOf("'");
+                  const lastQuote = handler.lastIndexOf("'");
+                  return firstQuote >= 0 && lastQuote > firstQuote ? handler.slice(firstQuote + 1, lastQuote) : '';
                 }));
-                for (const tabId of tabIds) {
-                  if (!tabId) continue;
-                  await page.locator('.section-nav-btn[onclick="setTab(\\'' + tabId + '\\')"]').click();
+                for (let index = 0; index < tabIds.length; index++) {
+                  const tabId = tabIds[index];
+                  if (!tabId) {
+                    failures.push('admin/desktop: navigation tab has no setTab target');
+                    continue;
+                  }
+                  await navigationTabs.nth(index).click();
                   await page.waitForFunction(id => {
                     const active = document.querySelector('.section-nav-btn.active');
                     return active && active.getAttribute('onclick') === "setTab('" + id + "')";
