@@ -45,6 +45,34 @@ async function run() {
     app = require('../server');
     mongoose = require('mongoose');
 
+    await test('admin console keeps its organized stylesheet and script dependency paths', async () => {
+      const frontendRoot = path.join(__dirname, '../../frontend');
+      const html = fs.readFileSync(path.join(frontendRoot, 'admin.html'), 'utf8');
+      assert.equal((html.match(/<style\\b/gi) || []).length, 0, 'admin page must not contain an inline style block');
+      assert.equal((html.match(/\\sstyle=/gi) || []).length, 0, 'admin page must not contain inline style attributes');
+      assert.match(html, /\\/css\\/admin-layout\\.css/);
+      const adminScripts = [...html.matchAll(/<script[^>]+src=["']([^"']+)/gi)]
+        .map(match => match[1])
+        .filter(src => src.startsWith('/js/admin/'));
+      assert.equal(adminScripts.length, 12, 'all twelve admin modules must be loaded');
+      for (const src of adminScripts) {
+        const relativePath = src.split('?')[0].replace(/^\\/+/, '');
+        assert.ok(fs.existsSync(path.join(frontendRoot, relativePath)), 'missing admin script: ' + src);
+      }
+      const core = fs.readFileSync(path.join(frontendRoot, 'js/admin/core/admin-core.js'), 'utf8');
+      const shell = fs.readFileSync(path.join(frontendRoot, 'js/admin/dashboard/admin-shell.js'), 'utf8');
+      const registry = core.match(/const ADMIN_SECTIONS = \\[([\\s\\S]*?)\\n\\];/);
+      assert.ok(registry, 'admin section registry must exist');
+      const groupCount = (registry[1].match(/^\\s*\\{id:/gm) || []).length;
+      const tabCount = (registry[1].match(/\\{id:'[^']+',label:/g) || []).length - groupCount;
+      assert.equal(groupCount, 7);
+      assert.equal(tabCount, 29);
+      const tabIds = [...registry[1].matchAll(/tabs:\\[([^\\]]+)\\]/g)]
+        .flatMap(group => [...group[1].matchAll(/\\{id:'([^']+)'/g)].map(match => match[1]));
+      const renderSwitch = shell.slice(shell.indexOf('function renderCurrentTab'), shell.indexOf('function renderDashboard'));
+      for (const tabId of tabIds) assert.ok(renderSwitch.includes("'" + tabId + "'"), 'missing render path for tab: ' + tabId);
+    });
+
     await test('only the configured root administrator bypasses the permission matrix', async () => {
       assert.equal(isRootAdmin({ role: 'admin', phone: '01012345678' }), true);
       assert.equal(isRootAdmin({ role: 'admin', phone: '01012345679' }), false);
