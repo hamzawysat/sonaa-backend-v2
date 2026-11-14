@@ -38,6 +38,7 @@ async function start(){
   state.checkingSession=true;
   await loadProfile();
   if(!getToken())return;
+  if(state.tab==='login'||state.tab==='register')state.tab='home';
   await Promise.allSettled([loadOrders(),loadMyOffers(),loadWalletHistory(),loadNotifications()]);
  }catch(error){
   console.error('Technician page initialization failed:',error);
