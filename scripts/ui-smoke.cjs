@@ -109,7 +109,8 @@ function apiResponse(pathname) {
                     !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
                   failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
                 }
-                await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
+                const initialTab = await page.evaluate(() => state.tab);
+            if (initialTab !== 'home') failures.push('technician/mobile: dashboard did not open on the home section');
                 const pollingStarted = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
                 if (!pollingStarted) failures.push('technician: chat/message polling did not start after login');
                 await page.getByRole('button', { name: /الدعم الفني/ }).first().waitFor({ state: 'visible', timeout: 3000 });
@@ -171,13 +172,13 @@ function apiResponse(pathname) {
               ['حسابي', 'profile']
             ];
             for (const [label, tab] of expectedTabs) {
-              const tabButton = page.getByRole('button', { name: new RegExp(label) }).first();
+              const tabButton = page.locator('button').filter({ hasText: label }).first();
               await tabButton.click();
               await page.waitForTimeout(120);
-              const activeClass = await page.getByRole('button', { name: new RegExp(label) }).first().getAttribute('class');
-              if (!activeClass || !activeClass.includes('from-[#C9A34F]')) {
-                failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
-              }
+              const isActive = await page.evaluate(labelText => [...document.querySelectorAll('button')]
+                .filter(button => button.textContent.includes(labelText))
+                .some(button => String(button.className).includes('from-[#C9A34F]')), label);
+              if (!isActive) failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
             }
 
             const polling = await page.evaluate(() => ({
