@@ -130,7 +130,7 @@ function renderContent(){
   </section>
 
    <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-7 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={home:['⌂','الرئيسية',''],available:['📋','فرص العمل',state.filteredOrders.length],myOrders:['💼','طلباتي',state.myOffers.length+state.completedOffers.length],wallet:['💳','المحفظة',''],store:['🛍️','المتجر',''],profile:['👤','حسابي',''],support:['🎧','الدعم الفني','']}[t.id];return `<button type="button" onclick="openTechnicianSection('${t.id}')" class="min-w-0 rounded-xl border p-1 flex flex-col items-center justify-center gap-0.5 min-h-[52px] transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-[8px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
-  ${state.tab==='home'?\`
+  ${state.tab==='home'?`
    <section class="fanni-home-dashboard mt-4 space-y-3" aria-labelledby="fanniHomeTitle">
     <div class="panel p-4">
      <div class="flex items-center justify-between gap-3">
@@ -163,7 +163,7 @@ function renderContent(){
       </article>
      </div>
     </div>
-    ${!approved?\`<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-6 text-amber-900">حسابك ${esc(status)}. تقدر تراجع بياناتك، وإرسال العروض وشحن المحفظة متاحان بعد اعتماد الإدارة.</div>\`:''}
+    ${!approved?`<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-6 text-amber-900">حسابك ${esc(status)}. تقدر تراجع بياناتك، وإرسال العروض وشحن المحفظة متاحان بعد اعتماد الإدارة.</div>`:''}
     <div class="panel p-4">
      <h3 class="section-title">اختصارات سريعة</h3>
      <div class="mt-3 grid grid-cols-2 gap-2">
@@ -173,7 +173,7 @@ function renderContent(){
       <button type="button" onclick="setTab('store')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">🛍️ المتجر</button>
      </div>
     </div>
-   </section>\`:''}
+   </section>`:''}
   ${state.tab==='myOrders'?`<div class="mt-3 panel p-2 grid grid-cols-2 gap-2"><button type="button" onclick="setMyOrdersView('active')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='active'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">العروض الجارية (${state.myOffers.length})</button><button type="button" onclick="setMyOrdersView('completed')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='completed'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">المهام المكتملة (${state.completedOffers.length})</button></div>`:''}
 
   ${state.tab==='available'?`
