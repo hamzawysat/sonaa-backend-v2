@@ -95,12 +95,18 @@ function apiResponse(pathname) {
               await page.locator('.account-submit').click();
               await page.getByText('رقم الموبايل غير صحيح؛ اكتب 11 رقمًا يبدأ بـ 01.').waitFor({ state: 'visible', timeout: 3000 });
 
-              const clientStyles = await page.locator('link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
+              const clientHeadStyles = await page.locator('head link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
+              const clientStyleOrder = [
+                '/css/client-foundation.css',
+                '/css/client-layout.css',
+                '/css/theme.css',
+                '/css/hamzawy-sat-brand.css',
+                '/css/client-components.css'
+              ].map(path => clientHeadStyles.indexOf(path));
               const clientHtmlSource = await (await page.request.get(BASE + '/client.html')).text();
-              if (!clientStyles.includes('/css/client-foundation.css') ||
-                  !clientStyles.includes('/css/client-layout.css') ||
-                  !clientStyles.includes('/css/client-components.css') ||
-                  clientHtmlSource.includes('<style>') ||
+              if (clientStyleOrder.some(index => index < 0) ||
+                  clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
+                  /<style\\b/i.test(clientHtmlSource) ||
                   clientHtmlSource.includes(':root{--navy:') ||
                   clientHtmlSource.includes('#app .client-section-tabs{')) {
                 failures.push('client/desktop: client stylesheets were not extracted or the original inline CSS remains');
