@@ -76,9 +76,18 @@ async function run() {
       for (const legacyPath of ['js/admin-core.js', 'js/admin-auth.js', 'js/admin-shell.js', 'js/admin-people.js', 'js/admin-orders.js', 'js/admin-navigation.js', 'js/admin-entity-actions.js', 'js/admin-platform-actions.js']) {
         assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyPath)), false, 'unreachable root admin script remains: ' + legacyPath);
       }
-      for (const src of adminScripts) {
+      const localScripts = [...html.matchAll(/<script[^>]+src=["']([^"']+)/gi)]
+        .map(match => match[1])
+        .filter(src => src.startsWith('/'));
+      for (const src of localScripts) {
         const relativePath = src.split('?')[0].replace(/^\/+/, '');
-        assert.ok(fs.existsSync(path.join(frontendRoot, relativePath)), 'missing admin script: ' + src);
+        assert.ok(fs.existsSync(path.join(frontendRoot, relativePath)), 'missing local admin dependency: ' + src);
+      }
+      const localStylesheets = [...html.matchAll(/<link[^>]+stylesheet[^>]+href=["']([^"']+)/gi)]
+        .map(match => match[1])
+        .filter(href => href.startsWith('/'));
+      for (const href of localStylesheets) {
+        assert.ok(fs.existsSync(path.join(frontendRoot, href.replace(/^\/+/, ''))), 'missing admin stylesheet: ' + href);
       }
       const core = fs.readFileSync(path.join(frontendRoot, 'js/admin/core/admin-core.js'), 'utf8');
       const shell = fs.readFileSync(path.join(frontendRoot, 'js/admin/dashboard/admin-shell.js'), 'utf8');
