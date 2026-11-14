@@ -98,6 +98,8 @@ async function run() {
       assert.ok(core.includes('commerceActionBlocked'), 'client subscription creation must also check commerce write permission');
       assert.ok(core.includes('passwordRecoveryWriteBlocked'), 'support password issuance must check password recovery write permission');
       assert.ok(core.includes('passwordRecoveryReadBlocked'), 'support password reveal must check password recovery read permission');
+      assert.ok(core.includes('walletReadActionBlocked'), 'client wallet ledger must check wallet read permission');
+      assert.ok(core.includes('clientDataReadBlocked'), 'client profile details must check client-data read permission');
       const registry = core.match(/const ADMIN_SECTIONS = \[([\s\S]*?)\n\];/);
       assert.ok(registry, 'admin section registry must exist');
       const groupCount = (registry[1].match(/^\s*\{id:/gm) || []).length;
