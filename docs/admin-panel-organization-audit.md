@@ -85,3 +85,7 @@ Root-level copies of `web-push.js`, `page-visit.js`, `manifest.webmanifest`, `se
 A baseline-to-work-branch comparison confirmed that 11 of the 12 reorganized JS modules are byte-for-byte identical to their previous source files; the remaining core module differs only by the refund permission alignment correction described above. The extracted stylesheet is an exact copy of the former inline style block, and the 12-script execution order is unchanged.
 
 The refresh/notification wiring audit confirmed that the admin-wide refresh remains at 60 seconds with visibility/focus recovery, store order-count and new-order notification polling remains at 15 seconds with visibility recovery, and the admin page still loads the web-push and page-visit clients. Regression tests were added for these contracts; they are static checks and do not replace browser runtime testing.
+
+## UI permission guard audit
+
+The event-handler audit found several mutating actions that were protected by the API but missing from the UI's disabled-button guard list. The list now covers subscription creation/detail edits, client wallet debit/settlement, password changes/support-password issuance, announcement changes, service-category ordering, region restore and bulk region actions. Cross-domain actions now also check their backend permission key: wallet mutations/read ledger, commerce subscription creation, support-password read/write, and client profile details. This keeps disabled-state feedback aligned with server authorization rather than relying only on the current tab's permission.
