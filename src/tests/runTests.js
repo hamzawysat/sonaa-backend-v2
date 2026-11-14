@@ -103,6 +103,20 @@ async function run() {
       for (const tabId of tabIds) assert.ok(renderSwitch.includes("'" + tabId + "'"), 'missing render path for tab: ' + tabId);
     });
 
+    await test('admin auto-refresh and store notification polling remain wired', async () => {
+      const frontendRoot = path.join(__dirname, '../../frontend');
+      const navigation = fs.readFileSync(path.join(frontendRoot, 'js/admin/navigation/admin-navigation.js'), 'utf8');
+      const store = fs.readFileSync(path.join(frontendRoot, 'js/admin/commerce/admin-store.js'), 'utf8');
+      const html = fs.readFileSync(path.join(frontendRoot, 'admin.html'), 'utf8');
+      assert.ok(navigation.includes('refreshAllAdminData(false)'), 'admin refresh loop must remain active');
+      assert.ok(navigation.includes('},60000);'), 'admin refresh interval must remain one minute');
+      assert.ok(navigation.includes("addEventListener('visibilitychange'"), 'admin refresh must resume when the page becomes visible');
+      assert.ok(store.includes('pollStoreAdminNotifications()'), 'store notification polling must remain active');
+      assert.ok(store.includes('},15000);'), 'store order polling must remain every 15 seconds');
+      assert.ok(html.includes('src="/web-push.js"'), 'web push client must remain loaded');
+      assert.ok(html.includes('src="/page-visit.js"'), 'page visit tracking must remain loaded');
+    });
+
     await test('only the configured root administrator bypasses the permission matrix', async () => {
       assert.equal(isRootAdmin({ role: 'admin', phone: '01012345678' }), true);
       assert.equal(isRootAdmin({ role: 'admin', phone: '01012345679' }), false);
