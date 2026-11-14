@@ -4,7 +4,7 @@ if (!adminToken) { alert('سجل دخول أدمن أولاً'); location.replac
 const $ = id => document.getElementById(id);
 const pageSelect=$('pageSelect'), subPageSelect=$('subPageSelect'), previewFrame=$('previewFrame'), wrapper=$('wrapper'), saveBtn=$('saveBtn'), saveStatus=$('saveStatus'), editorControls=$('editorControls'), selectionNotice=$('selectionNotice');
 const pagesMap={client:'client.html',fanni:'fanni.html',admin:'admin.html',password:'password.html',support:'support.html'};
-const sectionsMap={'client:login':'login','client:register':'register','client:new-order':'new','client:my-orders':'orders','client:profile':'profile','fanni:login':'login','fanni:available':'available','fanni:my-orders':'myOffers','fanni:wallet':'wallet','admin:dashboard':'dashboard','admin:orders':'orders','admin:settings':'settings'};
+const sectionsMap={'client:login':'login','client:register':'register','client:new-order':'new','client:my-orders':'orders','client:track':'track','client:wallet':'wallet','client:subscriptions':'subscriptions','client:store':'store','client:complaint':'complaint','client:profile':'profile','fanni:login':'login','fanni:available':'available','fanni:my-orders':'myOffers','fanni:wallet':'wallet','admin:dashboard':'dashboard','admin:orders':'orders','admin:settings':'settings'};
 let selectedElement=null,selectedKey=null,editMode=false,dirty=false,saving=false,frameReady=false,layoutReady=false,currentPage='client',currentLayout={version:3,elements:{}},editVersion=0,pageLoadSequence=0,originalState=new Map();
 const layoutsCache=Object.create(null);
 const defaultLayout=()=>({version:3,elements:{}});
