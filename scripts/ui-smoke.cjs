@@ -122,7 +122,7 @@ function apiResponse(pathname) {
                 await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 10000 });
                 await page.locator('#toast').getByText(/تم إرسال طلب تعديل بيانات/).waitFor({ state: 'visible', timeout: 3000 });
                 await page.route('**/api/areas', route => route.fulfill({
-                  status: 503,
+                  status: 200,
                   contentType: 'application/json; charset=utf-8',
                   body: JSON.stringify({ message: 'فشل اختبار تحميل المناطق' })
                 }));
