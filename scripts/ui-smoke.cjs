@@ -187,6 +187,7 @@ function apiResponse(pathname) {
                 await page.locator('.account-submit').click();
                 await page.waitForFunction(() => !!localStorage.getItem('sonaa_client_account_token'), { timeout: 10000 });
                 await page.waitForFunction(() => !!state.account && !!state.accountToken, { timeout: 10000 });
+                await page.locator('.client-section-tabs').waitFor({ state: 'visible', timeout: 10000 });
                 const customerTabIds = await page.evaluate(() => CLIENT_TAB_DEFINITIONS.map(tab => tab.id));
                 if (customerTabIds.join(',') !== 'new,orders,wallet,subscriptions,store,complaint') {
                   failures.push('client/desktop: signed-in customer navigation is missing or out of order');
