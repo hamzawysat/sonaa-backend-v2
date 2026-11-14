@@ -195,18 +195,21 @@ function apiResponse(pathname) {
                 await page.locator('.account-submit').click();
                 await page.waitForFunction(() => !!localStorage.getItem('sonaa_client_account_token'), { timeout: 10000 });
                 await page.waitForFunction(() => !!state.account && !!state.accountToken, { timeout: 10000 });
-                await page.locator('.client-section-tabs').waitFor({ state: 'visible', timeout: 10000 });
-                const customerTabIds = await page.evaluate(() => CLIENT_TAB_DEFINITIONS.map(tab => tab.id));
-                if (customerTabIds.join(',') !== 'new,orders,wallet,subscriptions,store,complaint') {
-                  failures.push('client/desktop: signed-in customer navigation is missing or out of order');
-                }
-                const customerTabButtons = page.locator('.client-section-tabs button');
+                await page.locator('nav.fixed.bottom-0').waitFor({ state: 'visible', timeout: 10000 });
+                const customerTabIds = ['home', 'new', 'orders', 'wallet', 'subscriptions', 'store', 'complaint'];
+                const customerTabButtons = page.locator('nav.fixed.bottom-0 button[onclick^="setTab("]');
                 if (await customerTabButtons.count() !== customerTabIds.length) {
-                  failures.push('client/desktop: visible customer navigation button count is incorrect');
+                  failures.push('client/desktop: expected seven customer bottom navigation buttons');
                 }
-                for (let buttonIndex = 0; buttonIndex < customerTabIds.length; buttonIndex++) {
-                  await customerTabButtons.nth(buttonIndex).click();
-                  await page.waitForFunction(expected => state.tab === expected, customerTabIds[buttonIndex], { timeout: 5000 });
+                if (await page.locator('.client-section-tabs').count() !== 0) {
+                  failures.push('client/desktop: duplicate top customer navigation is still present');
+                }
+                if (await page.locator('.client-home-dashboard').count() !== 1 || await page.evaluate(() => state.tab) !== 'home') {
+                  failures.push('client/desktop: customer dashboard did not open on the home section');
+                }
+                for (const tab of customerTabIds) {
+                  await page.locator('nav.fixed.bottom-0 button[onclick="setTab(\\'' + tab + '\\')"]').click();
+                  await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 5000 });
                 }
 
                 // Exercise the shared visual editor against the isolated MongoDB-backed API.
