@@ -123,15 +123,18 @@ async function run() {
       const manualCredit = { method: 'POST', path: '/clients/abc/wallet/add-balance' };
       const manualDebit = { method: 'POST', path: '/clients/abc/wallet/deduct-balance' };
       const manualSettlement = { method: 'POST', path: '/clients/abc/wallet/set-balance' };
+      const serviceRefund = { method: 'POST', path: '/client-wallet/orders/SN123456/refund' };
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupRead), true);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, topupApprove), false);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualCredit), false);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualDebit), false);
       assert.equal(canAccessAdmin(readOnlyWalletAdmin, manualSettlement), false);
+      assert.equal(canAccessAdmin(readOnlyWalletAdmin, serviceRefund), false);
       assert.equal(canAccessAdmin(walletManager, topupApprove), true);
       assert.equal(canAccessAdmin(walletManager, manualCredit), true);
       assert.equal(canAccessAdmin(walletManager, manualDebit), true);
       assert.equal(canAccessAdmin(walletManager, manualSettlement), true);
+      assert.equal(canAccessAdmin(walletManager, serviceRefund), true);
     });
 
     await test('custom admin permissions separate reading from execution and protect permission management', async () => {
