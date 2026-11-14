@@ -138,6 +138,7 @@ async function run() {
       const frontendRoot = path.join(__dirname, '../../frontend');
       const navigation = fs.readFileSync(path.join(frontendRoot, 'js/admin/navigation/admin-navigation.js'), 'utf8');
       const store = fs.readFileSync(path.join(frontendRoot, 'js/admin/commerce/admin-store.js'), 'utf8');
+      assert.ok(navigation.includes("state.pageMode='home'"), 'web admin back button must return to the group navigation');
       const html = fs.readFileSync(path.join(frontendRoot, 'admin.html'), 'utf8');
       assert.ok(navigation.includes('refreshAllAdminData(false)'), 'admin refresh loop must remain active');
       assert.ok(navigation.includes('},60000);'), 'admin refresh interval must remain one minute');

@@ -11,8 +11,19 @@ function setTab(t,scrollTarget='content',fromBack=false){
  if(t==='profileEdits')loadFanniProfileEdits();else if(t==='orders')loadOrders();else if(t==='roles')loadAdminUsers();else if(t==='complaints')loadComplaints();else if(t==='services')loadServices();else if(t==='regions')loadRegions();else if(t==='pricing')loadPricing();else if(t==='settings')loadSettings();else if(t==='security')loadAuditLogs();else if(t==='pageVisits')loadPageVisits();else if(t==='notifications')loadNotificationHistory();else if(t==='support')loadSupportViolations();else if(t==='content')loadContent();else if(t==='topups')applyTopupFilter();else if(t==='clients')loadClients();else if(t==='clientWallet')loadClientTopups();else if(t==='commercePlans')loadCommerceCatalog();else if(t==='commerceSubscriptions')loadClientSubscriptions();else if(t==='store')loadStoreProducts();else if(t==='storeOrders')loadStoreOrders();else if(t==='wallets')render();else applyFilter();
 }
 function goBack(){
- if(ADMIN_TAB_HISTORY.length){const previous=ADMIN_TAB_HISTORY.pop();setTab(previous,'back',true);return;}
- if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage('sonaa-admin-back-at-root');}
+ if(window.ReactNativeWebView){
+  if(ADMIN_TAB_HISTORY.length){const previous=ADMIN_TAB_HISTORY.pop();setTab(previous,'back',true);return;}
+  window.ReactNativeWebView.postMessage('sonaa-admin-back-at-root');
+  return;
+ }
+ state.pageMode='home';
+ state.tab='dashboard';
+ state.search='';
+ state.filter='الكل';
+ state.dropdowns={};
+ state.pendingActions={};
+ state.loading=false;
+ render();
 }
 function onSearch(v){state.search=v; if(state.tab==='orders')applyOrderFilter(); else if(state.tab==='complaints')applyComplaintFilter(); else if(state.tab==='services')applyServicesFilter(); else if(state.tab==='topups')applyTopupFilter(); else if(state.tab==='clients')applyClientFilter();else if(state.tab==='clientWallet')applyClientTopupFilter();else applyFilter();}
 function onFilter(v){state.filter=v;applyFilter()} function onFilterTopup(v){state.filterTopup=v;applyTopupFilter()} function onFilterOrder(v){state.filterOrder=v;applyOrderFilter()} function onFilterComplaint(v){state.filterComplaint=v;applyComplaintFilter()}

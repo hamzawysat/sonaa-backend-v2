@@ -104,3 +104,5 @@ The final reference pass removed only files proven redundant or unreachable: roo
 The final navigation order is: الرئيسية, إدارة العملاء, إدارة الفنيين, الإدارة المالية, الاشتراكات والمتجر, إدارة الخدمات والمناطق, خدمة العملاء والتواصل, إعدادات وإدارة المنصة. The finance group owns client wallet, technician wallet and wallet top-up tabs; all 29 tab IDs and permission mappings remain unchanged.
 
 GitHub Actions run `43538810367` completed successfully on the eight-group revision: dependency installation, backend integration/security tests, frontend browser smoke tests, and the high-severity dependency audit all passed. This is CI verification; no production deployment or merge was performed.
+
+The browser-navigation pass exposed that the web back button could not return from a section to the group menu. `goBack()` now returns web users to the eight-group home navigation; the native WebView back-message/history behavior is preserved. The browser smoke test opens each of the 29 tabs and returns to the home navigation between tabs.

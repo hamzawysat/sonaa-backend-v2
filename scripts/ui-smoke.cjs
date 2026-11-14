@@ -143,8 +143,12 @@ function apiResponse(pathname) {
                     }
                     const tabContent = await page.locator('#admin-tab-content').innerText().catch(() => '');
                     if (!tabContent.trim()) failures.push('admin/desktop: empty tab content for ' + tabId);
+                    await page.locator('button[onclick="goBack()"]').click();
+                    await page.waitForTimeout(120);
+                    const homeGroups = await page.locator('.section-nav-group').count();
+                    if (homeGroups !== 8) failures.push('admin/desktop: back from ' + tabId + ' did not return to the 8-group home navigation');
                   } catch (error) {
-                    failures.push('admin/desktop: failed to open tab ' + tabId + ': ' + error.message);
+                    failures.push('admin/desktop: failed to open/leave tab ' + tabId + ': ' + error.message);
                     break;
                   }
                 }
