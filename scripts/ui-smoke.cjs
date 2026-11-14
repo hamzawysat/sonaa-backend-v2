@@ -172,13 +172,18 @@ function apiResponse(pathname) {
               ['حسابي', 'profile']
             ];
             for (const [label, tab] of expectedTabs) {
-              const tabButton = page.locator('button').filter({ hasText: label }).first();
-              await tabButton.click();
-              await page.waitForTimeout(120);
-              const isActive = await page.evaluate(labelText => [...document.querySelectorAll('button')]
-                .filter(button => button.textContent.includes(labelText))
-                .some(button => String(button.className).includes('from-[#C9A34F]')), label);
-              if (!isActive) failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
+              try {
+                const tabButton = page.locator(`button[onclick="openTechnicianSection('${tab}')"]`).first();
+                await tabButton.click({ timeout: 8000 });
+                await page.waitForTimeout(120);
+                const isActive = await page.evaluate(expected => [...document.querySelectorAll('button')]
+                  .some(button => button.getAttribute('onclick') === "openTechnicianSection('" + expected + "')" &&
+                    String(button.className).includes('from-[#C9A34F]')), tab);
+                if (!isActive) failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
+              } catch (error) {
+                failures.push('technician/mobile: ' + tab + ' navigation click failed: ' + error.message);
+                throw error;
+              }
             }
 
             const polling = await page.evaluate(() => ({
@@ -202,7 +207,7 @@ function apiResponse(pathname) {
             const resumed = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
             if (!stopped || !resumed) failures.push('technician/mobile: polling did not stop/resume with page visibility');
 
-            await page.getByRole('button', { name: /الدعم الفني/ }).first().click();
+            await page.locator('button[onclick="openTechnicianSection(\'support\')"]').first().click({ timeout: 8000 });
             await page.waitForURL(url => url.pathname.endsWith('/support.html') && url.searchParams.get('role') === 'fanni', { timeout: 5000 });
           }
 
