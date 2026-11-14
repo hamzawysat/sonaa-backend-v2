@@ -83,7 +83,7 @@ async function initializeClientAccount(){
     if(state.account){
       state.clientName=state.account.name||'';
       state.phone=state.account.phone||'';
-      state.tab='new';
+      state.tab='home';
       await Promise.allSettled([loadMyOrders(false),loadNotifications()]);
     }else{
       state.accountToken='';
