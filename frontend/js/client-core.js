@@ -301,7 +301,7 @@ let state={
   storeProducts:[],myStoreOrders:[],
   commerceItems:[],commerceSubscriptions:[],commerceLoading:false,commerceError:'',commerceSubmitting:'',walletBalance:0,walletFrozen:false,walletTransactions:[],walletTopupRequests:[],walletTransferNumbers:[],walletLoading:false,walletSubmitting:false,walletFromPhone:'',walletAmount:'',walletMethod:'vodafone_cash',walletReference:'',walletIdempotencyKey:'',walletError:'',walletSuccess:'',
   account:null,accountInitializing:false,accountToken:(()=>{if(window.IS_EDITOR_PREVIEW)return '';try{return localStorage.getItem('sonaa_client_account_token')||'';}catch{return '';}})(),accountAuthMode:forceClientRegistration?'register':'login',accountLoading:false,accountError:'',myOrders:[],accountOrdersLoading:false,accountOrdersTab:'current',notifications:[],notificationsUnread:0,notificationsOpen:false,
-  tab:'orders',service:'',clientName:'',area:'',areaSearch:'',address:'',phone:'',budget:'',desc:'',voiceBlob:null,voiceUrl:'',voiceRecordingData:'',voiceRecorder:null,voiceChunks:[],voiceRecording:false,loading:false,sn:null,
+  tab:'home',service:'',clientName:'',area:'',areaSearch:'',address:'',phone:'',budget:'',desc:'',voiceBlob:null,voiceUrl:'',voiceRecordingData:'',voiceRecorder:null,voiceChunks:[],voiceRecording:false,loading:false,sn:null,
   trackInput:'',tracked:null,trackError:'',trackLoading:false,acceptingOffer:'',
   ratingStars:5,ratingComment:'',ratingSubmitting:false,
   complaintSn:'',complaintName:'',complaintText:'',complaintLoading:false,
