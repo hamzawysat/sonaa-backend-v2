@@ -75,3 +75,5 @@ The client-service refund action calls `/api/admin/client-wallet/orders/:sn/refu
 ## Duplicate cleanup performed
 
 After confirming the server always selects the existing `frontend-dist/` or `frontend/` directory before the repository root, and confirming no active frontend page references the legacy root scripts, the unreachable root `admin.html` and its root-level admin script duplicates were removed. The original flat admin JS files under `frontend/js/` were also removed after the new nested files were verified to be byte-for-byte copies and all 12 HTML script references were confirmed to resolve. Regression assertions were added to `src/tests/runTests.js` to keep these paths and removals consistent.
+
+The unreachable root-level `css/theme.css` and `css/hamzawy-sat-brand.css` copies were also removed. The active stylesheet copies remain under `frontend/css/`, which is the static source directory selected by the server and copied by the frontend build.
