@@ -274,3 +274,6 @@ body .fanni-login-gate .account-switch-link:focus-visible{
   body .fanni-login-gate .account-switch-link{transition:none!important}
 }
 
+
+.global-refresh.is-refreshing svg{animation:client-refresh-spin 1s linear infinite}
+@keyframes client-refresh-spin{to{transform:rotate(360deg)}}
