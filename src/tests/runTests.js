@@ -70,6 +70,9 @@ async function run() {
       for (const legacyCss of ['css/theme.css', 'css/hamzawy-sat-brand.css']) {
         assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyCss)), false, 'unreachable root stylesheet remains: ' + legacyCss);
       }
+      for (const legacyAsset of ['web-push.js', 'page-visit.js', 'manifest.webmanifest', 'service-worker.js', 'robots.txt', 'js/preview-bootstrap.js', 'js/shared-editor-bridge.js', 'js/ui-layout-loader.js', 'js/shared-preview-links.js']) {
+        assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyAsset)), false, 'unreachable root frontend asset remains: ' + legacyAsset);
+      }
       for (const legacyPath of ['js/admin-core.js', 'js/admin-auth.js', 'js/admin-shell.js', 'js/admin-people.js', 'js/admin-orders.js', 'js/admin-navigation.js', 'js/admin-entity-actions.js', 'js/admin-platform-actions.js']) {
         assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyPath)), false, 'unreachable root admin script remains: ' + legacyPath);
       }
