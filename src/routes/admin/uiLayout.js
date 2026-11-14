@@ -4,9 +4,10 @@ const express = require('express');
 
 const ADMIN_LAYOUT_SECTIONS = {
   dashboard: ['dashboard', 'stats'],
-  clients: ['clients', 'orders', 'clientWallet'],
+  clients: ['clients', 'orders'],
+  technicians: ['fannis', 'pending', 'profileEdits', 'disabled', 'levels', 'offers'],
+  finance: ['clientWallet', 'wallets', 'topups'],
   commerce: ['commercePlans', 'commerceSubscriptions', 'store', 'storeOrders'],
-  technicians: ['fannis', 'pending', 'profileEdits', 'disabled', 'levels', 'offers', 'wallets', 'topups'],
   'service-management': ['services', 'regions'],
   'customer-operations': ['complaints', 'support', 'notifications', 'content'],
   'platform-admin': ['pricing', 'reports', 'pageVisits', 'security', 'settings', 'roles']
@@ -19,7 +20,7 @@ function createAdminUiLayoutRouter({ Joi, auth, getAdminConfig, adminName, write
   function sanitizeAdminUiLayout(input) {
     const source = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
     const sectionOrder = Array.isArray(source.sectionOrder)
-      ? [...new Set(source.sectionOrder.filter(id => Object.prototype.hasOwnProperty.call(ADMIN_LAYOUT_SECTIONS, id)))].slice(0, 6)
+      ? [...new Set(source.sectionOrder.filter(id => Object.prototype.hasOwnProperty.call(ADMIN_LAYOUT_SECTIONS, id)))].slice(0, 8)
       : [];
     const tabOrder = {};
     for (const [sectionId, allowed] of Object.entries(ADMIN_LAYOUT_SECTIONS)) {

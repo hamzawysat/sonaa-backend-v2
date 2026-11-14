@@ -1037,9 +1037,19 @@ async function run() {
       const saved = await request(app).put('/api/admin/ui-layout/admin')
         .set('Authorization', 'Bearer ' + adminToken)
         .send({ layout: {
-          sectionOrder: ['platform-admin', 'dashboard', 'unknown-section', 'dashboard'],
+          sectionOrder: [
+            'platform-admin', 'dashboard', 'clients', 'technicians',
+            'finance', 'commerce', 'service-management', 'customer-operations',
+            'unknown-section', 'dashboard'
+          ],
           tabOrder: { dashboard: ['stats', 'orders', 'dashboard', 'not-a-tab'] },
-          tabGroups: { orders: 'dashboard', dashboard: 'invalid-section' },
+          tabGroups: {
+            orders: 'dashboard',
+            clientWallet: 'finance',
+            wallets: 'finance',
+            topups: 'finance',
+            dashboard: 'invalid-section'
+          },
           sizes: { orders: 'large', dashboard: 'tiny', stats: 'small', unknown: 'large' },
           elements: {
             'auto-div-1_button-': {
@@ -1050,9 +1060,15 @@ async function run() {
           }
         } });
       assert.equal(saved.status, 200);
-      assert.deepEqual(saved.body.layout.sectionOrder, ['platform-admin', 'dashboard']);
+      assert.deepEqual(saved.body.layout.sectionOrder, [
+        'platform-admin', 'dashboard', 'clients', 'technicians',
+        'finance', 'commerce', 'service-management', 'customer-operations'
+      ], 'all eight configured admin sections must survive sanitization');
       assert.deepEqual(saved.body.layout.tabOrder.dashboard, ['stats', 'orders', 'dashboard']);
       assert.equal(saved.body.layout.tabGroups.orders, 'dashboard');
+      assert.equal(saved.body.layout.tabGroups.clientWallet, 'finance');
+      assert.equal(saved.body.layout.tabGroups.wallets, 'finance');
+      assert.equal(saved.body.layout.tabGroups.topups, 'finance');
       assert.equal(saved.body.layout.tabGroups.dashboard, undefined);
       assert.equal(saved.body.layout.sizes.orders, 'large');
       assert.equal(saved.body.layout.sizes.dashboard, undefined);
