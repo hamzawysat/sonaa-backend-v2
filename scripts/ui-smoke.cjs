@@ -37,6 +37,16 @@ function apiResponse(pathname) {
     ]) {
       for (const target of pages) {
         const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+        if (target.name === 'technician' && viewport.name === 'mobile') {
+          await page.addInitScript(() => {
+            const nativeSetInterval = window.setInterval.bind(window);
+            window.__sonaaIntervalDelays = [];
+            window.setInterval = (handler, delay, ...args) => {
+              window.__sonaaIntervalDelays.push(Number(delay));
+              return nativeSetInterval(handler, delay, ...args);
+            };
+          });
+        }
         const pageErrors = [];
         const badLocalResponses = [];
 
@@ -189,10 +199,13 @@ function apiResponse(pathname) {
             const polling = await page.evaluate(() => ({
               chats: !!fanniChatsPollTimer,
               messages: !!fanniMessagesPollTimer,
-              bell: !!document.querySelector('button[aria-label="الإشعارات"]')
+              bell: !!document.querySelector('button[aria-label="الإشعارات"]'),
+              intervals: window.__sonaaIntervalDelays || []
             }));
-            if (!polling.chats || !polling.messages || !polling.bell) {
-              failures.push('technician/mobile: polling or notification bell is missing after navigation');
+            if (!polling.chats || !polling.messages || !polling.bell ||
+                polling.intervals.filter(delay => delay === 25000).length !== 1 ||
+                polling.intervals.filter(delay => delay === 10000).length !== 1) {
+              failures.push('technician/mobile: polling timers must run once at 25s and 10s and keep the notification bell');
             }
 
             await page.evaluate(() => {
