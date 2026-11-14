@@ -100,6 +100,20 @@ function apiResponse(pathname) {
                 await page.locator('#fanniLoginPassword').fill('FanniSmokePass123');
                 await page.getByRole('button', { name: 'دخول إلى حسابي' }).click();
                 await page.waitForFunction(() => !!localStorage.getItem('fanni_token_v4'), { timeout: 10000 });
+                const technicianNavigation = await page.evaluate(() => ({
+                  tabs: typeof TECHNICIAN_TAB_DEFINITIONS !== 'undefined' ? TECHNICIAN_TAB_DEFINITIONS.map(tab => tab.id) : [],
+                  notificationBell: !!document.querySelector('button[aria-label="الإشعارات"]'),
+                  supportLink: !!document.querySelector('a.support-float[href="support.html?role=fanni"]')
+                }));
+                if (technicianNavigation.tabs.join(',') !== 'available,myOrders,wallet,store,profile' ||
+                    !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
+                  failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
+                }
+                await page.evaluate(() => setTab('myOrders'));
+                await page.getByRole('button', { name: /المهام المكتملة/ }).click();
+                await page.getByRole('heading', { name: 'المهام المكتملة' }).waitFor({ state: 'visible', timeout: 3000 });
+                await page.getByRole('button', { name: /العروض الجارية/ }).click();
+                await page.getByRole('heading', { name: 'عروضي' }).waitFor({ state: 'visible', timeout: 3000 });
                 await page.evaluate(() => setTab('profile'));
                 await page.locator('button[onclick="beginEditProfile()"]').waitFor({ state: 'visible', timeout: 5000 });
                 await page.locator('button[onclick="beginEditProfile()"]').click();
