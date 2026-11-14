@@ -6,14 +6,15 @@ Baseline: `backup/admin-organization-before-phase1-2026-11-14`
 
 ## Navigation inventory
 
-Seven navigation groups, 29 tabs:
+Eight navigation groups, 29 tabs:
 
 | Group | Tabs |
 |---|---|
 | الرئيسية | dashboard, stats |
-| إدارة العملاء | clients, clientWallet, orders |
+| إدارة العملاء | clients, orders |
+| الإدارة المالية | clientWallet, wallets, topups |
 | الاشتراكات والمتجر | commercePlans, commerceSubscriptions, store, storeOrders |
-| إدارة الفنيين | fannis, pending, profileEdits, disabled, levels, offers, wallets, topups |
+| إدارة الفنيين | fannis, pending, profileEdits, disabled, levels, offers |
 | إدارة الخدمات والمناطق | services, regions |
 | خدمة العملاء والتواصل | complaints, support, notifications, content |
 | إعدادات وإدارة المنصة | pricing, reports, pageVisits, security, settings, roles |
@@ -61,7 +62,7 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 
 ## Static verification after the first organization pass
 
-- 7 navigation groups and 29 tabs remain registered.
+- 8 navigation groups and 29 tabs remain registered.
 - All 29 tabs have a render path. All regular tabs have a frontend permission key; `security` and `roles` intentionally remain root-admin-only and are denied to subordinate roles.
 - 185 inline event-handler attributes were found across the admin module templates, calling 115 distinct handler names. The only statically unbound handler name is `openFanniProfileEditor`, which is intentionally exported as `window.openFanniProfileEditor`.
 - 12 new script paths are present and resolve to files in the frontend source tree.
@@ -91,3 +92,7 @@ The refresh/notification wiring audit confirmed that the admin-wide refresh rema
 The event-handler audit found several mutating actions that were protected by the API but missing from the UI's disabled-button guard list. The list now covers subscription creation/detail edits, client wallet debit/settlement, password changes/support-password issuance, announcement changes, service-category ordering, region restore and bulk region actions. Cross-domain actions now also check their backend permission key: wallet mutations/read ledger, commerce subscription creation, support-password read/write, and client profile details. This keeps disabled-state feedback aligned with server authorization rather than relying only on the current tab's permission.
 
 A second pass across all 12 frontend modules found no remaining mutating template handlers outside the write-action guard list. Remaining unlisted handlers are read, search/filter, navigation, selection or modal controls; the three cross-domain read actions (client profile, wallet ledger and support-password reveal) have explicit permission checks.
+
+## Final navigation correction
+
+The approved eight-group structure separates finance from client and technician management without changing any of the 29 tab IDs, labels, API endpoints or permission keys. The dedicated `الإدارة المالية` group now contains `clientWallet`, `wallets` and `topups`; client management contains only clients and orders, and technician management contains only technician operations. Pending-count badges were reassigned to the group that now owns each queue. The structure regression test now asserts all eight group IDs and the three finance tabs.
