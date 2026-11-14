@@ -116,8 +116,10 @@ function apiResponse(pathname) {
               if (!sharedEditorSource.includes('function getEffectiveData(data)') ||
                   !sharedEditorSource.includes('function clearMobileOverrideProperties(data,properties)') ||
                   !sharedEditorSource.includes("clearMobileOverrideProperties(data,[property])") ||
-                  !sharedEditorSource.includes("clearMobileOverrideProperties(data,['translateX','translateY'])") ||
-                  !sharedEditorSource.includes('const data=getSelectedData(),effective=getEffectiveData(data)')) {
+                  (sharedEditorSource.split("clearMobileOverrideProperties(data,['translateX','translateY'])").length - 1) < 2 ||
+                  !sharedEditorSource.includes('const data=getSelectedData(),effective=getEffectiveData(data)') ||
+                  !sharedEditorSource.includes('originX:Number(effective.translateX)||0,originY:Number(effective.translateY)||0') ||
+                  !sharedEditorSource.includes('const x=(Number(effective.translateX)||0)+dx,y=(Number(effective.translateY)||0)+dy')) {
                 failures.push('client/desktop: editor changes do not consistently apply to shared desktop/mobile layout data');
               }
               if (clientStyleOrder.some(index => index < 0) ||
