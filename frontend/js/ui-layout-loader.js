@@ -346,7 +346,6 @@
       var buttons = document.querySelectorAll('button,a,[role="tab"]');
       for (var bi=0; bi<buttons.length; bi++) if (textNeedle.test(buttons[bi].textContent || buttons[bi].getAttribute('aria-label') || '')) { buttons[bi].click(); return; }
     }
-    if (page === 'fanni' && actual === 'profile') { location.href = '/password.html?role=fanni&mode=account'; return; }
     if (page === 'password' && actual === 'changePassword') { var change=document.getElementById('changePassword'); if(change){document.querySelectorAll('#profile,#recovery,#adminQueue').forEach(function(n){n.classList.add('hidden')});change.classList.remove('hidden');change.scrollIntoView({behavior:'smooth',block:'start'});return;} }
     var target = document.getElementById(actual) ||
       document.querySelector('[data-section="' + actual + '"], [data-tab="' + actual + '"], [data-page="' + actual + '"]');
