@@ -89,3 +89,5 @@ The refresh/notification wiring audit confirmed that the admin-wide refresh rema
 ## UI permission guard audit
 
 The event-handler audit found several mutating actions that were protected by the API but missing from the UI's disabled-button guard list. The list now covers subscription creation/detail edits, client wallet debit/settlement, password changes/support-password issuance, announcement changes, service-category ordering, region restore and bulk region actions. Cross-domain actions now also check their backend permission key: wallet mutations/read ledger, commerce subscription creation, support-password read/write, and client profile details. This keeps disabled-state feedback aligned with server authorization rather than relying only on the current tab's permission.
+
+A second pass across all 12 frontend modules found no remaining mutating template handlers outside the write-action guard list. Remaining unlisted handlers are read, search/filter, navigation, selection or modal controls; the three cross-domain read actions (client profile, wallet ledger and support-password reveal) have explicit permission checks.
