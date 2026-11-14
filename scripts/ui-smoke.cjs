@@ -117,6 +117,26 @@ function apiResponse(pathname) {
                 await page.locator('#login-btn').click();
                 await page.waitForFunction(() => !!localStorage.getItem('admin_token_v3'), { timeout: 10000 });
                 await page.waitForTimeout(1200);
+                const navigationGroups = await page.locator('.section-nav-group').count();
+                const navigationTabs = page.locator('.section-nav-btn[onclick^="setTab("]');
+                const navigationTabCount = await navigationTabs.count();
+                if (navigationGroups !== 8) failures.push('admin/desktop: expected 8 navigation groups, found ' + navigationGroups);
+                if (navigationTabCount !== 29) failures.push('admin/desktop: expected 29 navigation tabs, found ' + navigationTabCount);
+                const tabIds = await navigationTabs.evaluateAll(buttons => buttons.map(button => {
+                  const match = (button.getAttribute('onclick') || '').match(/setTab\\('([^']+)'\\)/);
+                  return match ? match[1] : '';
+                }));
+                for (const tabId of tabIds) {
+                  if (!tabId) continue;
+                  await page.locator('.section-nav-btn[onclick="setTab(\\'' + tabId + '\\')"]').click();
+                  await page.waitForFunction(id => {
+                    const active = document.querySelector('.section-nav-btn.active');
+                    return active && active.getAttribute('onclick') === "setTab('" + id + "')";
+                  }, tabId, { timeout: 5000 });
+                  await page.waitForTimeout(120);
+                  const tabContent = await page.locator('#admin-tab-content').innerText().catch(() => '');
+                  if (!tabContent.trim()) failures.push('admin/desktop: empty tab content for ' + tabId);
+                }
               }
             }
           }
