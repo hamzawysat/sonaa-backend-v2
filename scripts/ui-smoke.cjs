@@ -207,9 +207,9 @@ function apiResponse(pathname) {
                 if (await page.locator('.client-home-dashboard').count() !== 1 || await page.evaluate(() => state.tab) !== 'home') {
                   failures.push('client/desktop: customer dashboard did not open on the home section');
                 }
-                for (const tab of customerTabIds) {
-                  await page.locator('nav.fixed.bottom-0 button[onclick="setTab(\\'' + tab + '\\')"]').click();
-                  await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 5000 });
+                for (let tabIndex = 0; tabIndex < customerTabIds.length; tabIndex++) {
+                  await customerTabButtons.nth(tabIndex).click();
+                  await page.waitForFunction(expected => state.tab === expected, customerTabIds[tabIndex], { timeout: 5000 });
                 }
 
                 // Exercise the shared visual editor against the isolated MongoDB-backed API.
