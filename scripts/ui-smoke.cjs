@@ -105,10 +105,12 @@ function apiResponse(pathname) {
                   notificationBell: !!document.querySelector('button[aria-label="الإشعارات"]'),
                   supportLink: !!document.querySelector('a.support-float[href="support.html?role=fanni"]')
                 }));
-                if (technicianNavigation.tabs.join(',') !== 'available,myOrders,wallet,store,profile' ||
+                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile' ||
                     !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
                   failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
                 }
+                await page.evaluate(() => setTab('home'));
+                await page.waitForFunction(() => state.tab === 'home', { timeout: 3000 });
                 await page.evaluate(() => setTab('myOrders'));
                 await page.getByRole('button', { name: /المهام المكتملة/ }).click();
                 await page.getByRole('heading', { name: 'المهام المكتملة' }).waitFor({ state: 'visible', timeout: 3000 });
