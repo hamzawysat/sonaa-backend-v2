@@ -8,13 +8,14 @@ function applyClientTopupFilter(){
   if(!query)return true;
   return [item.clientName,item.clientPhone,item.senderNumber,item.referenceNumber,item.amount].some(value=>String(value||'').toLowerCase().includes(query));
  });
- if(state.tab==='clientWallet')render();
+ if(state.tab==='clientWallet'||(state.tab==='topups'&&state.topupOwnerTab==='clients'))render();
 }
+function setTopupOwnerTab(type){type=String(type||'');if(!['fannis','clients'].includes(type))return;if(type==='clients'&&!canReadTab('clientWallet'))return showToast('لا تملك صلاحية الاطلاع على طلبات شحن العملاء','error');state.topupOwnerTab=type;state.search='';render();if(type==='clients')loadClientTopups();else applyTopupFilter();}
 async function loadClientTopups(){
  if(!getToken())return;state.clientTopupsLoading=true;render();
  try{const data=await tryApi(['/api/admin/client-wallet/topup-requests'],{method:'GET'});state.clientTopups=extractList(data,['requests','items']);applyClientTopupFilter();}
  catch(error){state.clientTopups=[];state.filteredClientTopups=[];showToast(error.message||'تعذر تحميل محافظ العملاء','error');}
- finally{state.clientTopupsLoading=false;if(state.tab==='clientWallet')render();}
+ finally{state.clientTopupsLoading=false;if(state.tab==='clientWallet'||(state.tab==='topups'&&state.topupOwnerTab==='clients'))render();}
 }
 async function approveClientTopup(id){
  if(!id||!confirm('تأكيد اعتماد التحويل وإضافة المبلغ إلى محفظة العميل؟'))return;
