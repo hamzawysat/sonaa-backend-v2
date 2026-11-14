@@ -16,6 +16,7 @@ function goBack(){
   window.ReactNativeWebView.postMessage('sonaa-admin-back-at-root');
   return;
  }
+ ADMIN_TAB_HISTORY.length=0;
  state.pageMode='home';
  state.tab='dashboard';
  state.search='';

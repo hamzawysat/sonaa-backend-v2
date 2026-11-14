@@ -137,9 +137,9 @@ function apiResponse(pathname) {
                   try {
                     await navigationTabs.nth(index).click();
                     await page.waitForTimeout(180);
-                    const activeHandler = await page.locator('.section-nav-btn.active').first().getAttribute('onclick').catch(() => null);
-                    if (activeHandler !== "setTab('" + tabId + "')") {
-                      failures.push('admin/desktop: tab did not become active: ' + tabId + ' (active=' + activeHandler + ')');
+                    const selectedTab = await page.evaluate(() => state.tab);
+                    if (selectedTab !== tabId) {
+                      failures.push('admin/desktop: clicked tab did not become selected: ' + tabId + ' (selected=' + selectedTab + ')');
                     }
                     const tabContent = await page.locator('#admin-tab-content').innerText().catch(() => '');
                     if (!tabContent.trim()) failures.push('admin/desktop: empty tab content for ' + tabId);

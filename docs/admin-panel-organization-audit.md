@@ -106,3 +106,5 @@ The final navigation order is: الرئيسية, إدارة العملاء, إد
 GitHub Actions run `43538810367` completed successfully on the eight-group revision: dependency installation, backend integration/security tests, frontend browser smoke tests, and the high-severity dependency audit all passed. This is CI verification; no production deployment or merge was performed.
 
 The browser-navigation pass exposed that the web back button could not return from a section to the group menu. `goBack()` now returns web users to the eight-group home navigation; the native WebView back-message/history behavior is preserved. The browser smoke test opens each of the 29 tabs and returns to the home navigation between tabs.
+
+The web back-to-home transition also clears stale browser tab history before rendering the group menu, preventing unbounded history growth while switching between sections.
