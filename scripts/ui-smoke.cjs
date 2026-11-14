@@ -95,6 +95,14 @@ function apiResponse(pathname) {
               await page.locator('.account-submit').click();
               await page.getByText('رقم الموبايل غير صحيح؛ اكتب 11 رقمًا يبدأ بـ 01.').waitFor({ state: 'visible', timeout: 3000 });
 
+              const clientStyles = await page.locator('link[rel="stylesheet"]').evaluateAll(items => items.map(item => new URL(item.href).pathname));
+              const clientCssAudit = await page.locator('style').evaluateAll(items => items.map(item => item.textContent.length));
+              if (!clientStyles.includes('/css/client-layout.css') ||
+                  !clientStyles.includes('/css/client-components.css') ||
+                  Math.max(0, ...clientCssAudit) > 5000) {
+                failures.push('client/desktop: client stylesheets were not extracted or oversized inline CSS remains');
+              }
+
               const clientSections = ['new', 'orders', 'track', 'wallet', 'subscriptions', 'store', 'complaint'];
               const editorMarkup = await (await page.request.get(BASE + '/editor.html')).text();
               const editorScript = await (await page.request.get(BASE + '/js/editor.js')).text();
