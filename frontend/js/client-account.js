@@ -69,7 +69,7 @@ async function submitClientAccount(e){
     if(!d.token||!d.client)throw new Error('تعذر إتمام تسجيل الدخول. تحقق من بياناتك وحاول مرة أخرى.');
     state.accountToken=window.IS_EDITOR_PREVIEW?'':d.token;state.account=window.IS_EDITOR_PREVIEW?null:d.client;if(!window.IS_EDITOR_PREVIEW){try{localStorage.setItem('sonaa_client_account_token',d.token);}catch(e){}}
     if(d.mustChangePassword&&!window.IS_EDITOR_PREVIEW){location.href='password.html?role=client&mode=change&support=1';return;}
-    state.clientName=d.client.name||name;state.phone=d.client.phone||phone;state.tab='new';state.accountError='';showToast(d.message||'تم تسجيل الدخول بنجاح','success');await loadMyOrders(false);await loadNotifications();
+    state.clientName=d.client.name||name;state.phone=d.client.phone||phone;state.tab='home';state.accountError='';showToast(d.message||'تم تسجيل الدخول بنجاح','success');await loadMyOrders(false);await loadNotifications();
   }catch(error){state.accountError=error.message||'تعذر إتمام العملية.';}
   finally{state.accountLoading=false;render();}
 }
