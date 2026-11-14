@@ -133,9 +133,11 @@ async function copyWalletNumber(index){
  }catch(error){toast('تعذر النسخ تلقائيًا. اضغط مطولًا على الرقم لنسخه.','error');}
 }
 async function loadWalletTransferNumbers(){
- try{const data=await apiGet('/api/wallet-settings');state.walletPhone1=String(data.walletPhone1||'').trim();state.walletPhone2=String(data.walletPhone2||'').trim();}
+ let loaded=false;
+ try{const data=await apiGet('/api/wallet-settings');state.walletPhone1=String(data.walletPhone1||'').trim();state.walletPhone2=String(data.walletPhone2||'').trim();loaded=true;}
  catch(error){log('تعذر تحميل أرقام التحويل',error.message);state.walletPhone1='';state.walletPhone2='';}
  if(state.tab==='wallet')render();
+ return loaded;
 }
 
 function onRegAreaSearch(value){
