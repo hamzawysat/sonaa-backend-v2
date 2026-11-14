@@ -147,6 +147,59 @@ function apiResponse(pathname) {
             }
           }
 
+          if (viewport.name === 'mobile' && target.name === 'technician' && process.env.SONAA_SMOKE_REAL_API === '1') {
+            await page.locator('#fanniLoginPhone').fill('01012345671');
+            await page.locator('#fanniLoginPassword').fill('FanniSmokePass123');
+            await page.getByRole('button', { name: 'دخول إلى حسابي' }).click();
+            await page.waitForFunction(() => !!localStorage.getItem('fanni_token_v4'), { timeout: 10000 });
+            await page.waitForFunction(() => state.tab === 'home', { timeout: 5000 });
+
+            const resources = await page.evaluate(() => ({
+              css: [...document.querySelectorAll('link[rel="stylesheet"]')].map(item => item.href).filter(url => url.includes('/css/fanni-')),
+              scripts: [...document.querySelectorAll('script[src]')].map(item => item.src).filter(url => url.includes('/js/fanni-'))
+            }));
+            if (new Set(resources.css).size !== resources.css.length || new Set(resources.scripts).size !== resources.scripts.length) {
+              failures.push('technician/mobile: duplicate CSS or JavaScript module references detected');
+            }
+
+            const expectedTabs = [
+              ['الرئيسية', 'home'],
+              ['فرص العمل', 'available'],
+              ['طلباتي', 'myOrders'],
+              ['المحفظة', 'wallet'],
+              ['المتجر', 'store'],
+              ['حسابي', 'profile']
+            ];
+            for (const [label, tab] of expectedTabs) {
+              await page.getByRole('button', { name: new RegExp(label) }).first().click();
+              await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 4000 });
+            }
+
+            const polling = await page.evaluate(() => ({
+              chats: !!fanniChatsPollTimer,
+              messages: !!fanniMessagesPollTimer,
+              bell: !!document.querySelector('button[aria-label="الإشعارات"]')
+            }));
+            if (!polling.chats || !polling.messages || !polling.bell) {
+              failures.push('technician/mobile: polling or notification bell is missing after navigation');
+            }
+
+            await page.evaluate(() => {
+              Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+              document.dispatchEvent(new Event('visibilitychange'));
+            });
+            const stopped = await page.evaluate(() => !fanniChatsPollTimer && !fanniMessagesPollTimer);
+            await page.evaluate(() => {
+              Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+              document.dispatchEvent(new Event('visibilitychange'));
+            });
+            const resumed = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
+            if (!stopped || !resumed) failures.push('technician/mobile: polling did not stop/resume with page visibility');
+
+            await page.getByRole('button', { name: /الدعم الفني/ }).first().click();
+            await page.waitForURL(url => url.pathname.endsWith('/support.html') && url.searchParams.get('role') === 'fanni', { timeout: 5000 });
+          }
+
           if (pageErrors.length) failures.push(target.name + '/' + viewport.name + ': ' + pageErrors.join(' | '));
           if (badLocalResponses.length) failures.push(target.name + '/' + viewport.name + ': ' + badLocalResponses.join(', '));
         } catch (error) {
