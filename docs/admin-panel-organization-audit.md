@@ -71,3 +71,7 @@ Fine-grained authorization is enforced in `src/middleware/auth.js` through `PERM
 ## Permission alignment correction found during the API audit
 
 The client-service refund action calls `/api/admin/client-wallet/orders/:sn/refund`. The backend classifies all `/client-wallet/*` routes under the `wallet` permission, while the frontend had a one-off override that classified this refund endpoint as `orders`. The override was removed. The refund button now also requires wallet write permission in addition to the current order-tab write guard, and the backend permission suite now includes explicit read-only-denied / wallet-manager-allowed assertions for this refund route.
+
+## Duplicate cleanup performed
+
+After confirming the server always selects the existing `frontend-dist/` or `frontend/` directory before the repository root, and confirming no active frontend page references the legacy root scripts, the unreachable root `admin.html` and its root-level admin script duplicates were removed. The original flat admin JS files under `frontend/js/` were also removed after the new nested files were verified to be byte-for-byte copies and all 12 HTML script references were confirmed to resolve. Regression assertions were added to `src/tests/runTests.js` to keep these paths and removals consistent.
