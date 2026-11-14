@@ -104,7 +104,15 @@ async function run() {
       assert.ok(registry, 'admin section registry must exist');
       const groupCount = (registry[1].match(/^\s*\{id:/gm) || []).length;
       const tabCount = (registry[1].match(/\{id:'[^']+',label:/g) || []).length - groupCount;
-      assert.equal(groupCount, 7);
+      assert.equal(groupCount, 8);
+      for (const groupId of ['dashboard', 'clients', 'finance', 'commerce', 'technicians', 'service-management', 'customer-operations', 'platform-admin']) {
+        assert.ok(registry[1].includes("id:'" + groupId + "'"), 'missing admin navigation group: ' + groupId);
+      }
+      const financeGroup = registry[1].match(/\{id:'finance'[^]*?tabs:\[([^\]]+)\]/);
+      assert.ok(financeGroup, 'dedicated finance group must exist');
+      for (const tabId of ['clientWallet', 'wallets', 'topups']) {
+        assert.ok(financeGroup[1].includes("id:'" + tabId + "'"), 'finance group missing tab: ' + tabId);
+      }
       assert.equal(tabCount, 29);
       const tabIds = [...registry[1].matchAll(/tabs:\[([^\]]+)\]/g)]
         .flatMap(group => [...group[1].matchAll(/\{id:'([^']+)'/g)].map(match => match[1]));
