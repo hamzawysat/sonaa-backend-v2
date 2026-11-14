@@ -118,7 +118,7 @@ function apiResponse(pathname) {
                   !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
                   clientActionsSource.includes('},3000);') ||
                   clientActionsSource.includes('},2000);' ) ||
-                  !clientComponentsSource.includes('@keyframes client-refresh-spin')) {
+                  !clientComponentsSource.includes('.global-refresh.is-refreshing svg') || !clientComponentsSource.includes('animation:global-refresh-spin')) {
                 failures.push('client/desktop: extracted styles or 25s/10s polling cadence is incorrect');
               }
 
