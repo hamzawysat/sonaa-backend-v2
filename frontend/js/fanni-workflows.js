@@ -43,7 +43,8 @@ async function submitFanniProfileEdit(payload){
 
 
 async function loadOrders(page=1,append=false){
- if(!getToken()||state.loading)return;
+ if(!getToken())return false;
+ if(state.loading)return null;
 
  state.loading=true;
  render();
@@ -56,6 +57,7 @@ async function loadOrders(page=1,append=false){
   applyFilter();
   state.loading=false;
   render();
+  return true;
  }catch(e){
   state.loading=false;
   if(!append){state.orders=[];state.filteredOrders=[];}
@@ -65,7 +67,7 @@ async function loadOrders(page=1,append=false){
 }
 
 async function loadMyOffers(){
- if(!getToken())return;
+ if(!getToken())return false;
 
  try{
   const data=await API.myOffers();
@@ -74,12 +76,14 @@ state.completedOffers=allOffers.filter(o=>o.completed===true||o.orderStatus==='�
 state.myOffers=allOffers.filter(o=>!(o.completed===true||o.orderStatus==='تم الانتهاء'));
   applyFilter();
   render();
+  return true;
  }catch(e){
   log('my offers',e);
 
   if(e.status===401){
    toast('انتهت جلسة الدخول. سجل دخولك مرة أخرى.','error');
   }
+  return false;
  }
 }
  
@@ -122,7 +126,7 @@ async function completeOrder(sn){
  }
  
 async function loadWalletHistory(){
- if(!getToken())return;
+ if(!getToken())return false;
 
  try{
   const data=await API.walletHistory();
@@ -143,12 +147,14 @@ async function loadWalletHistory(){
   }
 
   render();
+  return true;
  }catch(e){
   log('wallet history',e);
 
   if(e.status===401){
    toast('انتهت جلسة الدخول. سجل دخولك مرة أخرى.','error');
   }
+  return false;
  }
 }
 
