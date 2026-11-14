@@ -196,6 +196,11 @@ function apiResponse(pathname) {
               }
             }
 
+            await page.locator('button[onclick="openTechnicianSection(\'home\')"]').first().click();
+            await page.locator('.fanni-home-dashboard').waitFor({ state: 'visible', timeout: 3000 });
+            const homeStatsCount = await page.locator('.fanni-home-dashboard [data-home-stat]').count();
+            if (homeStatsCount !== 4) failures.push('technician/mobile: home dashboard must show all four summary statistics');
+
             const polling = await page.evaluate(() => ({
               chats: !!fanniChatsPollTimer,
               messages: !!fanniMessagesPollTimer,

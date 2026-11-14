@@ -130,6 +130,50 @@ function renderContent(){
   </section>
 
    <section class="fanni-dashboard-tabs mt-4"><div class="grid grid-cols-7 gap-1.5">${TECHNICIAN_TAB_DEFINITIONS.map(t=>{const info={home:['⌂','الرئيسية',''],available:['📋','فرص العمل',state.filteredOrders.length],myOrders:['💼','طلباتي',state.myOffers.length+state.completedOffers.length],wallet:['💳','المحفظة',''],store:['🛍️','المتجر',''],profile:['👤','حسابي',''],support:['🎧','الدعم الفني','']}[t.id];return `<button type="button" onclick="openTechnicianSection('${t.id}')" class="min-w-0 rounded-xl border p-1 flex flex-col items-center justify-center gap-0.5 min-h-[52px] transition ${state.tab===t.id?'bg-gradient-to-br from-[#C9A34F] to-[#A9822E] border-[#8D6C25] text-[#171A22] shadow-[0_3px_0_#8D6C25]':'bg-gradient-to-br from-[#FFFFFF] to-[#EAF0F8] border-[#D5DFED] text-[#344965] shadow-[0_3px_0_#CBD7E7]'}"><span class="text-[8px] leading-tight font-extrabold text-center">${info[1]}</span>${info[2]!==''?`<span class="text-[8px] leading-none rounded-full bg-white border px-1.5 py-0.5">${info[2]}</span>`:''}</button>`}).join('')}</div></section>
+  ${state.tab==='home'?`
+   <section class="fanni-home-dashboard mt-4 space-y-3" aria-labelledby="fanniHomeTitle">
+    <div class="panel p-4">
+     <div class="flex items-center justify-between gap-3">
+      <div>
+       <p class="text-[10px] font-bold text-slate-500">نظرة سريعة على حسابك</p>
+       <h2 id="fanniHomeTitle" class="section-title mt-1">ملخص شغلك</h2>
+      </div>
+      <span class="rounded-full bg-cyan-50 px-3 py-1.5 text-[10px] font-extrabold text-cyan-800">لوحة الفني</span>
+     </div>
+     <div class="mt-4 grid grid-cols-2 gap-2">
+      <article class="rounded-xl border border-slate-200 bg-white p-3">
+       <p class="text-[10px] font-bold text-slate-500">فرص العمل المتاحة</p>
+       <p class="mt-1 text-2xl font-black text-slate-900" data-home-stat="available">${state.filteredOrders.length}</p>
+       <button type="button" onclick="setTab('available')" class="mt-2 text-[11px] font-extrabold text-cyan-800">عرض الفرص</button>
+      </article>
+      <article class="rounded-xl border border-slate-200 bg-white p-3">
+       <p class="text-[10px] font-bold text-slate-500">عروضي والمهام الجارية</p>
+       <p class="mt-1 text-2xl font-black text-slate-900" data-home-stat="active">${state.myOffers.length}</p>
+       <button type="button" onclick="setTab('myOrders')" class="mt-2 text-[11px] font-extrabold text-cyan-800">متابعة طلباتي</button>
+      </article>
+      <article class="rounded-xl border border-slate-200 bg-white p-3">
+       <p class="text-[10px] font-bold text-slate-500">المهام المكتملة</p>
+       <p class="mt-1 text-2xl font-black text-slate-900" data-home-stat="completed">${state.completedOffers.length}</p>
+       <button type="button" onclick="setTab('myOrders');setMyOrdersView('completed')" class="mt-2 text-[11px] font-extrabold text-cyan-800">عرض المكتمل</button>
+      </article>
+      <article class="rounded-xl border border-slate-200 bg-white p-3">
+       <p class="text-[10px] font-bold text-slate-500">إشعارات غير مقروءة</p>
+       <p class="mt-1 text-2xl font-black text-slate-900" data-home-stat="notifications">${Number(state.notificationsUnread||0)}</p>
+       <button type="button" onclick="toggleNotifications()" class="mt-2 text-[11px] font-extrabold text-cyan-800">فتح الإشعارات</button>
+      </article>
+     </div>
+    </div>
+    ${!approved?`<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] leading-6 text-amber-900">حسابك ${esc(status)}. تقدر تراجع بياناتك، وإرسال العروض وشحن المحفظة متاحان بعد اعتماد الإدارة.</div>`:''}
+    <div class="panel p-4">
+     <h3 class="section-title">اختصارات سريعة</h3>
+     <div class="mt-3 grid grid-cols-2 gap-2">
+      <button type="button" onclick="setTab('available')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">📋 فرص العمل</button>
+      <button type="button" onclick="setTab('myOrders')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">💼 طلباتي</button>
+      <button type="button" onclick="setTab('wallet')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">💳 المحفظة</button>
+      <button type="button" onclick="setTab('store')" class="rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-extrabold text-slate-800">🛍️ المتجر</button>
+     </div>
+    </div>
+   </section>`:''}
   ${state.tab==='myOrders'?`<div class="mt-3 panel p-2 grid grid-cols-2 gap-2"><button type="button" onclick="setMyOrdersView('active')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='active'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">العروض الجارية (${state.myOffers.length})</button><button type="button" onclick="setMyOrdersView('completed')" class="rounded-xl px-3 py-2 text-[11px] font-extrabold ${state.myOrdersView==='completed'?'bg-[#C9A34F] text-[#171A22]':'bg-slate-50 text-slate-600'}">المهام المكتملة (${state.completedOffers.length})</button></div>`:''}
 
   ${state.tab==='available'?`
