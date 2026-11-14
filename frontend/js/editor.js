@@ -197,7 +197,7 @@ Object.entries(binds).forEach(([id,property])=>$(id).addEventListener('input',ev
  updateElement(property,value);
 }));
 function nudgeElement(dx,dy){
- if(!selectedElement)return;const data=getSelectedData();clearMobileOverrideProperties(data,['translateX','translateY']);const x=(Number(data.translateX)||0)+dx,y=(Number(data.translateY)||0)+dy;
+ if(!selectedElement)return;const data=getSelectedData(),effective=getEffectiveData(data);clearMobileOverrideProperties(data,['translateX','translateY']);const x=(Number(effective.translateX)||0)+dx,y=(Number(effective.translateY)||0)+dy;
  selectedElement.style.translate=x+'px '+y+'px';data.translateX=x;data.translateY=y;markDirty();
 }
 document.querySelectorAll('.nudge-btn').forEach(btn=>btn.addEventListener('click',()=>nudgeElement(Number(btn.dataset.dx),Number(btn.dataset.dy))));
@@ -234,9 +234,10 @@ function installBridge(){
    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
    selectElement(target);
    if(!selectedElement)return;
-   const data=getSelectedData();
+   const data=getSelectedData(),effective=getEffectiveData(data);
+   clearMobileOverrideProperties(data,['translateX','translateY']);
    drag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,
-    originX:Number(data.translateX)||0,originY:Number(data.translateY)||0,
+    originX:Number(effective.translateX)||0,originY:Number(effective.translateY)||0,
     moved:false,element:selectedElement};
    try{target.setPointerCapture(event.pointerId)}catch(_){}
   },true);
