@@ -355,11 +355,11 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     }catch(_){/* Keep the last successful orders during temporary network failures. */}
     finally{clientLivePollInFlight=false;}
-  },3000);
+  },25000);
   setInterval(async function(){
     if(document.hidden||!state.tracked||!state.trackInput)return;
     await refreshTrackedSilently();
-  },3000);
-  setInterval(refreshTrackedChatSilently,2000);
+  },25000);
+  setInterval(refreshTrackedChatSilently,10000);
 });
 render();

@@ -331,7 +331,7 @@
       support: { 'my-cases':'main', 'new-case':'new-title' }
     };
     var actual = aliases[page] && aliases[page][section] || section;
-    if (page === 'client' && ['new','orders','track','complaint'].indexOf(actual) !== -1 && goTab(actual)) return;
+    if (page === 'client' && ['new','orders','track','wallet','subscriptions','store','complaint'].indexOf(actual) !== -1 && goTab(actual)) return;
     if (page === 'fanni' && actual === 'notifications') { if (typeof window.toggleNotifications === 'function') window.toggleNotifications(); return; }
     if (page === 'fanni' && actual === 'support') { location.href = '/support.html?role=fanni'; return; }
     if (page === 'fanni' && actual === 'home') { if (goTab('home')) { window.scrollTo({top:0,behavior:'smooth'}); return; } }
