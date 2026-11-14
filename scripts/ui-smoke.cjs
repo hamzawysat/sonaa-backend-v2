@@ -107,6 +107,7 @@ function apiResponse(pathname) {
               const clientActionsSource = await (await page.request.get(BASE + '/js/client-actions.js')).text();
               const clientAccountSource = await (await page.request.get(BASE + '/js/client-account.js')).text();
               const clientComponentsSource = await (await page.request.get(BASE + '/css/client-components.css')).text();
+              const clientLayoutSource = await (await page.request.get(BASE + '/css/client-layout.css')).text();
               const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
               if (clientStyleOrder.some(index => index < 0) ||
                   clientStyleOrder.some((index, position) => position > 0 && index <= clientStyleOrder[position - 1]) ||
@@ -118,7 +119,7 @@ function apiResponse(pathname) {
                   !/setInterval\(refreshTrackedChatSilently,\s*10000\)/.test(clientActionsSource) ||
                   clientActionsSource.includes('},3000);') ||
                   clientActionsSource.includes('},2000);' ) ||
-                  !clientComponentsSource.includes('.global-refresh.is-refreshing svg') || !clientComponentsSource.includes('animation:global-refresh-spin')) {
+                  !clientLayoutSource.includes('.global-refresh.is-refreshing svg') || !clientLayoutSource.includes('animation:global-refresh-spin')) {
                 failures.push('client/desktop: extracted styles or 25s/10s polling cadence is incorrect');
               }
 
