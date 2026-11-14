@@ -55,6 +55,18 @@ async function run() {
         .map(match => match[1])
         .filter(src => src.startsWith('/js/admin/'));
       assert.equal(adminScripts.length, 12, 'all twelve admin modules must be loaded');
+      const oldFlatModules = [
+        'js/admin-core.js', 'js/admin-auth.js', 'js/admin-shell.js', 'js/admin-people.js',
+        'js/admin-orders.js', 'js/admin-platform.js', 'js/admin-store.js', 'js/admin-navigation.js',
+        'js/admin-entity-actions.js', 'js/admin-platform-actions.js', 'js/admin-client-wallet.js', 'js/admin-commerce.js'
+      ];
+      for (const legacyPath of oldFlatModules) {
+        assert.equal(fs.existsSync(path.join(frontendRoot, legacyPath)), false, 'superseded frontend module remains: ' + legacyPath);
+      }
+      assert.equal(fs.existsSync(path.join(__dirname, '../../admin.html')), false, 'unreachable root admin page must stay removed');
+      for (const legacyPath of ['js/admin-core.js', 'js/admin-auth.js', 'js/admin-shell.js', 'js/admin-people.js', 'js/admin-orders.js', 'js/admin-navigation.js', 'js/admin-entity-actions.js', 'js/admin-platform-actions.js']) {
+        assert.equal(fs.existsSync(path.join(__dirname, '../../', legacyPath)), false, 'unreachable root admin script remains: ' + legacyPath);
+      }
       for (const src of adminScripts) {
         const relativePath = src.split('?')[0].replace(/^\/+/, '');
         assert.ok(fs.existsSync(path.join(frontendRoot, relativePath)), 'missing admin script: ' + src);
