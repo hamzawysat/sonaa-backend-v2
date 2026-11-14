@@ -244,11 +244,11 @@ function apiResponse(pathname) {
 
                     await page.locator('[data-device="mobile"]').click();
                     await page.locator('#reloadPreviewBtn').click();
-                    await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), { timeout: 20000 });
+                    await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), null, { timeout: 20000 });
                     await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
                     await page.locator('[data-device="desktop"]').click();
                     await page.locator('#reloadPreviewBtn').click();
-                    await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), { timeout: 20000 });
+                    await page.waitForFunction(() => document.querySelector('#saveStatus')?.textContent.includes('جاهز'), null, { timeout: 20000 });
                     await preview.getByText('اختبار حفظ واسترجاع المحرر', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
 
                     const resetLayout = await page.request.delete(BASE + '/api/admin/ui-layout/client', {
