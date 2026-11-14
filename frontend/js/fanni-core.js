@@ -371,6 +371,7 @@ function showLogoutConfirmation(action='logout'){
 }
 function logout(){showLogoutConfirmation();}
 function performFanniLogout(){
+ stopFanniPolling();
  clearAuth();
  currentUser=null;
  Object.assign(state,{
