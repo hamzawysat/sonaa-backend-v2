@@ -127,3 +127,53 @@ body .fanni-login-gate .account-switch-link:focus-visible{
   body .fanni-login-gate .account-switch-link{transition:none!important}
 }
 
+
+
+/* Technician notifications: explicit read states and accessible contrast. */
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel{
+  background:#FFFFFF!important;color:#172B3A!important;border-color:#D8E8E8!important;
+}
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel>div:first-child{
+  background:#FFFFFF!important;color:#172B3A!important;border-color:#E2ECEC!important;
+}
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel button.fanni-notification-item{
+  display:block!important;width:100%!important;text-align:right!important;
+  border:0!important;border-bottom:1px solid #E5EEEE!important;
+  color:#173344!important;-webkit-text-fill-color:#173344!important;box-shadow:none!important;
+}
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel button.fanni-notification-item.is-read{background:#FFFFFF!important}
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel button.fanni-notification-item.is-unread{background:#EAF5F4!important}
+html[data-sonaa-theme="fanni"] body #app .fanni-notification-item b,
+html[data-sonaa-theme="fanni"] body #app .fanni-notification-item span,
+html[data-sonaa-theme="fanni"] body #app .fanni-notification-item small{
+  color:#173344!important;-webkit-text-fill-color:#173344!important;
+}
+html[data-sonaa-theme="fanni"] body #app .fanni-notifications-panel button[onclick="markAllNotificationsRead()"]{
+  color:#087E78!important;-webkit-text-fill-color:#087E78!important;
+  background:#EAF5F4!important;border:1px solid #C6E2DF!important;border-radius:999px!important;padding:7px 11px!important;
+}
+html[data-sonaa-theme="fanni"] body #app .fanni-app-header button[onclick="toggleNotifications()"]{
+  background:#EAF5F4!important;background-image:none!important;color:#087E78!important;
+  -webkit-text-fill-color:#087E78!important;border-color:#C6E2DF!important;
+  box-shadow:0 3px 0 #C6E2DF,0 6px 10px rgba(8,126,120,.10)!important;
+}
+
+/* Primary actions use petroleum with white text; secondary actions use a light surface. */
+html[data-sonaa-theme="fanni"] body #app button.primary-btn,
+html[data-sonaa-theme="fanni"] body #app .primary-btn,
+html[data-sonaa-theme="fanni"] body #app button[type="submit"]:not(.danger):not(.success),
+html[data-sonaa-theme="fanni"] body #app .account-submit{
+  background:#087E78!important;background-image:none!important;background-color:#087E78!important;
+  border-color:#066A65!important;color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;
+  text-shadow:none!important;box-shadow:0 3px 0 #066A65,0 6px 12px rgba(8,126,120,.16)!important;
+}
+html[data-sonaa-theme="fanni"] body #app button.primary-btn *,
+html[data-sonaa-theme="fanni"] body #app .primary-btn *,
+html[data-sonaa-theme="fanni"] body #app button[type="submit"]:not(.danger):not(.success) *{
+  color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;
+}
+html[data-sonaa-theme="fanni"] body #app button.secondary-btn,
+html[data-sonaa-theme="fanni"] body #app .secondary-btn{
+  background:#EAF5F4!important;background-image:none!important;border:1px solid #C6E2DF!important;
+  color:#14505A!important;-webkit-text-fill-color:#14505A!important;box-shadow:0 2px 0 #D5E9E7!important;
+}
