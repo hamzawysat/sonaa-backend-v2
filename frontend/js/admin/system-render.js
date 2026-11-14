@@ -66,3 +66,24 @@ function renderPageVisits(){const pages=pageVisitsData.summary||[],rows=pageVisi
 
 
 function filterPageVisits(value){pageVisitsData.filter=String(value||'');loadPageVisits();}
+
+
+function renderPricing(){
+  const p=state.pricing||{check:0,commission:10,minOffer:1,maxOffer:1000000};
+  const history=Array.isArray(state.pricingHistory)?state.pricingHistory:[];
+  return `
+  <section class="mt-4 space-y-4">
+    <div class="rounded-[18px] bg-gradient-to-r from-emerald-600 to-teal-600 p-4 text-white"><p class="text-[12px] font-black">الأسعار والعمولات ورسوم الفرص</p><p class="text-[10px] text-emerald-100 mt-1">تُطبّق عمولة المنصة وحدود سعر العرض الجديدة على العروض الجديدة فقط.</p></div>
+    <div class="premium-panel p-4 space-y-4">
+      <label class="block"><span class="text-[11px] font-black">رسوم الفرصة (check) — محفوظة فقط وغير مخصومة تلقائيًا حاليًا</span><input id="price-check" type="number" min="0" max="100000" value="${Number(p.check||0)}" class="field mt-2"></label>
+      <label class="block"><span class="text-[11px] font-black">عمولة المنصة %</span><input id="price-commission" type="number" min="0" max="100" step="0.01" value="${Number(p.commission??10)}" class="field mt-2"></label>
+      <label class="block"><span class="text-[11px] font-black">الحد الأدنى لسعر العرض</span><input id="price-min" type="number" min="1" max="1000000" value="${Number(p.minOffer||1)}" class="field mt-2"></label>
+      <label class="block"><span class="text-[11px] font-black">الحد الأقصى لسعر العرض</span><input id="price-max" type="number" min="1" max="1000000" value="${Number(p.maxOffer||1000000)}" class="field mt-2"></label>
+      <p class="text-[10px] text-slate-500">لا يُعاد حساب العمولات المسجلة على الطلبات القديمة.</p>
+      <button id="save-pricing-btn" onclick="savePricing()" class="w-full h-11 rounded-full bg-slate-900 text-white font-black text-[11px]">حفظ الأسعار</button>
+    </div>
+    <div class="premium-panel p-4"><h3 class="text-[11px] font-black mb-3">سجل تغييرات الأسعار</h3>
+      ${history.length?history.map(h=>`<div class="border-b last:border-0 py-3 text-[10px]"><p class="font-black">${escHtml(h.by||'الإدارة')} — ${escHtml(h.createdAt?new Date(h.createdAt).toLocaleString('ar-EG-u-ca-gregory',{calendar:'gregory',timeZone:'Africa/Cairo'}):'')}</p><p class="text-slate-500 mt-1">من ${escHtml(JSON.stringify(h.before||{}))} إلى ${escHtml(JSON.stringify(h.after||{}))}</p></div>`).join(''):'<p class="text-[10px] text-slate-500">لا توجد تغييرات مسجلة بعد.</p>'}
+    </div>
+  </section>`;
+}
