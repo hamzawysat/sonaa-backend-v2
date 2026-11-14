@@ -113,12 +113,19 @@ function apiResponse(pathname) {
                 const technicianNavigation = await page.evaluate(() => ({
                   tabs: typeof TECHNICIAN_TAB_DEFINITIONS !== 'undefined' ? TECHNICIAN_TAB_DEFINITIONS.map(tab => tab.id) : [],
                   notificationBell: !!document.querySelector('button[aria-label="الإشعارات"]'),
-                  supportLink: !!document.querySelector('a.support-float[href="support.html?role=fanni"]')
+                  supportFloat: !!document.querySelector('a.support-float[href="support.html?role=fanni"]'),
+                  topTabs: !!document.querySelector('.fanni-dashboard-tabs'),
+                  bottomTabs: document.querySelectorAll('nav.fixed.bottom-0 button[onclick^="openTechnicianSection("]').length,
+                  refreshOnLeft: (() => { const button = document.querySelector('#global-refresh'); if (!button) return false; const rect = button.getBoundingClientRect(); return rect.left >= 0 && rect.left < window.innerWidth / 2; })()
                 }));
-                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support' ||
-                    !technicianNavigation.notificationBell || !technicianNavigation.supportLink) {
-                  failures.push('technician/desktop: dashboard sections or notification/support placement is incorrect');
+                if (technicianNavigation.tabs.join(',') !== 'home,available,myOrders,wallet,store,profile,support') {
+                  failures.push('technician/desktop: expected technician section definitions are missing');
                 }
+                if (!technicianNavigation.notificationBell) failures.push('technician/desktop: notification bell is missing');
+                if (technicianNavigation.supportFloat) failures.push('technician/desktop: floating support shortcut still exists');
+                if (technicianNavigation.topTabs) failures.push('technician/desktop: duplicate top navigation still exists');
+                if (technicianNavigation.bottomTabs !== 7) failures.push('technician/desktop: expected 7 bottom navigation buttons, found ' + technicianNavigation.bottomTabs);
+                if (!technicianNavigation.refreshOnLeft) failures.push('technician/desktop: refresh control is not positioned on the left');
                 const initialTab = await page.evaluate(() => state.tab);
             if (initialTab !== 'home') failures.push('technician/mobile: dashboard did not open on the home section');
                 const pollingStarted = await page.evaluate(() => !!fanniChatsPollTimer && !!fanniMessagesPollTimer);
