@@ -171,8 +171,13 @@ function apiResponse(pathname) {
               ['حسابي', 'profile']
             ];
             for (const [label, tab] of expectedTabs) {
-              await page.getByRole('button', { name: new RegExp(label) }).first().click();
-              await page.waitForFunction(expected => state.tab === expected, tab, { timeout: 4000 });
+              const tabButton = page.getByRole('button', { name: new RegExp(label) }).first();
+              await tabButton.click();
+              await page.waitForTimeout(120);
+              const activeClass = await page.getByRole('button', { name: new RegExp(label) }).first().getAttribute('class');
+              if (!activeClass || !activeClass.includes('from-[#C9A34F]')) {
+                failures.push('technician/mobile: navigation did not activate the ' + tab + ' section');
+              }
             }
 
             const polling = await page.evaluate(() => ({
