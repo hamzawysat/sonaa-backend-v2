@@ -108,6 +108,7 @@ function apiResponse(pathname) {
               const clientAccountSource = await (await page.request.get(BASE + '/js/client-account.js')).text();
               const clientRenderSource = await (await page.request.get(BASE + '/js/client-render.js')).text();
               const behaviorScripts = await page.locator('script[src="/js/page-behaviors.js"]').evaluateAll(items => items.map(item => item.dataset.sonaaFeatures || item.dataset.sonaaFeature || ''));
+              const clientScriptPaths = await page.locator('script[src]').evaluateAll(items => items.map(item => new URL(item.src).pathname).filter(path => path.startsWith('/js/')));
               const clientComponentsSource = await (await page.request.get(BASE + '/css/client-components.css')).text();
               const clientLayoutSource = await (await page.request.get(BASE + '/css/client-layout.css')).text();
               const orderPollingIntervals = (clientActionsSource.match(/},\s*25000\);/g) || []).length;
